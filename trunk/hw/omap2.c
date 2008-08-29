@@ -4921,3 +4921,50 @@ struct omap_mpu_state_s *omap2420_mpu_init(unsigned long sdram_size,
 
     return s;
 }
+
+
+
+static void omap3530_remap_l4()
+{
+	/*OMAP3530 uses a different l4 mapping from OMAP2*/
+	
+}
+
+struct omap_mpu_state_s *omap3530_mpu_init(unsigned long sdram_size,
+                DisplayState *ds, const char *core)
+{
+	struct omap_mpu_state_s *s = (struct omap_mpu_state_s *)
+            qemu_mallocz(sizeof(struct omap_mpu_state_s));
+	ram_addr_t sram_base, q2_base;
+    qemu_irq *cpu_irq;
+    qemu_irq dma_irqs[4];
+    omap_clk gpio_clks[4];
+    int sdindex;
+    int i;
+
+    s->mpu_model = omap3530;
+    s->env = cpu_init("omap3530");
+    if (!s->env) {
+        fprintf(stderr, "Unable to find CPU definition\n");
+        exit(1);
+    }
+    s->sdram_size = sdram_size;
+    s->sram_size = OMAP353X_SRAM_SIZE;
+
+    s->wakeup = qemu_allocate_irqs(omap_mpu_wakeup, s, 1)[0];
+
+    /* Clocks */
+    omap_clk_init(s);
+
+     /* Memory-mapped stuff */
+    cpu_register_physical_memory(OMAP3_Q2_BASE, s->sdram_size,
+                    (q2_base = qemu_ram_alloc(s->sdram_size)) | IO_MEM_RAM);
+    cpu_register_physical_memory(OMAP3_SRAM_BASE, s->sram_size,
+                    (sram_base = qemu_ram_alloc(s->sram_size)) | IO_MEM_RAM);
+
+    s->l4 = omap_l4_init(OMAP2_L4_BASE, 54);
+
+
+
+    
+}

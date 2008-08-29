@@ -36,6 +36,12 @@
 # define OMAP2_L3_BASE		0x68000000
 # define OMAP2_Q2_BASE		0x80000000
 # define OMAP2_Q3_BASE		0xc0000000
+# define OMAP3_Q1_BASE		0x40000000
+# define OMAP3_L4_BASE		0x48000000
+# define OMAP3_SRAM_BASE	0x40200000
+# define OMAP3_L3_BASE		0x68000000
+# define OMAP3_Q2_BASE		0x80000000
+# define OMAP3_Q3_BASE		0xc0000000
 # define OMAP_MPUI_BASE		0xe1000000
 
 # define OMAP730_SRAM_SIZE	0x00032000
@@ -44,6 +50,7 @@
 # define OMAP1611_SRAM_SIZE	0x0003e800
 # define OMAP242X_SRAM_SIZE	0x000a0000
 # define OMAP243X_SRAM_SIZE	0x00010000
+# define OMAP353X_SRAM_SIZE	0x00010000
 # define OMAP_CS0_SIZE		0x04000000
 # define OMAP_CS1_SIZE		0x04000000
 # define OMAP_CS2_SIZE		0x04000000
@@ -794,6 +801,7 @@ i2c_bus *omap_i2c_bus(struct omap_i2c_s *s);
 # define cpu_is_omap2420(cpu)		(cpu->mpu_model == omap2420)
 # define cpu_is_omap2430(cpu)		(cpu->mpu_model == omap2430)
 # define cpu_is_omap3430(cpu)		(cpu->mpu_model == omap3430)
+# define cpu_is_omap3530(cpu)		(cpu->mpu_model == omap3530)
 
 # define cpu_is_omap15xx(cpu)		\
         (cpu_is_omap310(cpu) || cpu_is_omap1510(cpu))
@@ -802,10 +810,12 @@ i2c_bus *omap_i2c_bus(struct omap_i2c_s *s);
 # define cpu_is_omap24xx(cpu)		\
         (cpu_is_omap2410(cpu) || cpu_is_omap2420(cpu) || cpu_is_omap2430(cpu))
 
+        
 # define cpu_class_omap1(cpu)		\
         (cpu_is_omap15xx(cpu) || cpu_is_omap16xx(cpu))
 # define cpu_class_omap2(cpu)		cpu_is_omap24xx(cpu)
-# define cpu_class_omap3(cpu)		cpu_is_omap3430(cpu)
+# define cpu_class_omap3(cpu)	\
+		(cpu_is_omap3430(cpu) || cpu_is_omap3530(cpu))
 
 struct omap_mpu_state_s {
     enum omap_mpu_model {
@@ -819,6 +829,7 @@ struct omap_mpu_state_s {
         omap2423,
         omap2430,
         omap3430,
+        omap3530,
     } mpu_model;
 
     CPUState *env;
@@ -971,6 +982,8 @@ struct omap_mpu_state_s *omap310_mpu_init(unsigned long sdram_size,
 
 /* omap2.c */
 struct omap_mpu_state_s *omap2420_mpu_init(unsigned long sdram_size,
+                DisplayState *ds, const char *core);
+struct omap_mpu_state_s *omap3530_mpu_init(unsigned long sdram_size,
                 DisplayState *ds, const char *core);
 
 # if TARGET_PHYS_ADDR_BITS == 32

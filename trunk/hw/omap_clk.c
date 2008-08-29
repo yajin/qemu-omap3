@@ -37,6 +37,7 @@ struct clk {
 #define CLOCK_IN_OMAP242X	(1 << 14)
 #define CLOCK_IN_OMAP243X	(1 << 15)
 #define CLOCK_IN_OMAP343X	(1 << 16)
+#define CLOCK_IN_OMA353X	(1 << 17)
     uint32_t flags;
     int id;
 
@@ -1249,6 +1250,8 @@ void omap_clk_init(struct omap_mpu_state_s *mpu)
         flag = CLOCK_IN_OMAP243X;
     else if (cpu_is_omap3430(mpu))
         flag = CLOCK_IN_OMAP243X;
+    else if (cpu_is_omap3530(mpu))
+    	flag = CLOCK_IN_OMA353X;
     else
         return;
 
