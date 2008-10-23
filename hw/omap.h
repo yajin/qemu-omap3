@@ -36,6 +36,12 @@
 # define OMAP2_L3_BASE		0x68000000
 # define OMAP2_Q2_BASE		0x80000000
 # define OMAP2_Q3_BASE		0xc0000000
+# define OMAP3_Q1_BASE		0x40000000
+# define OMAP3_L4_BASE		0x48000000
+# define OMAP3_SRAM_BASE	0x40200000
+# define OMAP3_L3_BASE		0x68000000
+# define OMAP3_Q2_BASE		0x80000000
+# define OMAP3_Q3_BASE		0xc0000000
 # define OMAP_MPUI_BASE		0xe1000000
 
 # define OMAP730_SRAM_SIZE	0x00032000
@@ -44,6 +50,7 @@
 # define OMAP1611_SRAM_SIZE	0x0003e800
 # define OMAP242X_SRAM_SIZE	0x000a0000
 # define OMAP243X_SRAM_SIZE	0x00010000
+# define OMAP3530_SRAM_SIZE	0x00010000
 # define OMAP_CS0_SIZE		0x04000000
 # define OMAP_CS1_SIZE		0x04000000
 # define OMAP_CS2_SIZE		0x04000000
@@ -408,6 +415,72 @@ void omap_gpmc_attach(struct omap_gpmc_s *s, int cs, int iomemtype,
 # define OMAP_INT_243X_HS_USB_DMA	93
 # define OMAP_INT_243X_CARKIT		94
 # define OMAP_INT_34XX_GPTIMER12	95
+
+/*
+ * OMAP-35XX common IRQ numbers
+ */
+# define OMAP_INT_35XX_SYS_NIRQ		7
+# define OMAP_INT_35XX_PRCM_MPU_IRQ	11
+# define OMAP_INT_35XX_SDMA_IRQ0	12
+# define OMAP_INT_35XX_SDMA_IRQ1	13
+# define OMAP_INT_35XX_SDMA_IRQ2	14
+# define OMAP_INT_35XX_SDMA_IRQ3	15
+# define OMAP_INT_35XX_MCBSP1_IRQ	16
+# define OMAP_INT_35XX_MCBSP2_IRQ	17
+# define OMAP_INT_35XX_GPMC_IRQ		20
+# define OMAP_INT_35XX_MCBSP3_IRQ	22
+# define OMAP_INT_35XX_MCBSP4_IRQ	23
+# define OMAP_INT_35XX_CAM_IRQ		24
+# define OMAP_INT_35XX_DSS_IRQ		25
+# define OMAP_INT_35XX_MAIL_U0_MPU	26
+# define OMAP_INT_35XX_MCBSP5_IRQ	27
+# define OMAP_INT_35XX_DSP_MMU		28
+# define OMAP_INT_35XX_GPIO_BANK1	29
+# define OMAP_INT_35XX_GPIO_BANK2	30
+# define OMAP_INT_35XX_GPIO_BANK3	31
+# define OMAP_INT_35XX_GPIO_BANK4	32
+# define OMAP_INT_35XX_GPIO_BANK5	33
+# define OMAP_INT_35XX_GPIO_BANK6	34
+# define OMAP_INT_35XX_WDT3		36
+# define OMAP_INT_35XX_GPTIMER1		37
+# define OMAP_INT_35XX_GPTIMER2		38
+# define OMAP_INT_35XX_GPTIMER3		39
+# define OMAP_INT_35XX_GPTIMER4		40
+# define OMAP_INT_35XX_GPTIMER5		41
+# define OMAP_INT_35XX_GPTIMER6		42
+# define OMAP_INT_35XX_GPTIMER7		43
+# define OMAP_INT_35XX_GPTIMER8		44
+# define OMAP_INT_35XX_GPTIMER9		45
+# define OMAP_INT_35XX_GPTIMER10	46
+# define OMAP_INT_35XX_GPTIMER11	47
+# define OMAP_INT_35XX_MG_IRQ		53
+# define OMAP_INT_35XX_MCBSP4_IRQ_TX	54
+# define OMAP_INT_35XX_MCBSP4_IRQ_RX	55
+# define OMAP_INT_35XX_I2C1_IRQ		56
+# define OMAP_INT_35XX_I2C2_IRQ		57
+# define OMAP_INT_35XX_MCBSP1_IRQ_TX	59
+# define OMAP_INT_35XX_MCBSP1_IRQ_RX	60
+# define OMAP_INT_35XX_I2C3_IRQ		61
+# define OMAP_INT_35XX_MCBSP2_IRQ_TX	62
+# define OMAP_INT_35XX_MCBSP2_IRQ_RX	63
+# define OMAP_INT_35XX_MCSPI1_IRQ	65
+# define OMAP_INT_35XX_MCSPI2_IRQ	66
+# define OMAP_INT_35XX_UART1_IRQ	72
+# define OMAP_INT_35XX_UART2_IRQ	73
+# define OMAP_INT_35XX_UART3_IRQ	74
+# define OMAP_INT_35XX_MCBSP5_IRQ_TX	81
+# define OMAP_INT_35XX_MCBSP5_IRQ_RX	82
+# define OMAP_INT_35XX_MMC1_IRQ		83
+# define OMAP_INT_35XX_MS_IRQ		84
+# define OMAP_INT_35XX_MMC2_IRQ		86
+# define OMAP_INT_35XX_MCBSP3_IRQ_TX	89
+# define OMAP_INT_35XX_MCBSP3_IRQ_RX	90
+# define OMAP_INT_35XX_MCSPI3_IRQ	91
+# define OMAP_INT_35XX_HS_USB_MC	92
+# define OMAP_INT_35XX_HS_USB_DMA	93
+# define OMAP_INT_35XX_MMC3_IRQ		94
+# define OMAP_INT_35XX_GPTIMER12	95
+
 
 /* omap_dma.c */
 enum omap_dma_model {
@@ -795,6 +868,7 @@ i2c_bus *omap_i2c_bus(struct omap_i2c_s *s);
 # define cpu_is_omap2420(cpu)		(cpu->mpu_model == omap2420)
 # define cpu_is_omap2430(cpu)		(cpu->mpu_model == omap2430)
 # define cpu_is_omap3430(cpu)		(cpu->mpu_model == omap3430)
+# define cpu_is_omap3530(cpu)		(cpu->mpu_model == omap3530)
 
 # define cpu_is_omap15xx(cpu)		\
         (cpu_is_omap310(cpu) || cpu_is_omap1510(cpu))
@@ -806,7 +880,7 @@ i2c_bus *omap_i2c_bus(struct omap_i2c_s *s);
 # define cpu_class_omap1(cpu)		\
         (cpu_is_omap15xx(cpu) || cpu_is_omap16xx(cpu))
 # define cpu_class_omap2(cpu)		cpu_is_omap24xx(cpu)
-# define cpu_class_omap3(cpu)		cpu_is_omap3430(cpu)
+# define cpu_class_omap3(cpu)		(cpu_is_omap3430(cpu) || cpu_is_omap3530(cpu))
 
 struct omap_mpu_state_s {
     enum omap_mpu_model {
@@ -820,6 +894,7 @@ struct omap_mpu_state_s {
         omap2423,
         omap2430,
         omap3430,
+        omap3530
     } mpu_model;
 
     CPUState *env;
@@ -972,6 +1047,10 @@ struct omap_mpu_state_s *omap310_mpu_init(unsigned long sdram_size,
 
 /* omap2.c */
 struct omap_mpu_state_s *omap2420_mpu_init(unsigned long sdram_size,
+                DisplayState *ds, const char *core);
+
+/* omap3.c */
+struct omap_mpu_state_s *omap3530_mpu_init(unsigned long sdram_size,
                 DisplayState *ds, const char *core);
 
 # if TARGET_PHYS_ADDR_BITS == 32
