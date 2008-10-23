@@ -9,8 +9,17 @@
  * This code is licensed under the GNU GPL v2.
  */
 
+/* 
+ *  Modifications:
+ *      2008-09   ADD MT29F2G16ABC 2Gb, x16 nand flash emulation for beagle board. (yajin)
+ *						   Main differences:		                 
+ *						     (1)OMAP3530 has explict data/address/command registers. 
+ *						     (2)MT29F2G16ABC's address cycle: 5
+ *						     (3)MT29F2G16ABC's data bits:x16
+ */
+ 
 #ifndef NAND_IO
-
+# include <assert.h>
 # include "hw.h"
 # include "flash.h"
 # include "block.h"
@@ -49,6 +58,7 @@ struct nand_flash_s {
     uint8_t manf_id, chip_id;
     int size, pages;
     int page_shift, oob_shift, erase_shift, addr_shift;
+    int bus_width;
     uint8_t *storage;
     BlockDriverState *bdrv;
     int mem_oob;
@@ -78,6 +88,7 @@ struct nand_flash_s {
 # define NAND_4PAGE_ARRAY	0x00000040
 # define NAND_NO_READRDY	0x00000100
 # define NAND_SAMSUNG_LP	(NAND_NO_PADDING | NAND_COPYBACK)
+# define NAND_MT29F2G16_LP   0x80000000
 
 # define NAND_IO
 
@@ -178,7 +189,7 @@ struct nand_info_s {
     /* 2 Gigabit */
     [0xaa] = { 256,	8,	0, 0, LP_OPTIONS },
     [0xda] = { 256,	8,	0, 0, LP_OPTIONS },
-    [0xba] = { 256,	16,	0, 0, LP_OPTIONS16 },
+    [0xba] = { 256,	16,	0, 0, NAND_BUSWIDTH_16|NAND_MT29F2G16_LP },
     [0xca] = { 256,	16,	0, 0, LP_OPTIONS16 },
 
     /* 4 Gigabit */
@@ -438,6 +449,114 @@ uint8_t nand_getio(struct nand_flash_s *s)
     return *(s->ioaddr ++);
 }
 
+void nand_write_command(struct nand_flash_s *s, uint8_t value)
+{
+	/*00-30*/
+	if (s->cmd == NAND_CMD_READ0 && value == NAND_CMD_LPREAD2)
+		return;
+	if (value == NAND_CMD_RANDOMREAD1) 
+	{
+		s->addr &= ~((1 << s->addr_shift) - 1);
+		s->addrlen = 0;
+       return;
+     }
+	if (value == NAND_CMD_READ0)
+	{
+		s->offset = 0;
+	}
+	s->cmd = value;
+	if (s->cmd == NAND_CMD_READSTATUS ||
+        s->cmd == NAND_CMD_BLOCKERASE1 ||
+        s->cmd == NAND_CMD_NOSERIALREAD2 ||
+        s->cmd == NAND_CMD_RANDOMREAD2 ||
+        s->cmd == NAND_CMD_RESET)
+            nand_command(s);
+
+        if (s->cmd != NAND_CMD_RANDOMREAD2) 
+        {
+            s->addrlen = 0;
+            s->addr = 0;
+        }
+	
+}
+
+void nand_write_address(struct nand_flash_s *s, uint8_t value)
+{
+	int addr_cycle;
+	uint16_t addr;
+
+	s->addr |= ((uint64_t)value) << (s->addrlen * 8);
+	s->addrlen ++;
+	//printf("s->addr %llx addrlen %x value %x  \n",s->addr,s->addrlen,value);
+	if (s->addrlen == 1 && s->cmd == NAND_CMD_READID)
+    	nand_command(s);
+
+	/*TODO:determine the address cycle according to chipsize*/
+	assert(s->size=(256<<20));
+	addr_cycle=5;
+
+	 if (s->addrlen == addr_cycle && (
+         s->cmd == NAND_CMD_READ0 ||
+         s->cmd == NAND_CMD_PAGEPROGRAM1))
+	 {
+	 	/*chage it to byte address*/
+		addr = s->addr & 0xffff;
+	 	addr = addr<<s->bus_width;
+	 	s->addr &= 0xffffffffffff0000LL;
+	 	s->addr += addr;
+	 	nand_command(s);
+	 }
+            
+}
+
+/*16 bit operation*/
+void nand_write_data16(struct nand_flash_s *s, uint16_t value)
+{
+	 if (s->cmd == NAND_CMD_PAGEPROGRAM1) 
+	 {
+        if (s->iolen < (1 << s->page_shift) + (1 << s->oob_shift))
+        {
+        	s->io[s->iolen ++] = value&0xff;
+        	s->io[s->iolen ++] = (value>>8)&0xff;
+        }
+    }
+	 else if ( s->cmd == NAND_CMD_COPYBACKPRG1) 
+    {
+        if ((s->addr & ((1 << s->addr_shift) - 1)) <
+                (1 << s->page_shift) + (1 << s->oob_shift)) 
+       {
+            s->io[s->iolen + (s->addr & ((1 << s->addr_shift) - 1))] =value&0xff;
+            s->io[s->iolen + (s->addr & ((1 << s->addr_shift) - 1))+1] = (value>>8)&0xff;
+            s->addr ++;
+        }
+    }
+}
+
+uint16_t nand_read_data16(struct nand_flash_s *s)
+{
+	int offset;
+	uint16_t ret;
+
+    /* Allow sequential reading */
+    if (!s->iolen && s->cmd == NAND_CMD_READ0) 
+    {
+        offset = (s->addr & ((1 << s->addr_shift) - 1)) + s->offset;
+        s->offset = 0;
+        //printf("s->addr  %llx offset %x  \n",s->addr,offset);
+        s->blk_load(s, s->addr, offset);
+        s->iolen = (1 << s->page_shift) + (1 << s->oob_shift) - offset;
+    }
+
+    if (s->iolen <= 0)
+        return 0;
+
+    s->iolen -=2 ;
+    ret = *((uint16_t *)s->ioaddr);
+    s->ioaddr += 2;
+    return ret;
+}
+
+
 struct nand_flash_s *nand_init(int manf_id, int chip_id)
 {
     int pagesize;
@@ -456,7 +575,13 @@ struct nand_flash_s *nand_init(int manf_id, int chip_id)
     s->manf_id = manf_id;
     s->chip_id = chip_id;
     s->size = nand_flash_ids[s->chip_id].size << 20;
-    if (nand_flash_ids[s->chip_id].options & NAND_SAMSUNG_LP) {
+    s->bus_width =1;
+    if (nand_flash_ids[s->chip_id].options & NAND_BUSWIDTH_16)
+    	s->bus_width =2;
+    if ((nand_flash_ids[s->chip_id].options & NAND_SAMSUNG_LP)||
+    	 (nand_flash_ids[s->chip_id].options & NAND_MT29F2G16_LP)
+		)
+    {
         s->page_shift = 11;
         s->erase_shift = 6;
     } else {
