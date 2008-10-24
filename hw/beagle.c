@@ -151,7 +151,7 @@ static int beagle_nand_read_page(struct beagle_s *s,uint8_t *buf, uint16_t page_
  void beagle_rom_emu(struct beagle_s *s)
 {
 	uint32_t	loadaddr, len;
-	uint8_t nand_page[0x800],*internal_ram_base;
+	uint8_t nand_page[0x800],*load_dest;
 	uint32_t nand_pages,i;
 
 	/* The first two words(8 bytes) in first nand flash page have special meaning.
@@ -164,9 +164,12 @@ static int beagle_nand_read_page(struct beagle_s *s,uint8_t *buf, uint16_t page_
 	printf("len %x loadaddr %x \n ",len,loadaddr);
 
 	/*put the first page into internal ram*/
-	internal_ram_base=phys_ram_base +beagle_binfo.ram_size;
-	memcpy(internal_ram_base,nand_page+8,0x800-8);
-	internal_ram_base += 0x800-8;
+	load_dest = phys_ram_base +beagle_binfo.ram_size;
+	load_dest += loadaddr-OMAP3_SRAM_BASE;
+	printf("load_dest %x phys_ram_base %x \n",load_dest,phys_ram_base);
+	
+	memcpy(load_dest,nand_page+8,0x800-8);
+	load_dest += 0x800-8;
 
 	nand_pages = len/0x800;
 	if (len%0x800!=0)
@@ -175,11 +178,10 @@ static int beagle_nand_read_page(struct beagle_s *s,uint8_t *buf, uint16_t page_
 	for (i=1;i<nand_pages;i++)
 	{
 		beagle_nand_read_page(s,nand_page,i*0x800);
-		memcpy(internal_ram_base,nand_page,0x800);
-		internal_ram_base += 0x800;
+		memcpy(load_dest,nand_page,0x800);
+		load_dest += 0x800;
 	}
-
-	s->cpu->env->regs[15] = loadaddr;
+		s->cpu->env->regs[15] = loadaddr;
 }
 
 static void beagle_init(ram_addr_t ram_size, int vga_ram_size,
