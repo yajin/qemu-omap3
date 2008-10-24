@@ -182,7 +182,9 @@ static int io_mem_watch;
 #endif
 
 /* log support */
-static const char *logfilename = "/tmp/qemu.log";
+//static const char *logfilename = "/tmp/qemu.log";
+static const char *logfilename = "qemu.log";
+
 FILE *logfile;
 int loglevel;
 static int log_append = 0;
@@ -851,6 +853,7 @@ TranslationBlock *tb_gen_code(CPUState *env,
     int code_gen_size;
 
     phys_pc = get_phys_addr_code(env, pc);
+    printf("pc %x phys_pc %x\n",pc,phys_pc);
     tb = tb_alloc(pc);
     if (!tb) {
         /* flush must be done */

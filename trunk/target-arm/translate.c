@@ -5639,6 +5639,7 @@ static void disas_arm_insn(CPUState * env, DisasContext *s)
     TCGv addr;
 
     insn = ldl_code(s->pc);
+    printf("s->pc %x insn %x\n",s->pc,insn);
     s->pc += 4;
 
     /* M variants do not implement ARM mode.  */
@@ -5951,10 +5952,19 @@ static void disas_arm_insn(CPUState * env, DisasContext *s)
             store_reg(s, rd, tmp);
             break;
         case 7: /* bkpt */
-            gen_set_condexec(s);
-            gen_set_pc_im(s->pc - 4);
-            gen_exception(EXCP_BKPT);
-            s->is_jmp = DISAS_JUMP;
+        	 if ((env->cp15.c0_c2[4] & 0xf000)&&((insn&0xff000f0)==0x1600070))
+        	 {
+        	  		/*SMC.we do not support SMC currently. JUST take it as nop*/
+        	  		 printf("smc %x  insn %x \n",s->pc,insn);
+        	 }
+        	 else
+        	 {
+        	 	 printf("bkpt %x  insn %x \n",s->pc,insn);
+            	gen_set_condexec(s);
+            	gen_set_pc_im(s->pc - 4);
+            	gen_exception(EXCP_BKPT);
+            	s->is_jmp = DISAS_JUMP;
+        	 }
             break;
         case 0x8: /* signed multiply */
         case 0xa:

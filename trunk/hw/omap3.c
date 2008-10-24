@@ -48,10 +48,14 @@ struct omap_mpu_state_s *omap3530_mpu_init(unsigned long sdram_size,
     s->sram_size = OMAP3530_SRAM_SIZE;
 
      /* Memory-mapped stuff */
+     q2_base = qemu_ram_alloc(s->sdram_size);
     cpu_register_physical_memory(OMAP3_Q2_BASE, s->sdram_size,
-                    (q2_base = qemu_ram_alloc(s->sdram_size)) | IO_MEM_RAM);
+                    (q2_base | IO_MEM_RAM));
+    sram_base = qemu_ram_alloc(s->sram_size);
     cpu_register_physical_memory(OMAP3_SRAM_BASE, s->sram_size,
-                    (sram_base = qemu_ram_alloc(s->sram_size)) | IO_MEM_RAM);
+                    ( sram_base| IO_MEM_RAM));
+
+    printf("sram_base %x\n",sram_base);
 
     //s->gpmc = omap_gpmc_init(0x6e000000, s->irq[0][OMAP_INT_35XX_GPMC_IRQ]);
 
