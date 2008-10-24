@@ -18,6 +18,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#ifndef _EXEC_ALL_H_
+#define _EXEC_ALL_H_
 /* allow to see translation results - the slowdown should be negligible, so we leave it */
 #define DEBUG_DISAS
 
@@ -324,11 +326,8 @@ static inline target_ulong get_phys_addr_code(CPUState *env1, target_ulong addr)
 
     page_index = (addr >> TARGET_PAGE_BITS) & (CPU_TLB_SIZE - 1);
     mmu_idx = cpu_mmu_index(env1);
-    printf("get_phys_addr_code  \n");
-    printf("addr %x  env1->tlb_table[mmu_idx][page_index].addr_code %x \n",addr,env1->tlb_table[mmu_idx][page_index].addr_code);
     if (unlikely(env1->tlb_table[mmu_idx][page_index].addr_code !=
                  (addr & TARGET_PAGE_MASK))) {
-         printf("exception  \n");
         ldub_code(addr);
     }
     pd = env1->tlb_table[mmu_idx][page_index].addr_code & ~TARGET_PAGE_MASK;
@@ -339,7 +338,7 @@ static inline target_ulong get_phys_addr_code(CPUState *env1, target_ulong addr)
         cpu_abort(env1, "Trying to execute code outside RAM or ROM at 0x" TARGET_FMT_lx "\n", addr);
 #endif
     }
-    printf("addr + env1->tlb_table[mmu_idx][page_index].addend  %x \n",addr + env1->tlb_table[mmu_idx][page_index].addend);
+
     return addr + env1->tlb_table[mmu_idx][page_index].addend - (unsigned long)phys_ram_base;
 }
 
@@ -387,5 +386,7 @@ static inline int kqemu_is_ok(CPUState *env)
             ((env->hflags & HF_CPL_MASK) == 3 &&
              (env->eflags & IOPL_MASK) != IOPL_MASK)));
 }
+
+#endif
 
 #endif
