@@ -416,6 +416,7 @@ void omap_gpmc_attach(struct omap_gpmc_s *s, int cs, int iomemtype,
 # define OMAP_INT_243X_CARKIT		94
 # define OMAP_INT_34XX_GPTIMER12	95
 
+
 /*
  * OMAP-35XX common IRQ numbers
  */
