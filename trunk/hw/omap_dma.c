@@ -496,7 +496,14 @@ enum {
     omap_dma_intr_block,
     __omap_dma_intr_last,
 };
-
+#define INTR_CHECK(cond, id, nelements)	\
+    if (cond) {			\
+        elements[id] = nelements;	\
+        if (elements[id] < min_elems)	\
+            min_elems = elements[id];	\
+    } else				\
+        elements[id] = INT_MAX
+        
 static void omap_dma_transfer_setup(struct soc_dma_ch_s *dma)
 {
     struct omap_dma_port_if_s *src_p, *dest_p;
@@ -526,19 +533,13 @@ static void omap_dma_transfer_setup(struct soc_dma_ch_s *dma)
 
     /* Check all the conditions that terminate the transfer starting
      * with those that can occur the soonest.  */
-#define INTR_CHECK(cond, id, nelements)	\
-    if (cond) {			\
-        elements[id] = nelements;	\
-        if (elements[id] < min_elems)	\
-            min_elems = elements[id];	\
-    } else				\
-        elements[id] = INT_MAX;
+
 
     /* Elements */
     INTR_CHECK(
                     ch->sync && !ch->fs && !ch->bs,
                     omap_dma_intr_element_sync,
-                    1)
+                    1);
 
     /* Frames */
     /* TODO: for transfers where entire frames can be read and written
@@ -550,39 +551,39 @@ static void omap_dma_transfer_setup(struct soc_dma_ch_s *dma)
                     ((a->frame < a->frames - 1) || !a->element),
                     omap_dma_intr_last_frame,
                     (a->frames - a->frame - 2) * a->elements +
-                    (a->elements - a->element + 1))
+                    (a->elements - a->element + 1));
     INTR_CHECK(
                     ch->interrupts & HALF_FRAME_INTR,
                     omap_dma_intr_half_frame,
                     (a->elements >> 1) +
                     (a->element >= (a->elements >> 1) ? a->elements : 0) -
-                    a->element)
+                    a->element);
     INTR_CHECK(
                     ch->sync && ch->fs && (ch->interrupts & END_FRAME_INTR),
                     omap_dma_intr_frame,
-                    a->elements - a->element)
+                    a->elements - a->element);
     INTR_CHECK(
                     ch->sync && ch->fs && !ch->bs,
                     omap_dma_intr_frame_sync,
-                    a->elements - a->element)
+                    a->elements - a->element);
 
     /* Packets */
     INTR_CHECK(
                     ch->fs && ch->bs &&
                     (ch->interrupts & END_PKT_INTR) && !ch->src_sync,
                     omap_dma_intr_packet,
-                    a->pck_elements - a->pck_element)
+                    a->pck_elements - a->pck_element);
     INTR_CHECK(
                     ch->fs && ch->bs && ch->sync,
                     omap_dma_intr_packet_sync,
-                    a->pck_elements - a->pck_element)
+                    a->pck_elements - a->pck_element);
 
     /* Blocks */
     INTR_CHECK(
                     1,
                     omap_dma_intr_block,
                     (a->frames - a->frame - 1) * a->elements +
-                    (a->elements - a->element))
+                    (a->elements - a->element));
 
     dma->bytes = min_elems * ch->data_type;
 
