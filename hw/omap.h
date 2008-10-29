@@ -95,6 +95,11 @@ struct omap_prcm_s *omap_prcm_init(struct omap_target_agent_s *ta,
                 qemu_irq mpu_int, qemu_irq dsp_int, qemu_irq iva_int,
                 struct omap_mpu_state_s *mpu);
 
+struct omap3_prm_s;
+struct omap3_prm_s *omap3_prm_init(struct omap_target_agent_s *ta,
+                qemu_irq mpu_int, qemu_irq dsp_int, qemu_irq iva_int,
+                struct omap_mpu_state_s *mpu);
+
 struct omap_sysctl_s;
 struct omap_sysctl_s *omap_sysctl_init(struct omap_target_agent_s *ta,
                 omap_clk iclk, struct omap_mpu_state_s *mpu);
@@ -1040,6 +1045,11 @@ struct omap_mpu_state_s {
     struct omap_dss_s *dss;
 
     struct omap_eac_s *eac;
+
+	/*omap3 stuff*/
+	struct omap3_pm_s *omap3_pm;
+	
+    
 };
 
 /* omap1.c */
@@ -1231,5 +1241,37 @@ inline static int debug_register_io_memory(int io_index,
 int l4_register_io_memory(int io_index, CPUReadMemoryFunc **mem_read,
                 CPUWriteMemoryFunc **mem_write, void *opaque);
 # endif
+
+
+/* L4 Interconnect */
+struct omap_target_agent_s {
+    struct omap_l4_s *bus;
+    int regions;
+    struct omap_l4_region_s *start;
+    target_phys_addr_t base;
+    uint32_t component;
+    uint32_t control;
+    uint32_t control_h;  /*omap3*/
+    uint32_t status;
+};
+
+struct omap_l4_s {
+    target_phys_addr_t base;
+    int ta_num;
+    struct omap_target_agent_s ta[0];
+};
+
+struct omap_l4_region_s {
+    target_phys_addr_t offset;
+    size_t size;
+    int access;
+};
+struct omap_l4_agent_info_s {
+    int ta;
+    int region;
+    int regions;
+    int ta_region;
+};
+
 
 #endif /* hw_omap_h */

@@ -37,6 +37,7 @@ struct clk {
 #define CLOCK_IN_OMAP242X	(1 << 14)
 #define CLOCK_IN_OMAP243X	(1 << 15)
 #define CLOCK_IN_OMAP343X	(1 << 16)
+#define CLOCK_IN_OMAP353X	(1 << 17)   
     uint32_t flags;
     int id;
 
@@ -945,6 +946,22 @@ static struct clk omapctrl_clk = {
     .parent	= &core_l4_iclk,
 };
 
+
+/*OMAP3 Clocks*/
+static struct clk omap3_sys_32k = {
+    .name	= "omap3_sys_32k",
+    .rate	= 32768,
+    .flags	= CLOCK_IN_OMAP353X,
+};
+
+static struct clk omap3_sys_xtalin = {
+    .name	= "omap3_sys_xtalin",
+    .rate	= 12000000,
+    .flags	= CLOCK_IN_OMAP353X,
+};
+
+
+
 static struct clk *onchip_clks[] = {
     /* OMAP 1 */
 
@@ -1087,6 +1104,10 @@ static struct clk *onchip_clks[] = {
     &dss_l3_iclk,
     &dss_l4_iclk,
     &omapctrl_clk,
+
+    /*OMAP3*/
+    &omap3_sys_32k,
+    &omap3_sys_xtalin,
 
     0
 };
@@ -1249,6 +1270,8 @@ void omap_clk_init(struct omap_mpu_state_s *mpu)
         flag = CLOCK_IN_OMAP243X;
     else if (cpu_is_omap3430(mpu))
         flag = CLOCK_IN_OMAP243X;
+    else if (cpu_is_omap3530(mpu))
+    	flag = CLOCK_IN_OMAP353X;
     else
         return;
 

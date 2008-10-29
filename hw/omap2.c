@@ -2199,22 +2199,6 @@ struct omap_sti_s *omap_sti_init(struct omap_target_agent_s *ta,
     return s;
 }
 
-/* L4 Interconnect */
-struct omap_target_agent_s {
-    struct omap_l4_s *bus;
-    int regions;
-    struct omap_l4_region_s *start;
-    target_phys_addr_t base;
-    uint32_t component;
-    uint32_t control;
-    uint32_t status;
-};
-
-struct omap_l4_s {
-    target_phys_addr_t base;
-    int ta_num;
-    struct omap_target_agent_s ta[0];
-};
 
 #ifdef L4_MUX_HACK
 static int omap_l4_io_entries;
@@ -2386,11 +2370,7 @@ static CPUWriteMemoryFunc *omap_l4ta_writefn[] = {
 #define L4TA(n)		(n)
 #define L4TAO(n)	((n) + 39)
 
-static struct omap_l4_region_s {
-    target_phys_addr_t offset;
-    size_t size;
-    int access;
-} omap_l4_region[125] = {
+static struct omap_l4_region_s omap_l4_region[125] = {
     [  1] = { 0x40800,  0x800, 32          }, /* Initiator agent */
     [  2] = { 0x41000, 0x1000, 32          }, /* Link agent */
     [  0] = { 0x40000,  0x800, 32          }, /* Address and protection */
@@ -2518,12 +2498,7 @@ static struct omap_l4_region_s {
     [124] = { 0xb3000, 0x1000, 32 | 16 | 8 }, /* L4TA39 */
 };
 
-static struct omap_l4_agent_info_s {
-    int ta;
-    int region;
-    int regions;
-    int ta_region;
-} omap_l4_agent_info[54] = {
+static struct omap_l4_agent_info_s omap_l4_agent_info[54] = {
     { 0,           0, 3, 2 }, /* L4IA initiatior agent */
     { L4TAO(1),    3, 2, 1 }, /* Control and pinout module */
     { L4TAO(2),    5, 2, 1 }, /* 32K timer */
