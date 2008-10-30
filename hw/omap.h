@@ -1031,6 +1031,7 @@ struct omap_mpu_state_s {
         target_phys_addr_t base;
         uint32_t val;
         uint16_t readh;
+        uint32_t sysconfig; /*OMAP3*/
     } synctimer;
 
     struct omap_prcm_s *prcm;
@@ -1047,8 +1048,8 @@ struct omap_mpu_state_s {
     struct omap_eac_s *eac;
 
 	/*omap3 stuff*/
-	struct omap3_pm_s *omap3_pm;
-	
+    struct omap3_prm_s *omap3_prm;
+
     
 };
 

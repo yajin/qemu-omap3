@@ -512,7 +512,8 @@ static uint32_t omap_synctimer_readw(void *opaque, target_phys_addr_t addr)
     switch (offset) {
     case 0x00:	/* 32KSYNCNT_REV */
         return 0x21;
-
+    case 0x04:
+    	 return s->sysconfig;
     case 0x10:	/* CR */
         return omap_synctimer_read(s) - s->val;
     }
@@ -544,7 +545,20 @@ static CPUReadMemoryFunc *omap_synctimer_readfn[] = {
 static void omap_synctimer_write(void *opaque, target_phys_addr_t addr,
                 uint32_t value)
 {
+	
+    struct omap_synctimer_s *s = (struct omap_synctimer_s *) opaque;
+    int offset = addr - s->base;
+
+    switch (offset) {
+    case 0x04:   /*omap3*/
+    	 s->sysconfig = value & 0xc;
+    	 break;
+    default:
+        OMAP_BAD_REG(addr);
+    }
+
     OMAP_BAD_REG(addr);
+
 }
 
 static CPUWriteMemoryFunc *omap_synctimer_writefn[] = {

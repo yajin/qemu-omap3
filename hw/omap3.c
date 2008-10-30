@@ -144,6 +144,10 @@ struct omap_target_agent_s *omap3_l4ta_get(struct omap_l4_s *bus, int cs)
 
 
 struct omap3_prm_s {
+	target_phys_addr_t base;
+    qemu_irq irq[3];
+    struct omap_mpu_state_s *mpu;
+    
 	/*IVA2_PRM Register*/
 	uint32_t rm_rstctrl_iva2;               /*0x4830 6050*/
 	uint32_t rm_rstst_iva2;                 /*0x4830 6058*/
@@ -369,7 +373,7 @@ static void omap3_prm_coldreset(struct omap3_prm_s *s)
 	s->prm_voltsetup1 = 0x0;
 	s->prm_voltoffset = 0x0;
 	s->prm_clksetup = 0x0;
-	s->prm_polctrl = 0xc;
+	s->prm_polctrl = 0xa;
 	s->prm_voltsetup2 = 0x0;
 	
 	s->rm_rstst_neon = 0x1;
@@ -389,6 +393,53 @@ static void omap3_prm_coldreset(struct omap3_prm_s *s)
 	s->rm_prepwstst_usbhost = 0x0;
 	
 }
+
+static uint32_t omap3_prm_read(void *opaque, target_phys_addr_t addr)
+{
+    struct omap3_prm_s *s = (struct omap3_prm_s *) opaque;
+    int offset = addr - s->base;
+    uint32_t ret;
+
+     switch (offset) 
+     {
+     	case 0x1270:
+     		return s->prm_clksrc_ctrl;
+     	default:
+     		printf("omap3_prm_read addr %x \n",addr);
+     		exit(-1);
+     }
+}
+
+static void omap3_prm_write(void *opaque, target_phys_addr_t addr,
+                uint32_t value)
+{
+    struct omap3_prm_s *s = (struct omap3_prm_s *) opaque;
+    int offset = addr - s->base;
+
+    switch (offset) 
+     {
+     	case 0x1270:
+     		s->prm_clksrc_ctrl = value &(0xd8);
+     		break;
+     	default:
+     		printf("omap3_prm_write addr %x value %x \n",addr,value);
+     		exit(-1);
+     }
+}
+
+
+static CPUReadMemoryFunc *omap3_prm_readfn[] = {
+    omap_badwidth_read32,
+    omap_badwidth_read32,
+    omap3_prm_read,
+};
+
+static CPUWriteMemoryFunc *omap3_prm_writefn[] = {
+    omap_badwidth_write32,
+    omap_badwidth_write32,
+    omap3_prm_write,
+};
+
 struct omap3_prm_s *omap3_prm_init(struct omap_target_agent_s *ta,
                 qemu_irq mpu_int, qemu_irq dsp_int, qemu_irq iva_int,
                 struct omap_mpu_state_s *mpu)
@@ -405,7 +456,7 @@ struct omap3_prm_s *omap3_prm_init(struct omap_target_agent_s *ta,
     iomemtype = l4_register_io_memory(0, omap3_prm_readfn,
                     omap3_prm_writefn, s);
     s->base = omap_l4_attach(ta, 0, iomemtype);
-    //omap3_l4_attach(ta, 1, iomemtype);
+    omap_l4_attach(ta, 1, iomemtype);
 
     return s;
 }
@@ -444,10 +495,13 @@ struct omap_mpu_state_s *omap3530_mpu_init(unsigned long sdram_size,
 
     s->l4 = omap_l4_init(OMAP3_L4_BASE, sizeof(omap3_l4_agent_info));
 
-    /*omap_synctimer_init(omap3_l4ta_get(s->l4, 1), s,
-                    omap_findclk(s, "clk32-kHz"),
-                    omap_findclk(s, "core_l4_iclk"));
-	*/
+    s->omap3_prm = omap3_prm_init(omap3_l4ta_get(s->l4, 2),
+                   NULL, NULL, NULL, s);
+
+    //omap_synctimer_init(omap3_l4ta_get(s->l4, 1), s,
+     //              omap_findclk(s, "omap3_sys_32k"),
+      //              NULL);
+	
 
     return s;    
 }
