@@ -951,16 +951,14 @@ static struct clk omapctrl_clk = {
 static struct clk omap3_sys_32k = {
     .name	= "omap3_sys_32k",
     .rate	= 32768,
-    .flags	= CLOCK_IN_OMAP353X,
+    .flags	= CLOCK_IN_OMAP353X  | ALWAYS_ENABLED,
 };
 
 static struct clk omap3_sys_xtalin = {
     .name	= "omap3_sys_xtalin",
     .rate	= 12000000,
-    .flags	= CLOCK_IN_OMAP353X,
+    .flags	= CLOCK_IN_OMAP353X  | ALWAYS_ENABLED,
 };
-
-
 
 static struct clk *onchip_clks[] = {
     /* OMAP 1 */
