@@ -975,13 +975,13 @@ static struct clk omap3_sys_clk = {
     .name	= "omap3_sys_clk",
     .rate	= 12000000,
     .flags	= CLOCK_IN_OMAP353X  | ALWAYS_ENABLED,
-    .parent = omap3_sys_xtalin;
+    .parent = &omap3_sys_xtalin,
 };
 static struct clk omap3_32k_fclk = {
     .name	= "omap3_32k_fclk",
     .rate	= 32768,
     .flags	= CLOCK_IN_OMAP353X  | ALWAYS_ENABLED,
-    .parent = omap3_sys_32k;
+    .parent = &omap3_sys_32k,
 };
 
 

@@ -99,6 +99,10 @@ struct omap3_prm_s;
 struct omap3_prm_s *omap3_prm_init(struct omap_target_agent_s *ta,
                 qemu_irq mpu_int, qemu_irq dsp_int, qemu_irq iva_int,
                 struct omap_mpu_state_s *mpu);
+struct omap3_cm_s;
+struct omap3_cm_s *omap3_cm_init(struct omap_target_agent_s *ta,
+                qemu_irq mpu_int, qemu_irq dsp_int, qemu_irq iva_int,
+                struct omap_mpu_state_s *mpu);
 
 struct omap_sysctl_s;
 struct omap_sysctl_s *omap_sysctl_init(struct omap_target_agent_s *ta,
@@ -1049,6 +1053,7 @@ struct omap_mpu_state_s {
 
 	/*omap3 stuff*/
     struct omap3_prm_s *omap3_prm;
+	struct omap3_cm_s *omap3_cm;
 
     
 };
