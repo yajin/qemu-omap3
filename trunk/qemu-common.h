@@ -70,6 +70,13 @@ typedef void QEMUBHFunc(void *opaque);
 
 QEMUBH *qemu_bh_new(QEMUBHFunc *cb, void *opaque);
 void qemu_bh_schedule(QEMUBH *bh);
+/* Bottom halfs that are scheduled from a bottom half handler are instantly
+ * invoked.  This can create an infinite loop if a bottom half handler
+ * schedules itself.  qemu_bh_schedule_idle() avoids this infinite loop by
+ * ensuring that the bottom half isn't executed until the next main loop
+ * iteration.
+ */
+void qemu_bh_schedule_idle(QEMUBH *bh);
 void qemu_bh_cancel(QEMUBH *bh);
 void qemu_bh_delete(QEMUBH *bh);
 int qemu_bh_poll(void);
@@ -82,6 +89,7 @@ int qemu_timedate_diff(struct tm *tm);
 /* cutils.c */
 void pstrcpy(char *buf, int buf_size, const char *str);
 char *pstrcat(char *buf, int buf_size, const char *s);
+char *pstrdup(const char *str, size_t buf_size);
 int strstart(const char *str, const char *val, const char **ptr);
 int stristart(const char *str, const char *val, const char **ptr);
 time_t mktimegm(struct tm *tm);

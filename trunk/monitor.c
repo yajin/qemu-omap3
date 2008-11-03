@@ -75,7 +75,7 @@ static int term_outbuf_index;
 
 static void monitor_start_input(void);
 
-CPUState *mon_cpu = NULL;
+static CPUState *mon_cpu = NULL;
 
 void term_flush(void)
 {
@@ -1469,6 +1469,8 @@ static const term_cmd_t info_cmds[] = {
       "", "show the version of qemu" },
     { "network", "", do_info_network,
       "", "show the network state" },
+    { "chardev", "", qemu_chr_info,
+      "", "show the character devices" },
     { "block", "", do_info_block,
       "", "show the block devices" },
     { "blockstats", "", do_info_blockstats,

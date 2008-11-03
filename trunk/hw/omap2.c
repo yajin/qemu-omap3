@@ -2188,7 +2188,7 @@ static CPUWriteMemoryFunc *omap_sti_fifo_writefn[] = {
     omap_badwidth_write8,
 };
 
-struct omap_sti_s *omap_sti_init(struct omap_target_agent_s *ta,
+static struct omap_sti_s *omap_sti_init(struct omap_target_agent_s *ta,
                 target_phys_addr_t channel_base, qemu_irq irq, omap_clk clk,
                 CharDriverState *chr)
 {
@@ -2199,7 +2199,7 @@ struct omap_sti_s *omap_sti_init(struct omap_target_agent_s *ta,
     s->irq = irq;
     omap_sti_reset(s);
 
-    s->chr = chr ?: qemu_chr_open("null");
+    s->chr = chr ?: qemu_chr_open("null", "null");
 
     iomemtype = l4_register_io_memory(0, omap_sti_readfn,
                     omap_sti_writefn, s);
