@@ -210,6 +210,5 @@ QEMUMachine beagle_machine = {
     .desc =     "Beagle board (OMAP3530)",
     .init =     beagle_init,
     .ram_require =     (0x08000000 +  OMAP3530_SRAM_SIZE) | RAMSIZE_FIXED,
-    .max_cpus = 1,
 };
 
