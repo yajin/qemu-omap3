@@ -509,7 +509,7 @@ struct omap3_prm_s {
 	
 };
 
-static void omap3_prm_coldreset(struct omap3_prm_s *s)
+static void omap3_prm_reset(struct omap3_prm_s *s)
 {
 	s->rm_rstctrl_iva2 = 0x7;
 	s->rm_rstst_iva2 = 0x1;
@@ -683,7 +683,7 @@ struct omap3_prm_s *omap3_prm_init(struct omap_target_agent_s *ta,
     s->irq[1] = dsp_int;
     s->irq[2] = iva_int;
     s->mpu = mpu;
-    omap3_prm_coldreset(s);
+    omap3_prm_reset(s);
 
     iomemtype = l4_register_io_memory(0, omap3_prm_readfn,
                     omap3_prm_writefn, s);
@@ -827,7 +827,7 @@ struct omap3_cm_s {
 };
 
 
-static void omap3_cm_coldreset(struct omap3_cm_s *s)
+static void omap3_cm_reset(struct omap3_cm_s *s)
 {
 	s->cm_fclken_iva2 = 0x0;
 	s->cm_clken_pll_iva2 = 0x11;
@@ -999,7 +999,7 @@ struct omap3_cm_s *omap3_cm_init(struct omap_target_agent_s *ta,
     s->irq[1] = dsp_int;
     s->irq[2] = iva_int;
     s->mpu = mpu;
-    omap3_cm_coldreset(s);
+    omap3_cm_reset(s);
 
     iomemtype = l4_register_io_memory(0, omap3_cm_readfn,
                     omap3_cm_writefn, s);
@@ -1008,6 +1008,11 @@ struct omap3_cm_s *omap3_cm_init(struct omap_target_agent_s *ta,
 
     return s;
 }
+
+
+
+
+
 
 struct omap_mpu_state_s *omap3530_mpu_init(unsigned long sdram_size,
                 DisplayState *ds, const char *core)
