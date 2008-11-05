@@ -1054,6 +1054,7 @@ struct omap_mpu_state_s {
 	/*omap3 stuff*/
     struct omap3_prm_s *omap3_prm;
 	struct omap3_cm_s *omap3_cm;
+	struct omap3_wdt_s *omap3_mpu_wdt;
 
     
 };
