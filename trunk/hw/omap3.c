@@ -340,6 +340,7 @@ static struct omap_l4_agent_info_s omap3_l4_agent_info[ ] =
 	{0, 0, 2, 1 }, 			/* System Control module */
 	{1, 5, 3, 2 }, 			/* CM */
 	{2, 77, 3, 2 }, 			/* PRM */
+	{3, 82, 2, 1 }, 			/* PRM */
 };
 
 struct omap_target_agent_s *omap3_l4ta_get(struct omap_l4_s *bus, int cs)
@@ -630,7 +631,7 @@ static uint32_t omap3_prm_read(void *opaque, target_phys_addr_t addr)
 {
     struct omap3_prm_s *s = (struct omap3_prm_s *) opaque;
     int offset = addr - s->base;
-    uint32_t ret;
+    //uint32_t ret;
 
      switch (offset) 
      {
@@ -945,17 +946,49 @@ static uint32_t omap3_cm_read(void *opaque, target_phys_addr_t addr)
 {
     struct omap3_cm_s *s = (struct omap3_cm_s *) opaque;
     int offset = addr - s->base;
-    uint32_t ret;
+    //uint32_t ret;
 
      switch (offset) 
      {
-     	//case 0x1270:
-     	//	return s->prm_clksrc_ctrl;
+     	case 0xc00:   /*CM_FCLKEN_WKUP*/
+     		return s->cm_fclken_wkup;
+     	case 0xc10:    /*CM_ICLKEN_WKUP*/
+     		return s->cm_iclken_wkup;
+     	case 0xc20:    /*CM_IDLEST_WKUP*/
+     		/*TODO: Check whether the timer can be accessed.*/
+     		return 0x0;
      	default:
      		printf("omap3_cm_read addr %x \n",addr);
      		exit(-1);
      }
 }
+
+static inline void omap3_cm_fclken_wkup_update(struct omap_mpu_state_s *s,
+                uint32_t value)
+{
+	
+	if (value & 0x28)
+     	omap_clk_onoff(omap_findclk(s,"omap3_wkup_32k_fclk"), 1);
+    else
+    	omap_clk_onoff(omap_findclk(s,"omap3_wkup_32k_fclk"), 0);
+
+    if (value &0x1)
+    	omap_clk_onoff(omap_findclk(s,"omap3_gp1_fclk"), 1);
+    else
+    	omap_clk_onoff(omap_findclk(s,"omap3_gp1_fclk"), 0);
+
+}
+static inline void omap3_cm_iclken_wkup_update(struct omap_mpu_state_s *s,
+                uint32_t value)
+{
+	
+	if (value & 0x3f)
+     	omap_clk_onoff(omap_findclk(s,"omap3_wkup_l4_iclk"), 1);
+    else
+    	omap_clk_onoff(omap_findclk(s,"omap3_wkup_l4_iclk"), 0);
+
+}
+
 
 static void omap3_cm_write(void *opaque, target_phys_addr_t addr,
                 uint32_t value)
@@ -965,9 +998,18 @@ static void omap3_cm_write(void *opaque, target_phys_addr_t addr,
 
     switch (offset) 
      {
-     	//case 0x1270:
-     	//	s->prm_clksrc_ctrl = value &(0xd8);
-     	//	break;
+     	case 0xc20:   /*CM_IDLEST_WKUP*/
+     		OMAP_RO_REG(addr);
+	        exit(-1);
+        	 break;
+     	case 0xc00:   /*CM_FCLKEN_WKUP*/
+     		s->cm_fclken_wkup = value & 0x2e9;
+     		omap3_cm_fclken_wkup_update(s->mpu,s->cm_fclken_wkup);
+     		break;
+     	case 0xc10:    /*CM_ICLKEN_WKUP*/
+     		s->cm_iclken_wkup = value & 0x2ff;
+     		omap3_cm_iclken_wkup_update(s->mpu,s->cm_iclken_wkup);
+     		break;
      	default:
      		printf("omap3_cm_write addr %x value %x \n",addr,value);
      		exit(-1);
@@ -1009,9 +1051,319 @@ struct omap3_cm_s *omap3_cm_init(struct omap_target_agent_s *ta,
     return s;
 }
 
+#define OMAP3_SEC_WDT          1
+#define OMAP3_MPU_WDT         2
+#define OMAP3_IVA2_WDT        3
+/*omap3 watchdog timer*/
+struct omap3_wdt_s {
+	target_phys_addr_t base;
+    qemu_irq irq;          /*IVA2 IRQ*/
+    struct omap_mpu_state_s *mpu;
+    omap_clk clk;
+    QEMUTimer *timer;
+    
+    int active;
+    int64_t rate;
+    int64_t time;
+    //int64_t ticks_per_sec;
+
+    uint32_t wd_sysconfig;
+    uint32_t wd_sysstatus;
+    uint32_t wisr;
+    uint32_t wier;
+    uint32_t wclr;
+    uint32_t wcrr;
+    uint32_t wldr;
+    uint32_t wtgr;
+    uint32_t wwps;
+    uint32_t wspr;
+
+	/*pre and ptv in wclr*/
+    uint32_t pre;
+    uint32_t ptv;
+    //uint32_t val;
+
+    uint16_t writeh;	/* LSB */
+    uint16_t readh;  	/* MSB */
+
+};
 
 
 
+
+
+static inline void omap3_wdt_timer_update(struct omap3_wdt_s *wdt_timer)
+{
+	 int64_t expires;
+	 if (wdt_timer->active)
+	 {
+        expires = muldiv64(0xffffffffll - wdt_timer->wcrr,
+                        ticks_per_sec, wdt_timer->rate);
+        qemu_mod_timer(wdt_timer->timer, wdt_timer->time + expires);
+	 }
+	 else
+	 	qemu_del_timer(wdt_timer->timer);
+}
+static void omap3_wdt_clk_setup(struct omap3_wdt_s *timer)
+{
+	/*TODO: Add irq as user to clk*/
+}
+
+static inline uint32_t omap3_wdt_timer_read(struct omap3_wdt_s *timer)
+{
+    uint64_t distance;
+
+    if (timer->active) {
+        distance = qemu_get_clock(vm_clock) - timer->time;
+        distance = muldiv64(distance, timer->rate, ticks_per_sec);
+
+        if (distance >= 0xffffffff - timer->wcrr)
+            return 0xffffffff;
+        else
+            return timer->wcrr + distance;
+    } else
+        return timer->wcrr;
+}
+/*
+static inline void omap3_wdt_timer_sync(struct omap3_wdt_s *timer)
+{
+    if (timer->active) {
+        timer->val = omap3_wdt_timer_read(timer);
+        timer->time = qemu_get_clock(vm_clock);
+    }
+}*/
+	
+static void omap3_wdt_reset(struct omap3_wdt_s *s,int wdt_index)
+{
+	s->wd_sysconfig = 0x0;
+	s->wd_sysstatus = 0x0;
+	s->wisr = 0x0;
+	s->wier = 0x0;
+	s->wclr = 0x20;
+	s->wcrr = 0x0;
+	switch (wdt_index)
+	{
+		case OMAP3_MPU_WDT:
+		case OMAP3_IVA2_WDT:
+			s->wldr = 0xfffb0000;
+			break;
+		case OMAP3_SEC_WDT:
+			s->wldr = 0xffa60000;
+			break;
+	}
+	s->wtgr= 0x0;
+	s->wwps = 0x0;
+	s->wspr = 0x0;
+
+	switch (wdt_index)
+	{
+		case OMAP3_SEC_WDT:
+		case OMAP3_MPU_WDT:
+			s->active = 1;
+			break;
+		case OMAP3_IVA2_WDT:
+			s->active = 0;
+			break;
+	}
+	s->pre = s->wclr & (1<<5);
+	s->ptv = (s->wclr & 0x1c)>>2;
+	s->rate  = omap_clk_getrate(s->clk)>>(s->pre ? s->ptv : 0);
+
+	s->active = 1;
+	s->time = qemu_get_clock(vm_clock);
+	omap3_wdt_timer_update(s);
+}
+
+static uint32_t omap3_wdt_read32(void *opaque, target_phys_addr_t addr,int wdt_index)
+{
+	struct omap3_wdt_s *s = (struct omap3_wdt_s *) opaque;
+    int offset = addr - s->base;
+    //uint32_t ret;
+	//printf("omap3_wdt_read32 addr %x \n",addr);
+     switch (offset) 
+     {
+     	case 0x10:   /*WD_SYSCONFIG*/
+     		return s->wd_sysconfig;
+     	case 0x14:    /*WD_SYSSTATUS*/
+     		return s->wd_sysstatus;
+     	case 0x18:    /*WISR*/
+     		return s->wisr & 0x1;
+     	case 0x1c:   /*WIER*/
+     		return s->wier & 0x1;
+     	case 0x24:     /*WCLR*/
+     		return s->wclr & 0x3c;
+     	case 0x28:      /*WCRR*/
+			s->wcrr = omap3_wdt_timer_read(s);
+			s->time = qemu_get_clock(vm_clock);
+			return s->wcrr;
+		case 0x2c:     /*WLDR*/
+			return s->wldr;
+		case 0x30:     /*WTGR*/
+			 return s->wtgr;
+		case 0x34:     /*WWPS*/
+			return s->wwps;
+		case 0x48:     /*WSPR*/
+			return s->wspr;
+     	default:      
+     		printf("omap3_wdt_read32 addr %x \n",addr);
+     		exit(-1);
+     }
+}
+static uint32_t omap3_mpu_wdt_read16(void *opaque, target_phys_addr_t addr)
+{	
+	 struct omap3_wdt_s *s = (struct omap3_wdt_s *) opaque;
+    uint32_t ret;
+
+    if (addr & 2)
+        return s->readh;
+    else {
+        ret = omap3_wdt_read32(opaque, addr,OMAP3_MPU_WDT);
+        s->readh = ret >> 16;
+        return ret & 0xffff;
+    }
+}
+static uint32_t omap3_mpu_wdt_read32(void *opaque, target_phys_addr_t addr)
+{
+	return omap3_wdt_read32(opaque,addr,OMAP3_MPU_WDT);
+}
+
+static void omap3_wdt_write32(void *opaque, target_phys_addr_t addr,
+                uint32_t value,int wdt_index)
+{
+	struct omap3_wdt_s *s = (struct omap3_wdt_s *) opaque;
+    int offset = addr - s->base;
+    //uint32_t ret;
+
+     //printf("omap3_wdt_write32 addr %x value %x \n",addr,value);
+     switch (offset) 
+     {
+     	 case 0x14:    /*WD_SYSSTATUS*/
+     	 case 0x34:     /*WWPS*/	
+	        OMAP_RO_REG(addr);
+	        exit(-1);
+        	 break;
+     	case 0x10:   /*WD_SYSCONFIG*/
+     		s->wd_sysconfig = value & 0x33f;
+     		break;
+     	case 0x18:    /*WISR*/
+     		s->wisr = value & 0x1;
+     		break;
+     	case 0x1c:   /*WIER*/
+     		s->wier = value & 0x1;
+     		break;
+     	case 0x24:     /*WCLR*/
+     		s->wclr = value & 0x3c;
+     		break;
+     	case 0x28:      /*WCRR*/
+			s->wcrr = value;
+			s->time = qemu_get_clock(vm_clock);
+			omap3_wdt_timer_update(s);
+			break;
+		case 0x2c:     /*WLDR*/
+			s->wldr = value;   /*It will take effect after next overflow*/
+			break;
+		case 0x30:     /*WTGR*/
+			 if (value != s->wtgr)
+			 {
+			 	s->wcrr = s->wldr;
+			 	s->pre = s->wclr & (1<<5);
+				s->ptv = (s->wclr & 0x1c)>>2;
+				s->rate  = omap_clk_getrate(s->clk)>>(s->pre ? s->ptv : 0);
+				s->time = qemu_get_clock(vm_clock);
+				omap3_wdt_timer_update(s);
+			 }
+			 s->wtgr = value;
+			 break;
+		case 0x48:     /*WSPR*/
+			if (((value&0xffff)==0x5555)&&((s->wspr&0xffff)==0xaaaa))
+			{
+				s->active = 0;
+				s->wcrr = omap3_wdt_timer_read(s);
+				omap3_wdt_timer_update(s);
+			}
+			if (((value&0xffff)==0x4444)&&((s->wspr&0xffff)==0xbbbb))
+			{
+				s->active = 1;
+				s->time = qemu_get_clock(vm_clock);
+				omap3_wdt_timer_update(s);
+			}
+			s->wspr = value;
+			break;
+     	default:      
+     		printf("omap3_wdt_write32 addr %x \n",addr);
+     		exit(-1);
+     }
+}
+
+static void omap3_mpu_wdt_write16(void *opaque, target_phys_addr_t addr,
+                uint32_t value)
+{
+	    struct omap3_wdt_s *s = (struct omap3_wdt_s *) opaque;
+
+    if (addr & 2)
+        return omap3_wdt_write32(opaque,addr,(value << 16) | s->writeh,OMAP3_MPU_WDT); 
+    else
+        s->writeh = (uint16_t) value;
+}
+static void omap3_mpu_wdt_write32(void *opaque, target_phys_addr_t addr,
+                uint32_t value)
+{
+	omap3_wdt_write32(opaque,addr,value,OMAP3_MPU_WDT);
+}
+
+
+static CPUReadMemoryFunc *omap3_mpu_wdt_readfn[] = {
+    omap_badwidth_read32,
+    omap3_mpu_wdt_read16,
+    omap3_mpu_wdt_read32,
+};
+
+static CPUWriteMemoryFunc *omap3_mpu_wdt_writefn[] = {
+    omap_badwidth_write32,
+    omap3_mpu_wdt_write16,
+    omap3_mpu_wdt_write32,
+};
+
+
+
+static void omap3_mpu_wdt_timer_tick(void *opaque)
+{
+    struct omap3_wdt_s *wdt_timer = (struct omap3_wdt_s *) opaque;
+
+    /*TODO:Sent reset pulse to PRCM*/
+    wdt_timer->wcrr = wdt_timer->wldr;
+    
+    /*after overflow, generate the new wdt_timer->rate */
+    wdt_timer->pre = wdt_timer->wclr & (1<<5);
+	wdt_timer->ptv = (wdt_timer->wclr & 0x1c)>>2;
+	wdt_timer->rate  = omap_clk_getrate(wdt_timer->clk)>>(wdt_timer->pre ? wdt_timer->ptv : 0);
+
+	wdt_timer->time = qemu_get_clock(vm_clock);
+	omap3_wdt_timer_update(wdt_timer);
+}
+
+struct omap3_wdt_s *omap3_mpu_wdt_init(struct omap_target_agent_s *ta, 
+	 						qemu_irq irq, omap_clk fclk, omap_clk iclk,struct omap_mpu_state_s *mpu)
+{
+	 int iomemtype;
+    struct omap3_wdt_s *s = (struct omap3_wdt_s *)
+            qemu_mallocz(sizeof(*s));
+
+    s->irq = irq;
+    s->clk = fclk;
+    s->timer = qemu_new_timer(vm_clock, omap3_mpu_wdt_timer_tick, s);
+
+    omap3_wdt_reset(s,OMAP3_MPU_WDT);
+    if (irq!=NULL)
+    	omap3_wdt_clk_setup(s);
+
+    iomemtype = l4_register_io_memory(0, omap3_mpu_wdt_readfn,
+                    omap3_mpu_wdt_writefn, s);
+    s->base = omap_l4_attach(ta, 0, iomemtype);
+
+    return s;
+
+}
 
 
 struct omap_mpu_state_s *omap3530_mpu_init(unsigned long sdram_size,
@@ -1046,10 +1398,16 @@ struct omap_mpu_state_s *omap3530_mpu_init(unsigned long sdram_size,
 
     s->l4 = omap_l4_init(OMAP3_L4_BASE, sizeof(omap3_l4_agent_info));
 
+	 s->omap3_cm = omap3_cm_init(omap3_l4ta_get(s->l4, 1),
+                   NULL, NULL, NULL, s);
+
     s->omap3_prm = omap3_prm_init(omap3_l4ta_get(s->l4, 2),
                    NULL, NULL, NULL, s);
-    s->omap3_cm = omap3_cm_init(omap3_l4ta_get(s->l4, 1),
-                   NULL, NULL, NULL, s);
+
+    s->omap3_mpu_wdt = omap3_mpu_wdt_init(omap3_l4ta_get(s->l4, 3),
+    										NULL,omap_findclk(s,"omap3_wkup_32k_fclk"),
+    										omap_findclk(s,"omap3_wkup_l4_iclk"),s);
+    								
 
     return s;    
 }

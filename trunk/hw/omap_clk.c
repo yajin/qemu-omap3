@@ -1200,6 +1200,29 @@ static struct clk omap3_core_l4_iclk = {
 };
 
 
+/*WKUP Power Domain*/
+
+static struct clk omap3_wkup_32k_fclk = {
+    .name	= "omap3_wkup_32k_fclk",
+    .flags	= CLOCK_IN_OMAP353X ,
+    .parent	= &omap3_32k_fclk, 
+};
+
+static struct clk omap3_wkup_l4_iclk = {
+    .name	= "omap3_wkup_l4_iclk",
+    .flags	= CLOCK_IN_OMAP353X,
+    .enabled = 1,
+    .parent	= &omap3_sys_clk, 
+};
+
+static struct clk omap3_gp1_fclk = {
+    .name	= "omap3_gp1_fclk",
+    .flags	= CLOCK_IN_OMAP353X ,
+    .parent	= &omap3_32k_fclk,        /*omap3_32k_fclk and omap3_sys_clk*/
+};
+
+
+
 static struct clk *onchip_clks[] = {
     /* OMAP 1 */
 
@@ -1372,6 +1395,9 @@ static struct clk *onchip_clks[] = {
     &omap3_core_12m_fclk,
     &omap3_core_l3_iclk,
     &omap3_core_l4_iclk,
+    &omap3_wkup_32k_fclk,
+    &omap3_wkup_l4_iclk,
+    &omap3_gp1_fclk,
 
     0
 };
