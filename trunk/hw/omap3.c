@@ -341,6 +341,7 @@ static struct omap_l4_agent_info_s omap3_l4_agent_info[ ] =
 	{1, 5, 3, 2 }, 			/* CM */
 	{2, 77, 3, 2 }, 			/* PRM */
 	{3, 82, 2, 1 }, 			/* PRM */
+	{4, 3, 2, 1 }, 			/* SCM */
 };
 
 struct omap_target_agent_s *omap3_l4ta_get(struct omap_l4_s *bus, int cs)
@@ -1366,6 +1367,112 @@ struct omap3_wdt_s *omap3_mpu_wdt_init(struct omap_target_agent_s *ta,
 }
 
 
+/*dummy system control module*/
+struct omap3_scm_s {
+	target_phys_addr_t base;
+    struct omap_mpu_state_s *mpu;
+
+	uint32_t control_status;                /*0x4800 22F0*/
+};
+
+static void omap3_scm_reset(struct omap3_scm_s *s)
+{
+	s->control_status = 0x300;
+}
+
+static uint32_t omap3_scm_read8(void *opaque, target_phys_addr_t addr)
+{	
+	struct omap3_scm_s *s = (struct omap3_scm_s *) opaque;
+    int offset = addr - s->base;
+
+    switch (offset)
+    {
+    	case 0x2f0:
+    	case 0x2f1:
+    	case 0x2f2:
+    	case 0x2f3:
+    		return s->control_status;
+
+    	default:
+    		printf("omap3_scm_read8 addr %x \n",addr);
+     		exit(-1);
+    }
+}
+
+static uint32_t omap3_scm_read16(void *opaque, target_phys_addr_t addr)
+{
+    uint32_t v;
+    v = omap3_scm_read8(opaque, addr);
+    v |= omap3_scm_read8(opaque, addr + 1) << 8;
+    return v;
+}
+static uint32_t omap3_scm_read32(void *opaque, target_phys_addr_t addr)
+{
+    uint32_t v;
+    v = omap3_scm_read8(opaque, addr);
+    v |= omap3_scm_read8(opaque, addr + 1) << 8;
+    v |= omap3_scm_read8(opaque, addr + 2) << 16;
+    v |= omap3_scm_read8(opaque, addr + 3) << 24;
+    return v;
+}
+
+static void omap3_scm_write8(void *opaque, target_phys_addr_t addr,
+                uint32_t value)
+{
+	struct omap3_scm_s *s = (struct omap3_scm_s *) opaque;
+    int offset = addr - s->base;
+
+    switch (offset)
+    {
+    	default:
+    		printf("omap3_scm_write8 addr %x \n",addr);
+     		exit(-1);
+    }
+}
+static void omap3_scm_write16(void *opaque, target_phys_addr_t addr,
+                uint32_t value)
+{
+	omap3_scm_write8(opaque, addr + 0, (value ) & 0xff);
+   omap3_scm_write8(opaque, addr + 1, (value >> 8) & 0xff);
+}
+static void omap3_scm_write32(void *opaque, target_phys_addr_t addr,
+                uint32_t value)
+{
+	omap3_scm_write8(opaque, addr + 0, (value ) & 0xff);
+   omap3_scm_write8(opaque, addr + 1, (value >> 8) & 0xff);
+   omap3_scm_write8(opaque, addr + 2, (value >>16) & 0xff);
+   omap3_scm_write8(opaque, addr + 3, (value >> 24) & 0xff);
+
+}
+static CPUReadMemoryFunc *omap3_scm_readfn[] = {
+    omap3_scm_read8,
+    omap3_scm_read16,
+    omap3_scm_read32,
+};
+
+static CPUWriteMemoryFunc *omap3_scm_writefn[] = {
+    omap3_scm_write8,
+    omap3_scm_write16,
+    omap3_scm_write32,
+};
+
+struct omap3_scm_s *omap3_scm_init(struct omap_target_agent_s *ta, 
+	 						                                        struct omap_mpu_state_s *mpu)
+{
+	 int iomemtype;
+    struct omap3_scm_s *s = (struct omap3_scm_s *)
+            qemu_mallocz(sizeof(*s));
+
+    s->mpu = mpu;
+
+    omap3_scm_reset(s);
+
+    iomemtype = l4_register_io_memory(0, omap3_scm_readfn,
+                    omap3_scm_writefn, s);
+    s->base = omap_l4_attach(ta, 0, iomemtype);
+    return s;
+}
+
 struct omap_mpu_state_s *omap3530_mpu_init(unsigned long sdram_size,
                 DisplayState *ds, const char *core)
 {
@@ -1407,8 +1514,11 @@ struct omap_mpu_state_s *omap3530_mpu_init(unsigned long sdram_size,
     s->omap3_mpu_wdt = omap3_mpu_wdt_init(omap3_l4ta_get(s->l4, 3),
     										NULL,omap_findclk(s,"omap3_wkup_32k_fclk"),
     										omap_findclk(s,"omap3_wkup_l4_iclk"),s);
+
+    s->omap3_scm = omap3_scm_init(omap3_l4ta_get(s->l4, 4),s);
     								
 
     return s;    
 }
+
 
