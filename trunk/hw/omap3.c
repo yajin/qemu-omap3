@@ -1388,10 +1388,13 @@ static uint32_t omap3_scm_read8(void *opaque, target_phys_addr_t addr)
     switch (offset)
     {
     	case 0x2f0:
+    		return s->control_status & 0xff;
     	case 0x2f1:
+    		return (s->control_status & 0xff00)>>8;;
     	case 0x2f2:
+    		return (s->control_status & 0xff0000)>>16;;
     	case 0x2f3:
-    		return s->control_status;
+    		return (s->control_status & 0xff000000)>>24;;
 
     	default:
     		printf("omap3_scm_read8 addr %x \n",addr);
@@ -1442,8 +1445,8 @@ static void omap3_scm_write32(void *opaque, target_phys_addr_t addr,
    omap3_scm_write8(opaque, addr + 1, (value >> 8) & 0xff);
    omap3_scm_write8(opaque, addr + 2, (value >>16) & 0xff);
    omap3_scm_write8(opaque, addr + 3, (value >> 24) & 0xff);
-
 }
+
 static CPUReadMemoryFunc *omap3_scm_readfn[] = {
     omap3_scm_read8,
     omap3_scm_read16,
@@ -1470,6 +1473,355 @@ struct omap3_scm_s *omap3_scm_init(struct omap_target_agent_s *ta,
     iomemtype = l4_register_io_memory(0, omap3_scm_readfn,
                     omap3_scm_writefn, s);
     s->base = omap_l4_attach(ta, 0, iomemtype);
+    return s;
+}
+
+
+/*dummy port protection*/
+struct omap3_pm_s {
+	 target_phys_addr_t base;
+	 uint32_t size;
+    struct omap_mpu_state_s *mpu;
+
+	uint32_t l3_pm_rt_error_log;                            /*0x6801 0020*/
+	uint32_t l3_pm_rt_control;                                 /*0x6801 0028*/
+	uint32_t l3_pm_rt_error_clear_single;             /*0x6801 0030*/
+	uint32_t l3_pm_rt_error_clear_multi;             /*0x6801 0038*/
+	uint32_t l3_pm_rt_req_info_permission[2];     /*0x6801 0048 + (0x20*i)*/
+	uint32_t l3_pm_rt_read_permission[2];            /*0x6801 0050 + (0x20*i)*/
+	uint32_t l3_pm_rt_write_permission[2];           /*0x6801 0058 + (0x20*i)*/
+	uint32_t l3_pm_rt_addr_match[1];                    /*0x6801 0060 + (0x20*k)*/
+
+	uint32_t l3_pm_gpmc_error_log;                            /*0x6801 2420*/
+	uint32_t l3_pm_gpmc_control;                                 /*0x6801 2428*/
+	uint32_t l3_pm_gpmc_error_clear_single;             /*0x6801 2430*/
+	uint32_t l3_pm_gpmc_error_clear_multi;             /*0x6801 2438*/
+	uint32_t l3_pm_gpmc_req_info_permission[8];     /*0x6801 2448 + (0x20*i)*/
+	uint32_t l3_pm_gpmc_read_permission[8];            /*0x6801 2450 + (0x20*i)*/
+	uint32_t l3_pm_gpmc_write_permission[8];           /*0x6801 2458 + (0x20*i)*/
+	uint32_t l3_pm_gpmc_addr_match[7];                    /*0x6801 2460 + (0x20*k)*/
+
+	uint32_t l3_pm_ocmram_error_log;                            /*0x6801 2820*/
+	uint32_t l3_pm_ocmram_control;                                 /*0x6801 2828*/
+	uint32_t l3_pm_ocmram_error_clear_single;             /*0x6801 2830*/
+	uint32_t l3_pm_ocmram_error_clear_multi;             /*0x6801 2838*/
+	uint32_t l3_pm_ocmram_req_info_permission[8];     /*0x6801 2848 + (0x20*i)*/
+	uint32_t l3_pm_ocmram_read_permission[8];            /*0x6801 2850 + (0x20*i)*/
+	uint32_t l3_pm_ocmram_write_permission[8];           /*0x6801 2858 + (0x20*i)*/
+	uint32_t l3_pm_ocmram_addr_match[7];                    /*0x6801 2860 + (0x20*k)*/
+
+	uint32_t l3_pm_ocmrom_error_log;                            /*0x6801 2c20*/
+	uint32_t l3_pm_ocmrom_control;                                 /*0x6801 2c28*/
+	uint32_t l3_pm_ocmrom_error_clear_single;             /*0x6801 2c30*/
+	uint32_t l3_pm_ocmrom_error_clear_multi;             /*0x6801 2c38*/
+	uint32_t l3_pm_ocmrom_req_info_permission[2];     /*0x6801 2c48 + (0x20*i)*/
+	uint32_t l3_pm_ocmrom_read_permission[2];            /*0x6801 2c50 + (0x20*i)*/
+	uint32_t l3_pm_ocmrom_write_permission[2];           /*0x6801 2c58 + (0x20*i)*/
+	uint32_t l3_pm_ocmrom_addr_match[1];                    /*0x6801 2c60 + (0x20*k)*/
+
+	uint32_t l3_pm_mad2d_error_log;                            /*0x6801 3020*/
+	uint32_t l3_pm_mad2d_control;                                 /*0x6801 3028*/
+	uint32_t l3_pm_mad2d_error_clear_single;             /*0x6801 3030*/
+	uint32_t l3_pm_mad2d_error_clear_multi;             /*0x6801 3038*/
+	uint32_t l3_pm_mad2d_req_info_permission[8];     /*0x6801 3048 + (0x20*i)*/
+	uint32_t l3_pm_mad2d_read_permission[8];            /*0x6801 3050 + (0x20*i)*/
+	uint32_t l3_pm_mad2d_write_permission[8];           /*0x6801 3058 + (0x20*i)*/
+	uint32_t l3_pm_mad2d_addr_match[7];                    /*0x6801 3060 + (0x20*k)*/
+
+	uint32_t l3_pm_iva_error_log;                            /*0x6801 4020*/
+	uint32_t l3_pm_iva_control;                                 /*0x6801 4028*/
+	uint32_t l3_pm_iva_error_clear_single;             /*0x6801 4030*/
+	uint32_t l3_pm_iva_error_clear_multi;             /*0x6801 4038*/
+	uint32_t l3_pm_iva_req_info_permission[4];     /*0x6801 4048 + (0x20*i)*/
+	uint32_t l3_pm_iva_read_permission[4];            /*0x6801 4050 + (0x20*i)*/
+	uint32_t l3_pm_iva_write_permission[4];           /*0x6801 4058 + (0x20*i)*/
+	uint32_t l3_pm_iva_addr_match[3];                    /*0x6801 4060 + (0x20*k)*/
+
+	
+};
+static void omap3_pm_reset(struct omap3_pm_s *s)
+{
+	int i;
+	
+	s->l3_pm_rt_control = 0x3000000;
+	s->l3_pm_gpmc_control = 0x3000000;
+	s->l3_pm_ocmram_control = 0x3000000;
+	s->l3_pm_ocmrom_control = 0x3000000;
+	s->l3_pm_mad2d_control = 0x3000000;
+	s->l3_pm_iva_control = 0x3000000;
+
+	s->l3_pm_rt_req_info_permission[0] = 0xffff;
+	s->l3_pm_rt_req_info_permission[1] = 0x0;
+	for (i=3;i<8;i++)
+		s->l3_pm_gpmc_req_info_permission[i] = 0xffff; 
+	for (i=1;i<8;i++)
+		s->l3_pm_ocmram_req_info_permission[i] = 0xffff; 
+	s->l3_pm_ocmrom_req_info_permission[1] = 0xffff;
+	for (i=1;i<8;i++)
+		s->l3_pm_mad2d_req_info_permission[i] = 0xffff; 
+	for (i=1;i<4;i++)
+		s->l3_pm_iva_req_info_permission[i] = 0xffff; 
+
+	s->l3_pm_rt_read_permission[0] = 0x1406;
+	s->l3_pm_rt_read_permission[1] = 0x1406;
+	s->l3_pm_rt_write_permission[0] = 0x1406;
+	s->l3_pm_rt_write_permission[1] = 0x1406;
+	for (i=0;i<8;i++)
+	{
+		s->l3_pm_gpmc_read_permission[i] = 0x563e;
+		s->l3_pm_gpmc_write_permission[i] = 0x563e;
+	}
+	for (i=0;i<8;i++)
+	{
+		s->l3_pm_ocmram_read_permission[i] = 0x5f3e;
+		s->l3_pm_ocmram_write_permission[i] = 0x5f3e;
+	}
+	for (i=0;i<2;i++)
+	{
+		s->l3_pm_ocmrom_read_permission[i] = 0x1002;
+		s->l3_pm_ocmrom_write_permission[i] = 0x1002;
+	}
+		
+	for (i=0;i<8;i++)
+	{
+		s->l3_pm_mad2d_read_permission[i] = 0x5f1e;
+		s->l3_pm_mad2d_write_permission[i] = 0x5f1e;
+	}
+		
+	for (i=0;i<4;i++)
+	{
+		s->l3_pm_iva_read_permission[i] = 0x140e;
+		s->l3_pm_iva_write_permission[i] = 0x140e;
+	}
+		
+
+	s->l3_pm_rt_addr_match[0] = 0x10230;
+	
+	s->l3_pm_gpmc_addr_match[0] = 0x10230;
+
+
+}
+
+static uint32_t omap3_pm_read8(void *opaque, target_phys_addr_t addr)
+{	
+	struct omap3_pm_s *s = (struct omap3_pm_s *) opaque;
+    int offset = addr - s->base;
+
+    switch (offset)
+    {
+
+    	default:
+    		printf("omap3_pm_read8 addr %x \n",addr);
+     		exit(-1);
+    }
+}
+
+
+
+static uint32_t omap3_pm_read16(void *opaque, target_phys_addr_t addr)
+{
+    uint32_t v;
+    v = omap3_pm_read8(opaque, addr);
+    v |= omap3_pm_read8(opaque, addr + 1) << 8;
+    return v;
+}
+static uint32_t omap3_pm_read32(void *opaque, target_phys_addr_t addr)
+{
+    uint32_t v;
+    v = omap3_pm_read8(opaque, addr);
+    v |= omap3_pm_read8(opaque, addr + 1) << 8;
+    v |= omap3_pm_read8(opaque, addr + 2) << 16;
+    v |= omap3_pm_read8(opaque, addr + 3) << 24;
+    return v;
+}
+
+static void omap3_pm_write8(void *opaque, target_phys_addr_t addr,
+                uint32_t value)
+{
+	struct omap3_pm_s *s = (struct omap3_pm_s *) opaque;
+    int offset = addr - s->base;
+    int i;
+
+    switch (offset)
+    {
+    	case 0x48 ... 0x4b:
+    	case 0x68 ... 0x6b:
+    		i = (offset-0x48)/0x20;
+    		s->l3_pm_rt_req_info_permission[i] &= (~(0xff<<((offset-0x48-i*0x20)*8)));
+    		s->l3_pm_rt_req_info_permission[i] |= (value<<(offset-0x48-i*0x20)*8);
+    		break;
+    	case 0x50 ...  0x53:
+    	case 0x70 ... 0x73:
+    		i = (offset-0x50)/0x20;
+    		s->l3_pm_rt_read_permission[i] &= (~(0xff<<((offset-0x50-i*0x20)*8)));
+    		s->l3_pm_rt_read_permission[i] |= (value<<(offset-0x50-i*0x20)*8);
+    		break;
+    	case 0x58 ...  0x5b:
+    	case 0x78 ... 0x7b:
+    		i = (offset-0x58)/0x20;
+    		s->l3_pm_rt_write_permission[i] &= (~(0xff<<((offset-0x58-i*0x20)*8)));
+    		s->l3_pm_rt_write_permission[i] |= (value<<(offset-0x58-i*0x20)*8);
+    		break;
+    	case 0x60 ... 0x63:
+    		s->l3_pm_rt_addr_match[0] &= (~(0xff<<((offset-0x60)*8)));
+    		s->l3_pm_rt_addr_match[0] |= (value<<(offset-0x60)*8);
+    		break;
+    	case 0x2448 ... 0x244b:
+    	case 0x2468 ... 0x246b:
+    	case 0x2488 ... 0x248b:
+    	case 0x24a8 ... 0x24ab:
+    	case 0x24c8 ... 0x24cb:
+    	case 0x24e8 ... 0x24eb:
+    	case 0x2508 ... 0x250b:
+    	case 0x2528 ... 0x252b:
+    		i = (offset-0x2448)/0x20;
+    		s->l3_pm_gpmc_req_info_permission[i] &= (~(0xff<<((offset-0x2448-i*0x20)*8)));
+    		s->l3_pm_gpmc_req_info_permission[i] |= (value<<(offset-0x2448-i*0x20)*8);
+    		break;
+    	case 0x2450 ...  0x2453:
+    	case 0x2470 ... 0x2473:
+    	case 0x2490 ... 0x2493:
+    	case 0x24b0 ... 0x24b3:
+    	case 0x24d0 ... 0x24d3:
+    	case 0x24f0 ... 0x24f3:
+    	case 0x2510 ... 0x2513:
+    	case 0x2530 ... 0x2533:
+    		i = (offset-0x2450)/0x20;
+    		s->l3_pm_gpmc_read_permission[i] &= (~(0xff<<((offset-0x2450-i*0x20)*8)));
+    		s->l3_pm_gpmc_read_permission[i] |= (value<<(offset-0x2450-i*0x20)*8);
+    		break;
+    	case 0x2458 ... 0x245b:
+    	case 0x2478 ... 0x247b:
+    	case 0x2498 ... 0x249b:
+    	case 0x24b8 ... 0x24bb:
+    	case 0x24d8 ... 0x24db:
+    	case 0x24f8 ... 0x24fb:
+    	case 0x2518 ... 0x251b:
+    	case 0x2538 ... 0x253b:
+    		i = (offset-0x2458)/0x20;
+    		s->l3_pm_gpmc_write_permission[i] &= (~(0xff<<((offset-0x2458-i*0x20)*8)));
+    		s->l3_pm_gpmc_write_permission[i] |= (value<<(offset-0x2458-i*0x20)*8);
+    		break;
+    	case 0x2848 ... 0x284b:
+    	case 0x2868 ... 0x286b:
+    	case 0x2888 ... 0x288b:
+    	case 0x28a8 ... 0x28ab:
+    	case 0x28c8 ... 0x28cb:
+    	case 0x28e8 ... 0x28eb:
+    	case 0x2908 ... 0x290b:
+    	case 0x2928 ... 0x292b:
+    		i = (offset-0x2848)/0x20;
+    		s->l3_pm_ocmram_req_info_permission[i] &= (~(0xff<<((offset-0x2848-i*0x20)*8)));
+    		s->l3_pm_ocmram_req_info_permission[i] |= (value<<(offset-0x2848-i*0x20)*8);
+    		break;
+    	case 0x2850 ... 0x2853:
+    	case 0x2870 ... 0x2873:
+    	case 0x2890 ... 0x2893:
+    	case 0x28b0 ... 0x28b3:
+    	case 0x28d0 ... 0x28d3:
+    	case 0x28f0 ... 0x28f3:
+    	case 0x2910 ... 0x2913:
+    	case 0x2930 ... 0x2933:
+    		i = (offset-0x2850)/0x20;
+    		s->l3_pm_ocmram_read_permission[i] &= (~(0xff<<((offset-0x2850-i*0x20)*8)));
+    		s->l3_pm_ocmram_read_permission[i] |= (value<<(offset-0x2850-i*0x20)*8);
+    		break;
+    	case 0x2858 ... 0x285b:
+    	case 0x2878 ... 0x287b:
+    	case 0x2898 ... 0x289b:
+    	case 0x28b8 ... 0x28bb:
+    	case 0x28d8 ... 0x28db:
+    	case 0x28f8 ... 0x28fb:
+    	case 0x2918 ... 0x291b:
+    	case 0x2938 ... 0x293b:
+    		i = (offset-0x2858)/0x20;
+    		s->l3_pm_ocmram_write_permission[i] &= (~(0xff<<((offset-0x2858-i*0x20)*8)));
+    		s->l3_pm_ocmram_write_permission[i] |= (value<<(offset-0x2858-i*0x20)*8);
+    		break;
+
+    	case 0x2860 ... 0x2863:
+    	case 0x2880 ... 0x2883:
+    	case 0x28a0 ... 0x28a3:
+    	case 0x28c0 ... 0x28c3:
+    	case 0x28e0 ... 0x28e3:
+    	case 0x2900 ... 0x2903:
+    	case 0x2920 ... 0x2923:
+    		i = (offset-0x2860)/0x20;
+    		s->l3_pm_ocmram_addr_match[i] &= (~(0xff<<((offset-0x2860-i*0x20)*8)));
+    		s->l3_pm_ocmram_addr_match[i] |= (value<<(offset-0x2860-i*0x20)*8);
+    		break;
+
+    	case 0x4048 ... 0x404b:
+    	case 0x4068 ... 0x406b:
+    	case 0x4088 ... 0x408b:
+    	case 0x40a8 ... 0x40ab:
+    		i = (offset-0x4048)/0x20;
+    		s->l3_pm_iva_req_info_permission[i] &= (~(0xff<<((offset-0x4048-i*0x20)*8)));
+    		s->l3_pm_iva_req_info_permission[i] |= (value<<(offset-0x4048-i*0x20)*8);
+    		break;
+    	case 0x4050 ...  0x4053:
+    	case 0x4070 ... 0x4073:
+    	case 0x4090 ... 0x4093:
+    	case 0x40b0 ... 0x40b3:
+    		i = (offset-0x4050)/0x20;
+    		s->l3_pm_iva_read_permission[i] &= (~(0xff<<((offset-0x4050-i*0x20)*8)));
+    		s->l3_pm_iva_read_permission[i] |= (value<<(offset-0x4050-i*0x20)*8);
+    		break;
+    	case 0x4058 ...  0x405b:
+    	case 0x4078 ... 0x407b:
+    	case 0x4098 ... 0x409b:
+    	case 0x40b8 ... 0x40bb:
+    		i = (offset-0x4058)/0x20;
+    		s->l3_pm_iva_write_permission[i] &= (~(0xff<<((offset-0x4058-i*0x20)*8)));
+    		s->l3_pm_iva_write_permission[i] |= (value<<(offset-0x4058-i*0x20)*8);
+    		break;		
+    	default:
+    		printf("omap3_pm_write8 addr %x \n",addr);
+     		exit(-1);
+    }
+}
+static void omap3_pm_write16(void *opaque, target_phys_addr_t addr,
+                uint32_t value)
+{
+	omap3_pm_write8(opaque, addr + 0, (value ) & 0xff);
+   omap3_pm_write8(opaque, addr + 1, (value >> 8) & 0xff);
+}
+static void omap3_pm_write32(void *opaque, target_phys_addr_t addr,
+                uint32_t value)
+{
+	omap3_pm_write8(opaque, addr + 0, (value ) & 0xff);
+   omap3_pm_write8(opaque, addr + 1, (value >> 8) & 0xff);
+   omap3_pm_write8(opaque, addr + 2, (value >>16) & 0xff);
+   omap3_pm_write8(opaque, addr + 3, (value >> 24) & 0xff);
+}
+
+static CPUReadMemoryFunc *omap3_pm_readfn[] = {
+    omap3_pm_read8,
+    omap3_pm_read16,
+    omap3_pm_read32,
+};
+
+static CPUWriteMemoryFunc *omap3_pm_writefn[] = {
+    omap3_pm_write8,
+    omap3_pm_write16,
+    omap3_pm_write32,
+};
+
+struct omap3_pm_s *omap3_pm_init(struct omap_mpu_state_s *mpu)
+{
+	 int iomemtype;
+    struct omap3_pm_s *s = (struct omap3_pm_s *)qemu_mallocz(sizeof(*s));
+
+    s->mpu = mpu;
+    s->base = 0x68010000;
+    s->size = 0x4400;
+
+    omap3_pm_reset(s);
+
+    iomemtype = l4_register_io_memory(0, omap3_pm_readfn,
+                    omap3_pm_writefn, s);
+    cpu_register_physical_memory( s->base, s->size, iomemtype);
+    
     return s;
 }
 
@@ -1516,6 +1868,8 @@ struct omap_mpu_state_s *omap3530_mpu_init(unsigned long sdram_size,
     										omap_findclk(s,"omap3_wkup_l4_iclk"),s);
 
     s->omap3_scm = omap3_scm_init(omap3_l4ta_get(s->l4, 4),s);
+
+    s->omap3_pm = omap3_pm_init(s);
     								
 
     return s;    
