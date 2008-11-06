@@ -1825,6 +1825,74 @@ struct omap3_pm_s *omap3_pm_init(struct omap_mpu_state_s *mpu)
     return s;
 }
 
+/*dummy SDRAM Memory Scheduler emulation*/
+struct omap3_sms_s {
+	 target_phys_addr_t base;
+	 uint32_t size;
+    struct omap_mpu_state_s *mpu;
+
+	
+};
+
+static uint32_t omap3_sms_read32(void *opaque, target_phys_addr_t addr)
+{	
+	struct omap3_sms_s *s = (struct omap3_sms_s *) opaque;
+    int offset = addr - s->base;
+
+    switch (offset)
+    {
+
+    	default:
+    		printf("omap3_sms_read32 addr %x \n",addr);
+     		exit(-1);
+    }
+}
+
+static void omap3_sms_write32(void *opaque, target_phys_addr_t addr,
+                uint32_t value)
+{
+	struct omap3_sms_s *s = (struct omap3_sms_s *) opaque;
+    int offset = addr - s->base;
+    int i;
+
+    switch (offset)
+    {
+    	case 0x48:
+    		break;
+    	default:
+    		printf("omap3_sms_write32 addr %x\n",omap3_sms_write32);
+    		exit(-1);
+    }
+}
+
+static CPUReadMemoryFunc *omap3_sms_readfn[] = {
+    omap_badwidth_read32,
+    omap_badwidth_read32,
+    omap3_sms_read32,
+};
+
+static CPUWriteMemoryFunc *omap3_sms_writefn[] = {
+    omap_badwidth_write32,
+    omap_badwidth_write32,
+    omap3_sms_write32,
+};
+struct omap3_sms_s *omap3_sms_init(struct omap_mpu_state_s *mpu)
+{
+	 int iomemtype;
+    struct omap3_sms_s *s = (struct omap3_sms_s *)qemu_mallocz(sizeof(*s));
+
+    s->mpu = mpu;
+    s->base = 0x6c000000;
+    s->size = 0x10000;
+
+
+    iomemtype = l4_register_io_memory(0, omap3_sms_readfn,
+                    omap3_sms_writefn, s);
+    cpu_register_physical_memory( s->base, s->size, iomemtype);
+    
+    return s;
+}
+
 struct omap_mpu_state_s *omap3530_mpu_init(unsigned long sdram_size,
                 DisplayState *ds, const char *core)
 {
@@ -1870,7 +1938,7 @@ struct omap_mpu_state_s *omap3530_mpu_init(unsigned long sdram_size,
     s->omap3_scm = omap3_scm_init(omap3_l4ta_get(s->l4, 4),s);
 
     s->omap3_pm = omap3_pm_init(s);
-    								
+    s->omap3_sms = omap3_sms_init(s);							
 
     return s;    
 }
