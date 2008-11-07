@@ -2552,6 +2552,8 @@ struct omap_mpu_state_s *omap3530_mpu_init(unsigned long sdram_size,
     omap_synctimer_init(omap3_l4ta_get(s->l4, 6),s,
                     omap_findclk(s, "omap3_sys_32k"),
                     NULL);
+
+    s->sdrc = omap_sdrc_init(0x6d000000);
     
 
     return s;    
