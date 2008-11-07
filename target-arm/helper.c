@@ -1093,7 +1093,7 @@ static int get_phys_addr_v6(CPUState *env, uint32_t address, int access_type,
         /* Access permission fault.  */
         goto do_fault;
     }
-    printf("get_phys_addr_v6 . *phys_ptr %x\n",*phys_ptr);
+    //printf("get_phys_addr_v6 . *phys_ptr %x\n",*phys_ptr);
     *phys_ptr = phys_addr;
     return 0;
 do_fault:
@@ -1171,7 +1171,7 @@ static inline int get_phys_addr(CPUState *env, uint32_t address,
         /* MMU/MPU disabled.  */
         *phys_ptr = address;
         *prot = PAGE_READ | PAGE_WRITE;
-        printf("MMU Disabled. *phys_ptr %x\n",*phys_ptr);
+        //printf("MMU Disabled. *phys_ptr %x\n",*phys_ptr);
         return 0;
     } else if (arm_feature(env, ARM_FEATURE_MPU)) {
 	return get_phys_addr_mpu(env, address, access_type, is_user, phys_ptr,

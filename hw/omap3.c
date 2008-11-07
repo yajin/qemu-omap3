@@ -29,7 +29,7 @@
 #include "soc_dma.h"
 #include "audio/audio.h"
 
-
+#define OMAP3_DEBUG(x)    do {  printf x ; } while(0)
 
 static uint32_t omap3_l4ta_read(void *opaque, target_phys_addr_t addr)
 {
@@ -218,7 +218,7 @@ static struct omap_l4_region_s omap3_l4_region[ ] =
 	[ 82] = { 0x314000, 0x1000, 32 | 16    },      /* WDTIMER2  */
 	[ 83] = { 0x315000, 0x1000, 32 | 16 | 8},    /*  L4TA4 */
 
-	[ 84] = { 0x318000, 0x1000, 32 | 16    },      /* WDTIMER1  */
+	[ 84] = { 0x318000, 0x1000, 32 | 16    },      /* GPTIMER1  */
 	[ 85] = { 0x319000, 0x1000, 32 | 16 | 8},    /*  L4TA4 */
 	
  	[ 86] = { 0x320000, 0x1000, 32 | 16     }, /* 32K Timer */
@@ -340,8 +340,10 @@ static struct omap_l4_agent_info_s omap3_l4_agent_info[ ] =
 	{0, 0, 2, 1 }, 			/* System Control module */
 	{1, 5, 3, 2 }, 			/* CM */
 	{2, 77, 3, 2 }, 			/* PRM */
-	{3, 82, 2, 1 }, 			/* PRM */
-	{4, 3, 2, 1 }, 			/* SCM */
+	{3, 82, 2, 1 }, 			/* WDTIMER 2 */
+	{4, 3, 2, 1 }, 			   /* SCM */
+	{5, 84, 2, 1 }, 			/* GP TIMER 1 */
+	{6, 86, 2, 1 }, 			/* 32K Sync timer */
 };
 
 struct omap_target_agent_s *omap3_l4ta_get(struct omap_l4_s *bus, int cs)
@@ -636,14 +638,24 @@ static uint32_t omap3_prm_read(void *opaque, target_phys_addr_t addr)
 
      switch (offset) 
      {
+     	case 0xd40:
+     		return s->prm_clksel ;
      	case 0x1270:
      		return s->prm_clksrc_ctrl;
      	default:
-     		printf("omap3_prm_read addr %x \n",addr);
      		exit(-1);
      }
 }
 
+static inline void omap3_prm_clksrc_ctrl_update(struct omap3_prm_s *s,
+                uint32_t value)
+{
+	if ((value & 0xd0)==0x40)
+		omap_clk_setrate(omap_findclk(s->mpu, "omap3_sys_clk"),1,1);
+	else if ((value & 0xd0)==0x80)
+		omap_clk_setrate(omap_findclk(s->mpu, "omap3_sys_clk"),2,1);
+	//OMAP3_DEBUG(("omap3_sys_clk %d \n",omap_clk_getrate(omap_findclk(s->mpu, "omap3_sys_clk"))));
+}
 static void omap3_prm_write(void *opaque, target_phys_addr_t addr,
                 uint32_t value)
 {
@@ -652,9 +664,16 @@ static void omap3_prm_write(void *opaque, target_phys_addr_t addr,
 
     switch (offset) 
      {
+     	case 0xd40:
+     		s->prm_clksel = value & 0x7;
+     		break;
      	case 0x1270:
      		s->prm_clksrc_ctrl = value &(0xd8);
+     		omap3_prm_clksrc_ctrl_update(s,s->prm_clksrc_ctrl);
+     		//OMAP3_DEBUG(("s->prm_clksrc_ctrl  %x \n",s->prm_clksrc_ctrl ));
+     		//OMAP3_DEBUG(("RATE %d \n",omap_clk_getrate(omap_findclk(s->mpu, "omap3_sys_clk"))));
      		break;
+     	
      	default:
      		printf("omap3_prm_write addr %x value %x \n",addr,value);
      		exit(-1);
@@ -828,7 +847,366 @@ struct omap3_cm_s {
 
 };
 
+/*
+static inline void omap3_cm_fclken_wkup_update(struct omap3_cm_s *s,
+                uint32_t value)
+{
+	
+	if (value & 0x28)
+     	omap_clk_onoff(omap_findclk(s->mpu,"omap3_wkup_32k_fclk"), 1);
+    else
+    	omap_clk_onoff(omap_findclk(s->mpu,"omap3_wkup_32k_fclk"), 0);
 
+    if (value &0x1)
+    	omap_clk_onoff(omap_findclk(s->mpu,"omap3_gp1_fclk"), 1);
+    else
+    	omap_clk_onoff(omap_findclk(s->mpu,"omap3_gp1_fclk"), 0);
+
+}
+static inline void omap3_cm_iclken_wkup_update(struct omap3_cm_s *s,
+                uint32_t value)
+{
+	
+	if (value & 0x3f)
+     	omap_clk_onoff(omap_findclk(s->mpu,"omap3_wkup_l4_iclk"), 1);
+    else
+    	omap_clk_onoff(omap_findclk(s->mpu,"omap3_wkup_l4_iclk"), 0);
+
+}
+*/
+static inline void omap3_cm_clksel_wkup_update(struct omap3_cm_s *s,
+                uint32_t value)
+{
+	 omap_clk gp1_fclk = omap_findclk(s->mpu, "omap3_gp1_fclk");
+	 
+	if (value & 0x1)
+		omap_clk_reparent(gp1_fclk,omap_findclk(s->mpu, "omap3_sys_clk"));
+	else
+		omap_clk_reparent(gp1_fclk,omap_findclk(s->mpu, "omap3_32k_fclk"));
+	/*Tell GPTIMER to generate new clk rate*/
+	omap_gp_timer_chage_clk(s->mpu->gptimer[0]);
+
+	//OMAP3_DEBUG(("omap3_gp1_fclk %d \n",omap_clk_getrate(omap_findclk(s->mpu, "omap3_gp1_fclk"))));
+	
+	/*TODO:CM_USIM_CLK CLKSEL_RM*/	
+}
+
+static inline void omap3_cm_mpu_update(struct omap3_cm_s *s)
+{
+	uint32_t m,n,divide,m2,cm_clken_pll_mpu;
+	uint32_t bypass = 1;
+	
+	cm_clken_pll_mpu = s->cm_clken_pll_mpu;
+	omap_clk mpu_clk = omap_findclk(s->mpu, "omap3_mpu_clk");
+	 
+	if ((cm_clken_pll_mpu & 0x7)==0x5)
+	{	
+		bypass = 1;
+	}
+	else if ((cm_clken_pll_mpu & 0x7)==0x7)
+	{
+		m = (s->cm_clksel1_pll_mpu & 0x7ff00)>>8;
+		if ((m==0)||(m==1))
+			bypass = 1;
+		else
+			bypass = 0;
+	}
+	if (bypass==1)
+	{
+		/*BYPASS Model*/
+		divide = (s->cm_clksel1_pll_mpu & 0x380000)>>19;
+		//OMAP3_DEBUG(("divide %d\n",divide));
+		omap_clk_reparent(mpu_clk,omap_findclk(s->mpu, "omap3_core_clk"));
+		omap_clk_setrate(mpu_clk, divide, 1);
+
+	}
+	else
+	{
+		n = (s->cm_clksel1_pll_mpu & 0x7F);
+		m2 = (s->cm_clksel2_pll_mpu & 0x1F);
+		//OMAP3_DEBUG(("M  %d N %d M2 %d \n",m,n,m2 ));
+		omap_clk_reparent(mpu_clk,omap_findclk(s->mpu, "omap3_sys_clk"));
+		omap_clk_setrate(mpu_clk, (n+1)*m2, m);
+		//OMAP3_DEBUG(("mpu %d \n",omap_clk_getrate(mpu_clk)));
+
+	}
+
+}
+static inline void omap3_cm_iva2_update(struct omap3_cm_s *s)
+{
+	uint32_t m,n,divide,m2,cm_clken_pll_iva2;
+	uint32_t bypass = 1;
+	
+	cm_clken_pll_iva2 = s->cm_clken_pll_iva2;
+	omap_clk iva2_clk = omap_findclk(s->mpu, "omap3_iva2_clk");
+	 
+	if (((cm_clken_pll_iva2 & 0x7)==0x5)|| ((cm_clken_pll_iva2 & 0x7)==0x1))
+	{	
+		bypass = 1;
+	}
+	else if ((cm_clken_pll_iva2 & 0x7)==0x7)
+	{
+		m = (s->cm_clksel1_pll_iva2 & 0x7ff00)>>8;
+		if ((m==0)||(m==1))
+			bypass = 1;
+		else
+			bypass = 0;
+	}
+	if (bypass==1)
+	{
+		/*BYPASS Model*/
+		divide = (s->cm_clksel1_pll_iva2 & 0x380000)>>19;
+		//OMAP3_DEBUG(("divide %d\n",divide));
+		omap_clk_reparent(iva2_clk,omap_findclk(s->mpu, "omap3_core_clk"));
+		omap_clk_setrate(iva2_clk, divide, 1);
+
+	}
+	else
+	{
+		n = (s->cm_clksel1_pll_iva2 & 0x7F);
+		m2 = (s->cm_clksel2_pll_iva2 & 0x1F);
+		//OMAP3_DEBUG(("M  %d N %d M2 %d \n",m,n,m2 ));
+		omap_clk_reparent(iva2_clk,omap_findclk(s->mpu, "omap3_sys_clk"));
+		omap_clk_setrate(iva2_clk, (n+1)*m2, m);
+		//OMAP3_DEBUG(("iva2_clk %d \n",omap_clk_getrate(iva2_clk)));
+
+	}
+
+}
+
+static inline void omap3_cm_dpll3_update(struct omap3_cm_s *s)
+{
+	uint32_t m,n,m2,m3,cm_clken_pll;
+	uint32_t bypass =1 ;
+	
+	cm_clken_pll = s->cm_clken_pll;
+	
+	/*dpll3 bypass mode. parent clock is always omap3_sys_clk*/
+	if (((cm_clken_pll & 0x7)==0x5)||((cm_clken_pll & 0x7)==0x6))
+	{
+		bypass =1;
+	}
+	else if ((cm_clken_pll & 0x7)==0x7)
+	{
+		m = (s->cm_clksel1_pll & 0x7ff0000)>>16;
+		if ((m==0)||(m==1))
+			bypass =1;
+		else
+			bypass =0;
+	}
+	if (bypass==1)
+	{
+		omap_clk_setrate(omap_findclk(s->mpu, "omap3_core_clk"),1,1);
+		omap_clk_setrate(omap_findclk(s->mpu, "omap3_core2_clk"),1,1);
+		omap_clk_setrate(omap_findclk(s->mpu, "omap3_emu_core_alwon_clk"),1,1);
+	}
+	else
+	{
+		n = (s->cm_clksel1_pll & 0x3f00)>>8;
+		m2 = (s->cm_clksel1_pll & 0xf8000000)>>27;
+		m3 = (s->cm_clksel1_emu & 0x1f0000)>>16;
+
+		//OMAP3_DEBUG(("dpll3 cm_clksel1_pll %x m  %d n %d m2 %d  m3 %d\n",s->cm_clksel1_pll,m,n,m2,m3 ));
+		omap_clk_setrate(omap_findclk(s->mpu, "omap3_core_clk"), (n+1)*m2, m);
+		omap_clk_setrate(omap_findclk(s->mpu, "omap3_core2_clk"), (n+1)*m2, m*2);
+		omap_clk_setrate(omap_findclk(s->mpu, "omap3_emu_core_alwon_clk"), (n+1)*m3, m*2);
+		//OMAP3_DEBUG(("coreclk %d \n",omap_clk_getrate(omap_findclk(s->mpu, "omap3_core_clk"))));
+	}
+
+	
+}
+
+
+static inline void omap3_cm_dpll4_update(struct omap3_cm_s *s)
+{
+	uint32_t m,n,m2,m3,m4,m5,m6,cm_clken_pll;
+	cm_clken_pll = s->cm_clken_pll;
+	uint32_t bypass = 1;
+	
+	/*dpll3 bypass mode. parent clock is always omap3_sys_clk*/
+	/*DPLL4*/
+	 if ((cm_clken_pll & 0x70000)==0x10000)
+	 {
+	 	bypass = 1;
+	 }
+	 else if ((cm_clken_pll & 0x70000)==0x70000)
+	 {
+	 	m = (s->cm_clksel2_pll & 0x7ff00)>>8;
+	 	if ((m==0)||(m==1))
+	 		bypass = 1;
+	 	else
+	 		bypass = 0;
+	 }
+	if (bypass==1)
+	{
+		 omap_clk_setrate(omap_findclk(s->mpu, "omap3_96m_fclk"),1,1);
+	 	 omap_clk_setrate(omap_findclk(s->mpu, "omap3_54m_fclk"),1,1);
+	 	 omap_clk_setrate(omap_findclk(s->mpu, "omap3_dss1_alwon_fclk"),1,1); 
+	 	 omap_clk_setrate(omap_findclk(s->mpu, "omap3_cam_mclk"),1,1);
+	 	 omap_clk_setrate(omap_findclk(s->mpu, "omap3_per_alwon_clk"),1,1);
+	}
+	else
+	{
+		n = (s->cm_clksel2_pll & 0x7f);
+	 	m2 = s->cm_clksel3_pll & 0x1f;
+	 	m3 = (s->cm_clksel_dss & 0x1f00)>>8;
+	 	m4 = s->cm_clksel_dss & 0x1f;
+	 	m5 = s->cm_clksel_cam & 0x1f;
+	 	m6 = (s->cm_clksel1_emu & 0x1f000000)>>24;
+
+	 	//OMAP3_DEBUG(("dpll4 m  %d n %d m2 %d  m3 %d m4 %d m5 %d m6 %d \n",m,n,m2,m3,m4,m5,m6 ));
+	 	omap_clk_setrate(omap_findclk(s->mpu, "omap3_96m_fclk"),(n+1)*m2, m*2);
+	 	omap_clk_setrate(omap_findclk(s->mpu, "omap3_54m_fclk"),(n+1)*m3, m*2);
+	 	omap_clk_setrate(omap_findclk(s->mpu, "omap3_dss1_alwon_fclk"),(n+1)*m4, m*2); 
+	 	omap_clk_setrate(omap_findclk(s->mpu, "omap3_cam_mclk"),(n+1)*m5, m*2);
+	 	omap_clk_setrate(omap_findclk(s->mpu, "omap3_per_alwon_clk"),(n+1)*m6, m*2);
+
+	 	//OMAP3_DEBUG(("omap3_96m_fclk %d \n",omap_clk_getrate(omap_findclk(s->mpu, "omap3_96m_fclk"))));
+	 	//OMAP3_DEBUG(("omap3_54m_fclk %d \n",omap_clk_getrate(omap_findclk(s->mpu, "omap3_54m_fclk"))));
+	 	//OMAP3_DEBUG(("omap3_dss1_alwon_fclk %d \n",omap_clk_getrate(omap_findclk(s->mpu, "omap3_dss1_alwon_fclk"))));
+	 	//OMAP3_DEBUG(("omap3_cam_mclk %d \n",omap_clk_getrate(omap_findclk(s->mpu, "omap3_cam_mclk"))));
+	 	//OMAP3_DEBUG(("omap3_per_alwon_clk %d \n",omap_clk_getrate(omap_findclk(s->mpu, "omap3_per_alwon_clk"))));
+		//OMAP3_DEBUG(("omap3_48m_fclk %d \n",omap_clk_getrate(omap_findclk(s->mpu, "omap3_48m_fclk"))));
+		//OMAP3_DEBUG(("omap3_12m_fclk %d \n",omap_clk_getrate(omap_findclk(s->mpu, "omap3_12m_fclk"))));
+
+	}
+	 
+}
+
+static inline void omap3_cm_48m_update(struct omap3_cm_s *s)
+{
+	if (s->cm_clksel1_pll & 0x8)
+	{
+		/*parent is sysaltclk*/
+		omap_clk_reparent(omap_findclk(s->mpu, "omap3_48m_fclk"), 
+											 omap_findclk(s->mpu, "omap3_sys_altclk"));
+		omap_clk_reparent(omap_findclk(s->mpu, "omap3_12m_fclk"), 
+											 omap_findclk(s->mpu, "omap3_sys_altclk"));
+		/*TODO:need to set rate ?*/
+		
+	}
+	else
+	{
+		omap_clk_reparent(omap_findclk(s->mpu, "omap3_12m_fclk"), 
+											 omap_findclk(s->mpu, "omap3_96m_fclk"));
+		omap_clk_reparent(omap_findclk(s->mpu, "omap3_48m_fclk"), 
+											 omap_findclk(s->mpu, "omap3_96m_fclk"));
+		omap_clk_setrate(omap_findclk(s->mpu, "omap3_48m_fclk"),2,1);
+		omap_clk_setrate(omap_findclk(s->mpu, "omap3_12m_fclk"),8,1);
+
+	}
+		
+}
+static inline void omap3_cm_gp10_update(struct omap3_cm_s *s)
+{
+	omap_clk gp10_fclk = omap_findclk(s->mpu, "omap3_gp10_fclk");
+	 
+	if (s->cm_clksel_core & 0x40)
+		omap_clk_reparent(gp10_fclk,omap_findclk(s->mpu, "omap3_sys_clk"));
+	else
+		omap_clk_reparent(gp10_fclk,omap_findclk(s->mpu, "omap3_32k_fclk"));
+	
+	/*Tell GPTIMER10 to generate new clk rate*/
+	//omap_gp_timer_chage_clk(s->mpu->gptimer[0]);
+
+	//	OMAP3_DEBUG(("omap3_gp10_fclk %d \n",omap_clk_getrate(omap_findclk(s->mpu, "omap3_gp10_fclk"))));
+
+
+}
+static inline void omap3_cm_gp11_update(struct omap3_cm_s *s)
+{
+	omap_clk gp11_fclk = omap_findclk(s->mpu, "omap3_gp11_fclk");
+	 
+	if (s->cm_clksel_core & 0x80)
+		omap_clk_reparent(gp11_fclk,omap_findclk(s->mpu, "omap3_sys_clk"));
+	else
+		omap_clk_reparent(gp11_fclk,omap_findclk(s->mpu, "omap3_32k_fclk"));
+	/*Tell GPTIMER10 to generate new clk rate*/
+	//omap_gp_timer_chage_clk(s->mpu->gptimer[0]);
+	//OMAP3_DEBUG(("omap3_gp11_fclk %d \n",omap_clk_getrate(omap_findclk(s->mpu, "omap3_gp11_fclk"))));
+}
+static inline void omap3_cm_l3clk_update(struct omap3_cm_s *s)
+{
+	omap_clk l3_iclk = omap_findclk(s->mpu, "omap3_l3_iclk");
+	if ((s->cm_clksel_core & 0x3)==0x1)
+		omap_clk_setrate(l3_iclk,1, 1);
+	else if ((s->cm_clksel_core & 0x3)==0x2)
+		omap_clk_setrate(l3_iclk,2, 1);
+}
+static inline void omap3_cm_l4clk_update(struct omap3_cm_s *s)
+{
+	omap_clk l4_iclk = omap_findclk(s->mpu, "omap3_l4_iclk");
+	if ((s->cm_clksel_core & 0xc)==0x4)
+		omap_clk_setrate(l4_iclk,1, 1);
+	else if ((s->cm_clksel_core & 0xc)==0x8)
+		omap_clk_setrate(l4_iclk,2, 1);
+}
+static inline void omap3_cm_per_gptimer_update(struct omap3_cm_s *s)
+{
+	uint32_t cm_clksel_per = s->cm_clksel_per;
+	
+	if (cm_clksel_per&0x1)
+		omap_clk_reparent(omap_findclk(s->mpu, "omap3_gp2_fclk")
+										   ,omap_findclk(s->mpu, "omap3_sys_clk"));
+	else
+		omap_clk_reparent(omap_findclk(s->mpu, "omap3_gp2_fclk")
+										   ,omap_findclk(s->mpu, "omap3_32k_fclk"));
+
+	if (cm_clksel_per&0x2)
+		omap_clk_reparent(omap_findclk(s->mpu, "omap3_gp3_fclk")
+										   ,omap_findclk(s->mpu, "omap3_sys_clk"));
+	else
+		omap_clk_reparent(omap_findclk(s->mpu, "omap3_gp3_fclk")
+										   ,omap_findclk(s->mpu, "omap3_32k_fclk"));
+
+	if (cm_clksel_per&0x4)
+		omap_clk_reparent(omap_findclk(s->mpu, "omap3_gp4_fclk")
+										   ,omap_findclk(s->mpu, "omap3_sys_clk"));
+	else
+		omap_clk_reparent(omap_findclk(s->mpu, "omap3_gp4_fclk")
+										   ,omap_findclk(s->mpu, "omap3_32k_fclk"));
+
+	if (cm_clksel_per&0x8)
+		omap_clk_reparent(omap_findclk(s->mpu, "omap3_gp5_fclk")
+										   ,omap_findclk(s->mpu, "omap3_sys_clk"));
+	else
+		omap_clk_reparent(omap_findclk(s->mpu, "omap3_gp5_fclk")
+										   ,omap_findclk(s->mpu, "omap3_32k_fclk"));
+
+	if (cm_clksel_per&0x10)
+		omap_clk_reparent(omap_findclk(s->mpu, "omap3_gp6_fclk")
+										   ,omap_findclk(s->mpu, "omap3_sys_clk"));
+	else
+		omap_clk_reparent(omap_findclk(s->mpu, "omap3_gp6_fclk")
+										   ,omap_findclk(s->mpu, "omap3_32k_fclk"));
+	if (cm_clksel_per&0x20)
+		omap_clk_reparent(omap_findclk(s->mpu, "omap3_gp7_fclk")
+										   ,omap_findclk(s->mpu, "omap3_sys_clk"));
+	else
+		omap_clk_reparent(omap_findclk(s->mpu, "omap3_gp7_fclk")
+										   ,omap_findclk(s->mpu, "omap3_32k_fclk"));
+
+
+	if (cm_clksel_per&0x40)
+		omap_clk_reparent(omap_findclk(s->mpu, "omap3_gp8_fclk")
+										   ,omap_findclk(s->mpu, "omap3_sys_clk"));
+	else
+		omap_clk_reparent(omap_findclk(s->mpu, "omap3_gp8_fclk")
+										   ,omap_findclk(s->mpu, "omap3_32k_fclk"));
+	if (cm_clksel_per&0x80)
+		omap_clk_reparent(omap_findclk(s->mpu, "omap3_gp9_fclk")
+										   ,omap_findclk(s->mpu, "omap3_sys_clk"));
+	else
+		omap_clk_reparent(omap_findclk(s->mpu, "omap3_gp9_fclk")
+										   ,omap_findclk(s->mpu, "omap3_32k_fclk"));
+
+	/*TODO:Tell GPTIMER to generate new clk rate*/
+	
+	//OMAP3_DEBUG(("omap3_gp9_fclk %d \n",omap_clk_getrate(omap_findclk(s->mpu, "omap3_gp9_fclk"))));
+	//OMAP3_DEBUG(("omap3_gp8_fclk %d \n",omap_clk_getrate(omap_findclk(s->mpu, "omap3_gp8_fclk"))));
+
+	
+}
 static void omap3_cm_reset(struct omap3_cm_s *s)
 {
 	s->cm_fclken_iva2 = 0x0;
@@ -836,7 +1214,7 @@ static void omap3_cm_reset(struct omap3_cm_s *s)
 	s->cm_idlest_iva2 = 0x1;
 	s->cm_idlest_pll_iva2 = 0x0;
 	s->cm_autoidle_pll_iva2 = 0x0;
-	s->cm_clksel1_pll_iva2 = 0x8000;
+	s->cm_clksel1_pll_iva2 = 0x80000;
 	s->cm_clksel2_pll_iva2 = 0x1;
 	s->cm_clkstctrl_iva2 = 0x0;
 	s->cm_clkstst_iva2 = 0x0;
@@ -947,10 +1325,65 @@ static uint32_t omap3_cm_read(void *opaque, target_phys_addr_t addr)
 {
     struct omap3_cm_s *s = (struct omap3_cm_s *) opaque;
     int offset = addr - s->base;
-    //uint32_t ret;
+    uint32_t ret;
+    uint32_t bypass,m;
 
      switch (offset) 
      {
+     	case 0x04:
+     		return s->cm_clken_pll_iva2;
+     	case 0x24:
+     		if (((s->cm_clken_pll_iva2 & 0x7)==0x5)|| ((s->cm_clken_pll_iva2 & 0x7)==0x1))
+			{	
+				bypass = 1;
+			}
+			else if ((s->cm_clken_pll_iva2 & 0x7)==0x7)
+			{
+				m = (s->cm_clksel1_pll_iva2 & 0x7ff00)>>8;
+				if ((m==0)||(m==1))
+					bypass = 1;
+				else
+					bypass = 0;
+			}
+			if (bypass)
+				return 0;
+			else 
+				return 1;
+     	case 0x40:
+     		return s->cm_clksel1_pll_iva2;
+     	case 0x44:
+     		return s->cm_clksel2_pll_iva2;
+     	case 0xa40:  /*CM_CLKSEL_CORE*/
+			return s->cm_clksel_core;
+		case 0xb40:  /*CM_CLKSEL_SGX*/
+			return s->cm_clksel_sgx;
+     	case 0x904:    /*CM_CLKEN_PLL_MPU*/
+       	return s->cm_clken_pll_mpu;
+       case 0x940:
+       	return s->cm_clksel1_pll_mpu;
+       case 0x944:
+       	return s->cm_clksel2_pll_mpu;
+       case 0x924:
+       	if ((s->cm_clken_pll_mpu & 0x7)==0x5)
+			{	
+				bypass = 1;
+			}
+			else if ((s->cm_clken_pll_mpu & 0x7)==0x7)
+			{
+				m = (s->cm_clksel1_pll_mpu & 0x7ff00)>>8;
+				if ((m==0)||(m==1))
+					bypass = 1;
+				else
+					bypass = 0;
+			}
+			if (bypass)
+				return 0;
+			else
+				return 1;
+	   case 0xa00:
+       	return s->cm_fclken1_core;
+      case 0xa10:
+       	return s->cm_iclken1_core;
      	case 0xc00:   /*CM_FCLKEN_WKUP*/
      		return s->cm_fclken_wkup;
      	case 0xc10:    /*CM_ICLKEN_WKUP*/
@@ -958,36 +1391,43 @@ static uint32_t omap3_cm_read(void *opaque, target_phys_addr_t addr)
      	case 0xc20:    /*CM_IDLEST_WKUP*/
      		/*TODO: Check whether the timer can be accessed.*/
      		return 0x0;
+     	case 0xc40:
+     		return s->cm_clksel_wkup;
+     	case 0xd00:   /*CM_CLKEN_PLL*/
+     		return s->cm_clken_pll;
+     	case 0xd40:   /*CM_CLKSEL1_PLL*/
+     		return s->cm_clksel1_pll;
+     	case 0xd44:
+     		return s->cm_clksel2_pll ;
+     	case 0xd48:   /*CM_CLKSEL3_PLL*/
+     		return s->cm_clksel3_pll ;
+     	case 0xd20:  /*CM_IDLEST_CKGEN*/
+     		/*FIXME: all clock is active. we do not care it.*/
+     		ret = 0x3ffff;
+     		/*DPLL3 BYPASS*/
+     		if (((s->cm_clken_pll & 0x7)==0x5)||((s->cm_clken_pll & 0x7)==0x6))
+     			ret |= 0x3fffe;
+     		/*DPLL4 BYPASS*/
+     		 if ((s->cm_clken_pll & 0x70000)==0x10000)
+     			ret |= 0x3fffd;
+     		return ret; 
+       case 0xe40:
+     		return s->cm_clksel_dss;
+     	case 0xf40:
+     		return s->cm_clksel_cam;
+     	case 0x1000:
+     		return s->cm_fclken_per;
+     	case 0x1010:
+     		return s->cm_iclken_per;
+     	case 0x1040:
+     		return s->cm_clksel_per;
+     	case 0x1140:  /*CM_CLKSEL1_EMU*/
+     		return s->cm_clksel1_emu;
+
      	default:
-     		printf("omap3_cm_read addr %x \n",addr);
+     		printf("omap3_cm_read addr %x offset %x \n",addr,offset);
      		exit(-1);
      }
-}
-
-static inline void omap3_cm_fclken_wkup_update(struct omap_mpu_state_s *s,
-                uint32_t value)
-{
-	
-	if (value & 0x28)
-     	omap_clk_onoff(omap_findclk(s,"omap3_wkup_32k_fclk"), 1);
-    else
-    	omap_clk_onoff(omap_findclk(s,"omap3_wkup_32k_fclk"), 0);
-
-    if (value &0x1)
-    	omap_clk_onoff(omap_findclk(s,"omap3_gp1_fclk"), 1);
-    else
-    	omap_clk_onoff(omap_findclk(s,"omap3_gp1_fclk"), 0);
-
-}
-static inline void omap3_cm_iclken_wkup_update(struct omap_mpu_state_s *s,
-                uint32_t value)
-{
-	
-	if (value & 0x3f)
-     	omap_clk_onoff(omap_findclk(s,"omap3_wkup_l4_iclk"), 1);
-    else
-    	omap_clk_onoff(omap_findclk(s,"omap3_wkup_l4_iclk"), 0);
-
 }
 
 
@@ -1003,14 +1443,106 @@ static void omap3_cm_write(void *opaque, target_phys_addr_t addr,
      		OMAP_RO_REG(addr);
 	        exit(-1);
         	 break;
+	  case 0x4:   /*CM_CLKEN_PLL_IVA2*/
+	  	  s->cm_clken_pll_iva2 = value &0x7ff;
+	  	  omap3_cm_iva2_update(s);
+         break;
+     case 0x40:
+     		s->cm_clksel1_pll_iva2 = value & 0x3fff7f;
+     		//printf("value %x s->cm_clksel1_pll_iva2 %x \n",value,s->cm_clksel1_pll_iva2);
+      		omap3_cm_iva2_update(s);
+       	break;
+     case 0x44:
+     		s->cm_clksel2_pll_iva2 = value & 0x1f;
+      		omap3_cm_iva2_update(s);
+      		break;
+     case 0x904:    /*CM_CLKEN_PLL_MPU*/
+       	s->cm_clken_pll_mpu = value &0x7ff;
+       	omap3_cm_mpu_update(s);
+       	break;
+      case 0x940:
+      	   //printf("s->cm_clksel1_pll_mpu  %x\n",s->cm_clksel1_pll_mpu );
+      		s->cm_clksel1_pll_mpu = value & 0x3fff7f;
+      		omap3_cm_mpu_update(s);
+       	break;
+      case 0x944:
+      		s->cm_clksel2_pll_mpu = value & 0x1f;
+      		omap3_cm_mpu_update(s);
+      		break;
+       case 0xa00:
+       	s->cm_fclken1_core = value & 0x43fffe00;
+       case 0xa10:
+       	s->cm_iclken1_core = value & 0x7ffffed2;
+
+     	case 0xa40:  /*CM_CLKSEL_CORE*/
+     		s->cm_clksel_core = (value &0xcf);
+     		s->cm_clksel_core |= 0x700;
+     		omap3_cm_gp10_update(s);
+     		omap3_cm_gp11_update(s);
+     		omap3_cm_l3clk_update(s);
+     		omap3_cm_l4clk_update(s);
+     		break;
+     	case 0xb40:  /*CM_CLKSEL_SGX*/
+     		/*TODO: SGX Clock!!*/
+			s->cm_clksel_sgx = value;
+     		break;
      	case 0xc00:   /*CM_FCLKEN_WKUP*/
      		s->cm_fclken_wkup = value & 0x2e9;
-     		omap3_cm_fclken_wkup_update(s->mpu,s->cm_fclken_wkup);
+     		//omap3_cm_fclken_wkup_update(s,s->cm_fclken_wkup);
      		break;
      	case 0xc10:    /*CM_ICLKEN_WKUP*/
      		s->cm_iclken_wkup = value & 0x2ff;
-     		omap3_cm_iclken_wkup_update(s->mpu,s->cm_iclken_wkup);
+     		//omap3_cm_iclken_wkup_update(s,s->cm_iclken_wkup);
      		break;
+     	case 0xc40:      /*CM_CLKSEL_WKUP*/
+     		s->cm_clksel_wkup = value & 0x7f;
+     		omap3_cm_clksel_wkup_update(s,s->cm_clksel_wkup);
+     		break;
+     	case 0xd00:   /*CM_CLKEN_PLL*/
+     		s->cm_clken_pll = value & 0xffff17ff;
+     		omap3_cm_dpll3_update(s);
+     		omap3_cm_dpll4_update(s);
+     		break;
+     	case 0xd40:   /*CM_CLKSEL1_PLL*/
+     		//OMAP3_DEBUG(("WD40 value %x \n",value));
+     		s->cm_clksel1_pll = value & 0xffffbffc;
+     		//OMAP3_DEBUG(("WD40 value %x \n",value));
+     		omap3_cm_dpll3_update(s);
+     		omap3_cm_48m_update(s);
+     		break;
+     	case 0xd44:
+     		s->cm_clksel2_pll = value & 0x7ff7f;
+     		omap3_cm_dpll4_update(s);
+     		break;
+     	case 0xd48:   /*CM_CLKSEL3_PLL*/
+     		s->cm_clksel3_pll = value & 0x1f;
+     		omap3_cm_dpll4_update(s);
+     		break;
+     	case 0xe40:
+     		s->cm_clksel_dss= value & 0x1f1f;
+     		omap3_cm_dpll4_update(s);
+     		break;
+     	case 0xf40:
+     		s->cm_clksel_cam= value & 0x1f;
+     		omap3_cm_dpll4_update(s);
+     		break;
+     	case 0x1000:
+     		s->cm_fclken_per = value & 0x3ffff;
+     		break;
+     	case 0x1010:
+     		s->cm_iclken_per = value & 0x3ffff;
+     		break;
+     	case 0x1040:
+     		s->cm_clksel_per = value & 0xff;
+     		omap3_cm_per_gptimer_update(s);
+     		break;
+     	case 0x1140:  /*CM_CLKSEL1_EMU*/
+     		s->cm_clksel1_emu = value & 0x1f1f3fff;
+     		//printf("cm_clksel1_emu %x\n",s->cm_clksel1_emu);
+     		omap3_cm_dpll3_update(s);
+     		omap3_cm_dpll4_update(s);
+     		break;
+
      	default:
      		printf("omap3_cm_write addr %x value %x \n",addr,value);
      		exit(-1);
@@ -1927,14 +2459,14 @@ static void omap3_sms_write32(void *opaque, target_phys_addr_t addr,
 {
 	struct omap3_sms_s *s = (struct omap3_sms_s *) opaque;
     int offset = addr - s->base;
-    int i;
+    //int i;
 
     switch (offset)
     {
     	case 0x48:
     		break;
     	default:
-    		printf("omap3_sms_write32 addr %x\n",omap3_sms_write32);
+    		printf("omap3_sms_write32 addr %x\n",addr);
     		exit(-1);
     }
 }
@@ -1995,8 +2527,6 @@ struct omap_mpu_state_s *omap3530_mpu_init(unsigned long sdram_size,
     cpu_register_physical_memory(OMAP3_SRAM_BASE, s->sram_size,
                     ( sram_base| IO_MEM_RAM));
 
-    printf("sram_base %x\n",sram_base);
-
     s->l4 = omap_l4_init(OMAP3_L4_BASE, sizeof(omap3_l4_agent_info));
 
 	 s->omap3_cm = omap3_cm_init(omap3_l4ta_get(s->l4, 1),
@@ -2012,7 +2542,17 @@ struct omap_mpu_state_s *omap3530_mpu_init(unsigned long sdram_size,
     s->omap3_scm = omap3_scm_init(omap3_l4ta_get(s->l4, 4),s);
 
     s->omap3_pm = omap3_pm_init(s);
-    s->omap3_sms = omap3_sms_init(s);							
+    s->omap3_sms = omap3_sms_init(s);		
+
+    s->gptimer[0] = omap_gp_timer_init(omap3_l4ta_get(s->l4, 5),
+                    NULL,
+                    omap_findclk(s, "omap3_gp1_fclk"),
+                    omap_findclk(s, "omap3_wkup_l4_iclk"));
+
+    omap_synctimer_init(omap3_l4ta_get(s->l4, 6),s,
+                    omap_findclk(s, "omap3_sys_32k"),
+                    NULL);
+    
 
     return s;    
 }
