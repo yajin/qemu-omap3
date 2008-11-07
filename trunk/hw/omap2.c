@@ -83,6 +83,11 @@ struct omap_gp_timer_s {
 #define GPT_OVF_IT	(1 << 1)
 #define GPT_MAT_IT	(1 << 0)
 
+/*if the clock source of gptimer change, we must regenerate gptimer rate*/
+void omap_gp_timer_chage_clk(struct omap_gp_timer_s *timer)
+{
+	timer->rate = omap_clk_getrate(timer->clk);
+}
 static inline void omap_gp_timer_intr(struct omap_gp_timer_s *timer, int it)
 {
     if (timer->it_ena & it) {
@@ -270,6 +275,7 @@ static uint32_t omap_gp_timer_readw(void *opaque, target_phys_addr_t addr)
 {
     struct omap_gp_timer_s *s = (struct omap_gp_timer_s *) opaque;
     int offset = addr - s->base;
+   
 
     switch (offset) {
     case 0x00:	/* TIDR */
@@ -305,8 +311,10 @@ static uint32_t omap_gp_timer_readw(void *opaque, target_phys_addr_t addr)
                 (s->st << 0);
 
     case 0x28:	/* TCRR */
-        return omap_gp_timer_read(s);
-
+    	return omap_gp_timer_read(s);
+    	//ret1 = omap_gp_timer_read(s);
+    	 //printf("TCRR %d \n",ret1);
+    	 //return ret;
     case 0x2c:	/* TLDR */
         return s->load_val;
 
@@ -508,6 +516,7 @@ static uint32_t omap_synctimer_readw(void *opaque, target_phys_addr_t addr)
 {
     struct omap_synctimer_s *s = (struct omap_synctimer_s *) opaque;
     int offset = addr - s->base;
+    uint32_t ret;
 
     switch (offset) {
     case 0x00:	/* 32KSYNCNT_REV */
@@ -515,7 +524,7 @@ static uint32_t omap_synctimer_readw(void *opaque, target_phys_addr_t addr)
     case 0x04:
     	 return s->sysconfig;
     case 0x10:	/* CR */
-        return omap_synctimer_read(s) - s->val;
+        return omap_synctimer_read(s) - s->val;;
     }
 
     OMAP_BAD_REG(addr);
