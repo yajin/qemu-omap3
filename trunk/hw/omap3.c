@@ -1427,6 +1427,80 @@ static void omap3_scm_write8(void *opaque, target_phys_addr_t addr,
 
     switch (offset)
     {
+    	case 0x30 ... 0x33:   /*sdrc_d0 sdrc_d1*/
+    	case 0x34 ... 0x37:   /*sdrc_d2 sdrc_d3*/
+    	case 0x38 ... 0x3b:   /*sdrc_d4 sdrc_d5*/
+    	case 0x3c ... 0x3f:   /*sdrc_d6 sdrc_d7*/
+    	case 0x40 ... 0x43:   /*sdrc_d8 sdrc_d9*/
+    	case 0x44 ... 0x47:   /*sdrc_d10 sdrc_d11*/
+    	case 0x48 ... 0x4b:   /*sdrc_d12 sdrc_d13*/
+    	case 0x4c ... 0x4f:   /*sdrc_d14 sdrc_d15*/
+    	case 0x50 ... 0x53:   /*sdrc_d16 sdrc_d17*/
+    	case 0x54 ... 0x57:   /*sdrc_d18 sdrc_d19*/
+    	case 0x58 ... 0x5b:   /*sdrc_d20 sdrc_d21*/
+    	case 0x5c ... 0x5f:   /*sdrc_d22 sdrc_d23*/
+    	case 0x60 ... 0x63:   /*sdrc_d24 sdrc_d25*/
+    	case 0x64 ... 0x67:   /*sdrc_d26 sdrc_d27*/
+    	case 0x68 ... 0x6b:   /*sdrc_d28 sdrc_d29*/
+    	case 0x6c ... 0x6f:   /*sdrc_d30 sdrc_d31*/
+    	case 0x70 ... 0x73:   /*sdrcclk sdrcdqs0*/
+    	case 0x74 ... 0x77:   /*sdrcdqs1 sdrcdqs2*/
+    	case 0x78 ... 0x7b:   /*sdrcdqs3 gpmca1*/
+    	case 0x7c ... 0x7f:   /*gpmca2 gpmca3*/
+    	case 0x80 ... 0x83:   /*gpmca4 gpmca5*/
+    	case 0x84 ... 0x87:   /*gpmca6 gpmca7*/
+    	case 0x88 ... 0x8b:   /*gpmca8 gpmca9*/
+    	case 0x8c ... 0x8f:   /*gpmca10 gpmcd0*/
+    	case 0x90 ... 0x93:   /*gpmcd1 gpmcd2*/
+    	case 0x94 ... 0x97:   /*gpmcd3 gpmcd4*/
+    	case 0x98 ... 0x9b:   /*gpmcd5 gpmcd6*/
+    	case 0x9c ... 0x9f:   /*gpmcd7 gpmcd8*/
+    	case 0xa0 ... 0xa3:   /*gpmcd9 gpmcd10*/
+    	case 0xa4 ... 0xa7:   /*gpmcd11 gpmcd12*/
+    	case 0xa8 ... 0xab:   /*gpmcd13 gpmcd14*/
+    	case 0xac ... 0xaf:   /*gpmcd15 gpmcncs0*/
+    	case 0xb0 ... 0xb3:   /*gpmcncs1 gpmcncs2*/
+    	case 0xb4 ... 0xb7:   /*gpmcncs3 gpmcncs4*/
+    	case 0xb8 ... 0xbb:   /*gpmcncs5 gpmcncs6*/
+    	case 0xbc ... 0xbf:   /*gpmcncs7 gpmcclk*/
+    	case 0xc0 ... 0xc3:  
+    	case 0xc4 ... 0xc7: 
+    	case 0xc8 ... 0xcb:   /*gpmcnbe1 gpmcnwp*/
+    	case 0xcc ... 0xcf:   /*gpmcwait0 gpmcwait1*/
+    	case 0xd0 ... 0xd3:   /*gpmcwait2 gpmcwait3*/
+
+    	case 0x100 ... 0x103:   /*dssdata18 dssdata19*/
+    	case 0x104 ... 0x107:   /*dssdata20 dssdata21*/
+    	case 0x130 ... 0x133:   /*camwen camstrobe*/
+    		
+
+    	case 0x17c ... 0x17f:   /*uart1 tx uart1rts*/
+    	case 0x180 ... 0x183:   /*uart1 cts uart1 rx*/
+    	case 0x190 ... 0x193:   /*mcbsp1_dx mcbsp1_dr*/
+    	case 0x198 ... 0x19b:   
+    	case 0x19c ... 0x19f:   	
+    	case 0x1a0 ... 0x1a3:   
+		case 0x1e0 ... 0x1e3:    /*sys nirq sys_clkout2*/
+
+		case 0x260 ... 0x263:    /*sys nirq sys_clkout2*/
+		case 0x264 ... 0x267:    /*sys nirq sys_clkout2*/
+    	
+    	case 0xa04 ... 0xa07:   
+    	case 0xa08 ... 0xa0b:    /*sys_boot0*/
+    	case 0xa0c ... 0xa0f:    /*sys_boot1 sys_boot2*/
+    	case 0xa10 ... 0xa13:    /*sys_boot3 sys_boot4*/
+    	case 0xa14 ... 0xa17:    /*sys_boot5 sys_boot6*/
+    	case 0xa1c ... 0xa1f:    /*JTAG_nTRST JTAG_TCK*/
+    	case 0xa20 ... 0xa23:    /*JTAG_TMS JTAG_TDI*/
+    	case 0xa24 ... 0xa27:    /*JTAG_EMU0 JTAG_EMU1*/
+    	case 0xa28 ... 0xa2b:   
+    	case 0xa2c ... 0xa2f:   
+    	case 0xa30 ... 0xa33:   
+    	case 0xa40 ... 0xa43:
+    	case 0xa44 ... 0xa47:
+    	case 0xa48 ... 0xa4b:
+
+	   		break;
     	default:
     		printf("omap3_scm_write8 addr %x \n",addr);
      		exit(-1);
