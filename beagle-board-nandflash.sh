@@ -4,7 +4,7 @@
 # Put the xloader,u-boot,kernel and rootfs into nand flash image.
 # 
 #
-#	beagle-board-nandflash.sh  <xloader-image>   <nandflashimage>  xloader
+# beagle-board-nandflash.sh  <xloader-image>   <nandflashimage>  x-loader
 # beagle-board-nandflash.sh  <uboot-image>   <nandflashimage>  uboot	
 # beagle-board-nandflash.sh  <kernel-image>   <nandflashimage>  kernel
 # beagle-board-nandflash.sh  <rootfs>   <nandflashimage>  rootfs
@@ -100,10 +100,18 @@ put_xloader()
 	put_no_oob $1 $xloader_page_offset
 	echo "put xloader into flash image done!"
 }
-
+put_uboot()
+{
+	echo "uboot image name:"$uboot_image_name
+	put_no_oob $1 $uboot_page_offset
+	echo "put u-boot into flash image done!"
+}
 case "$3" in
-	xloader)
+	x-loader)
 		put_xloader $1
+		;;
+	u-boot)
+		put_uboot $1
 		;;
 	*)
 		echo "Unknown partition $3"
