@@ -2347,6 +2347,7 @@ static void unassigned_mem_writeb(void *opaque, target_phys_addr_t addr, uint32_
 {
 	printf("Unassigned mem write " TARGET_FMT_plx " = 0x%x\n", addr, val);
 	exit(-1);
+	
 #ifdef DEBUG_UNASSIGNED
     printf("Unassigned mem write " TARGET_FMT_plx " = 0x%x\n", addr, val);
 #endif
