@@ -1332,6 +1332,35 @@ static struct clk omap3_uart3_iclk = {
 };
 
 
+/*INTC Clock*/
+
+static struct clk omap3_mpu_intc_fclk = {
+    .name	= "omap3_mpu_intc_fclk",
+    .flags	= CLOCK_IN_OMAP353X ,
+    .divisor = 2,
+    .parent	= &omap3_mpu_clk,        
+};
+static struct clk omap3_mpu_intc_iclk = {
+    .name	= "omap3_mpu_intc_iclk",
+    .flags	= CLOCK_IN_OMAP353X ,
+    .divisor = 2,
+    .parent	= &omap3_mpu_clk,        
+};
+
+/*SDMA clock*/
+static struct clk omap3_sdma_fclk = {
+    .name	= "omap3_sdma_fclk",
+    .flags	= CLOCK_IN_OMAP353X ,
+    .parent	= &omap3_core_l3_iclk,        
+};
+static struct clk omap3_sdma_iclk = {
+    .name	= "omap3_sdma_iclk",
+    .flags	= CLOCK_IN_OMAP353X ,
+    .parent	= &omap3_core_l4_iclk,        
+};
+
+
+
 static struct clk *onchip_clks[] = {
     /* OMAP 1 */
 
@@ -1527,6 +1556,10 @@ static struct clk *onchip_clks[] = {
     &omap3_uart2_iclk,
     &omap3_uart3_fclk,
     &omap3_uart3_iclk,
+    &omap3_mpu_intc_fclk,
+    &omap3_mpu_intc_iclk,
+    &omap3_sdma_fclk,
+    &omap3_sdma_iclk,
 
     0
 };
