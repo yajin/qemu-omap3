@@ -4132,9 +4132,11 @@ static void omap_gpmc_cs_map(struct omap_gpmc_cs_file_s *f, int base, int mask)
 
     if (!f->opaque)
         return;
+    
 
     f->base = base << 24;
     f->size = (0x0fffffff & ~(mask << 24)) + 1;
+    printf("f->base %x f->size %x \n",f->base,f->size);
     /* TODO: rather than setting the size of the mapping (which should be
      * constant), the mask should cause wrapping of the address space, so
      * that the same memory becomes accessible at every <i>size</i> bytes
@@ -4300,6 +4302,7 @@ static void omap_gpmc_write(void *opaque, target_phys_addr_t addr,
     struct omap_gpmc_s *s = (struct omap_gpmc_s *) opaque;
     int offset = addr - s->base;
     int cs;
+    
     struct omap_gpmc_cs_file_s *f;
 
     switch (offset) {
@@ -4372,8 +4375,8 @@ static void omap_gpmc_write(void *opaque, target_phys_addr_t addr,
                     if (f->config[6] & (1 << 6))		/* CSVALID */
                         omap_gpmc_cs_unmap(f);
                     if (value & (1 << 6))			/* CSVALID */
-                        omap_gpmc_cs_map(f, value & 0x1f,	/* MASKADDR */
-                                        (value >> 8 & 0xf));	/* BASEADDR */
+                        omap_gpmc_cs_map(f, value & 0x3f,	/* BASEADDR */
+                                        (value >> 8 & 0xf));	   /* MASKADDR */
                 }
                 f->config[6] = value & 0x00000f7f;
                 break;
@@ -4481,7 +4484,7 @@ void omap_gpmc_attach(struct omap_gpmc_s *s, int cs, int iomemtype,
     f->opaque = opaque;
 
     if (f->config[6] & (1 << 6))				/* CSVALID */
-        omap_gpmc_cs_map(f, f->config[6] & 0x1f,		/* MASKADDR */
+        omap_gpmc_cs_map(f, f->config[6] & 0x3f,		/* MASKADDR */
                         (f->config[6] >> 8 & 0xf));		/* BASEADDR */
 }
 

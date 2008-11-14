@@ -54,6 +54,8 @@
 # define MAX_PAGE		0x800
 # define MAX_OOB		0x40
 
+# define BUS_WIDTH_16  2
+# define BUS_WIDTH_8 1
 struct nand_flash_s {
     uint8_t manf_id, chip_id;
     int size, pages;
@@ -69,7 +71,8 @@ struct nand_flash_s {
     uint8_t *ioaddr;
     int iolen;
 
-    uint32_t cmd, addr;
+    uint32_t cmd;
+    uint64_t addr;
     int addrlen;
     int status;
     int offset;
@@ -211,6 +214,11 @@ static const struct nand_info_s {
     [0xc5] = { 2048,	16,	0, 0, LP_OPTIONS16 },
 };
 
+#ifdef DEBUG_NAND
+#define NAND_DEBUG(x)    do {  printf x ; } while(0)
+#else
+#define NAND_DEBUG(x)    do {  } while(0)
+#endif
 static void nand_reset(struct nand_flash_s *s)
 {
     s->cmd = NAND_CMD_READ0;
@@ -223,21 +231,34 @@ static void nand_reset(struct nand_flash_s *s)
 
 static void nand_command(struct nand_flash_s *s)
 {
+	 int id_index[4] = {0,1,2,3};
     switch (s->cmd) {
     case NAND_CMD_READ0:
         s->iolen = 0;
         break;
 
     case NAND_CMD_READID:
-        s->io[0] = s->manf_id;
-        s->io[1] = s->chip_id;
-        s->io[2] = 'Q';		/* Don't-care byte (often 0xa5) */
+    	 /*16 bit nand flash only return one byte when reading ID*/
+    	 s->iolen = 4*s->bus_width;
+    	 memset(s->io,0x0,s->iolen );
+    	 if (s->bus_width== BUS_WIDTH_16 )
+    	 {
+    	 	id_index[0] = 0;
+    	 	id_index[1] = 2;
+    	 	id_index[2] = 4;
+    	 	id_index[3] = 6;
+    	 }
+        s->io[id_index[0]] = s->manf_id;
+        s->io[id_index[1]] = s->chip_id;
+        s->io[id_index[2]] = 'Q';		/* Don't-care byte (often 0xa5) */
         if (nand_flash_ids[s->chip_id].options & NAND_SAMSUNG_LP)
-            s->io[3] = 0x15;	/* Page Size, Block Size, Spare Size.. */
+            s->io[id_index[3]] = 0x15;	/* Page Size, Block Size, Spare Size.. */
+        else if ((s->manf_id==NAND_MFR_MICRON)&&(s->chip_id==0xba))
+        	 s->io[id_index[3]] = 0x55;
         else
-            s->io[3] = 0xc0;	/* Multi-plane */
+            s->io[id_index[3]] = 0xc0;	/* Multi-plane */
         s->ioaddr = s->io;
-        s->iolen = 4;
+       
         break;
 
     case NAND_CMD_RANDOMREAD2:
@@ -278,6 +299,8 @@ static void nand_command(struct nand_flash_s *s)
         break;
 
     case NAND_CMD_READSTATUS:
+    	 if ((s->manf_id==NAND_MFR_MICRON)&&(s->chip_id==0xba))
+    	 	s->status |= 0x60; /*flash is ready*/ 
         s->io[0] = s->status;
         s->ioaddr = s->io;
         s->iolen = 1;
@@ -483,11 +506,10 @@ void nand_write_command(struct nand_flash_s *s, uint8_t value)
 void nand_write_address(struct nand_flash_s *s, uint8_t value)
 {
 	int addr_cycle;
-	uint16_t addr;
+	uint64_t addr;
 
 	s->addr |= ((uint64_t)value) << (s->addrlen * 8);
 	s->addrlen ++;
-	//printf("s->addr %llx addrlen %x value %x  \n",s->addr,s->addrlen,value);
 	if (s->addrlen == 1 && s->cmd == NAND_CMD_READID)
     	nand_command(s);
 
@@ -499,9 +521,8 @@ void nand_write_address(struct nand_flash_s *s, uint8_t value)
          s->cmd == NAND_CMD_READ0 ||
          s->cmd == NAND_CMD_PAGEPROGRAM1))
 	 {
-	 	/*chage it to byte address*/
-		addr = s->addr & 0xffff;
-	 	addr = addr<<s->bus_width;
+		addr = s->addr & 0x7ff;
+	 	addr = addr*s->bus_width;
 	 	s->addr &= 0xffffffffffff0000LL;
 	 	s->addr += addr;
 	 	nand_command(s);
@@ -542,7 +563,6 @@ uint16_t nand_read_data16(struct nand_flash_s *s)
     {
         offset = (s->addr & ((1 << s->addr_shift) - 1)) + s->offset;
         s->offset = 0;
-        //printf("s->addr  %llx offset %x  \n",s->addr,offset);
         s->blk_load(s, s->addr, offset);
         s->iolen = (1 << s->page_shift) + (1 << s->oob_shift) - offset;
     }
@@ -575,9 +595,9 @@ struct nand_flash_s *nand_init(int manf_id, int chip_id)
     s->manf_id = manf_id;
     s->chip_id = chip_id;
     s->size = nand_flash_ids[s->chip_id].size << 20;
-    s->bus_width =1;
+    s->bus_width = BUS_WIDTH_8;
     if (nand_flash_ids[s->chip_id].options & NAND_BUSWIDTH_16)
-    	s->bus_width =2;
+    	s->bus_width = BUS_WIDTH_16;
     if ((nand_flash_ids[s->chip_id].options & NAND_SAMSUNG_LP)||
     	 (nand_flash_ids[s->chip_id].options & NAND_MT29F2G16_LP)
 		)
@@ -750,7 +770,7 @@ static void glue(nand_blk_load_, PAGE_SIZE)(struct nand_flash_s *s,
                                     s->io, (PAGE_SECTORS + 2)) == -1)
                 printf("%s: read error in sector %i\n",
                                 __FUNCTION__, PAGE_START(addr) >> 9);
-            s->ioaddr = s->io + (PAGE_START(addr) & 0x1ff) + offset;
+            s->ioaddr = s->io + (PAGE_START(addr) & 0x1ff) + offset;         
         }
     } else {
         memcpy(s->io, s->storage + PAGE_START(s->addr) +
