@@ -33,7 +33,11 @@
 
 #define BEAGLE_NAND_CS			0
 
-
+#ifdef DEBUG_BEAGLE
+#define BEAGLE_DEBUG(x)    do {  printf x ; } while(0)
+#else
+#define BEAGLE_DEBUG(x)    do {   } while(0)
+#endif
 /* Beagle board support */
 struct beagle_s {
     struct omap_mpu_state_s *cpu;
@@ -54,6 +58,7 @@ static uint32_t beagle_nand_read16(void *opaque, target_phys_addr_t addr)
 	struct beagle_s *s = (struct beagle_s *) opaque;
 	target_phys_addr_t offset;
     offset = addr-s->nand_base;
+    BEAGLE_DEBUG(("beagle_nand_read16 offset %x\n",offset));
 
 	switch (offset)
 	{
@@ -106,19 +111,39 @@ CPUReadMemoryFunc *beagle_nand_readfn[] = {
         omap_badwidth_write32,
 };
 
+/*
+void beagle_nand_base_update(void *opaque, target_phys_addr_t new)
+{
+    struct beagle_s *s = (struct beagle_s *) opaque;
+    int iomemtype;
 
+    printf("beagle_nand_base_update base %x \n",new);
 
+    s->nand_base = new;
+
+	iomemtype = cpu_register_io_memory(0, beagle_nand_readfn,
+                    beagle_nand_writefn, s);
+    cpu_register_physical_memory(s->nand_base, 0xc, iomemtype);
+}
+
+void beagle_nand_base_unmap(void *opaque)
+{
+    struct beagle_s *s = (struct beagle_s *) opaque;
+    cpu_register_physical_memory(s->nand_base,0xc, IO_MEM_UNASSIGNED);
+}
+*/
 static void beagle_nand_setup(struct beagle_s *s)
 {
 	int iomemtype;
 	
 	/*MT29F2G16ABC*/
 	s->nand = nand_init(NAND_MFR_MICRON,0xba);
+	s->nand_base = 0x6e00007c ;
 
-	s->nand_base= 0x6E00007c +  (0x00000030 * BEAGLE_NAND_CS);
 	iomemtype = cpu_register_io_memory(0, beagle_nand_readfn,
                     beagle_nand_writefn, s);
     cpu_register_physical_memory(s->nand_base, 0xc, iomemtype);
+
 }
 
 static int beagle_nand_read_page(struct beagle_s *s,uint8_t *buf, uint16_t page_addr)
@@ -161,12 +186,11 @@ static int beagle_nand_read_page(struct beagle_s *s,uint8_t *buf, uint16_t page_
 	len = *((uint32_t*)nand_page);
 	loadaddr =  *((uint32_t*)(nand_page+4));
 
-	printf("len %x loadaddr %x \n ",len,loadaddr);
-
 	/*put the first page into internal ram*/
 	load_dest = phys_ram_base +beagle_binfo.ram_size;
 	load_dest += loadaddr-OMAP3_SRAM_BASE;
-	printf("load_dest %x phys_ram_base %x \n",load_dest,phys_ram_base);
+	
+	BEAGLE_DEBUG(("load_dest %x phys_ram_base %x \n",load_dest,phys_ram_base));
 	
 	memcpy(load_dest,nand_page+8,0x800-8);
 	load_dest += 0x800-8;
