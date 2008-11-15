@@ -2345,7 +2345,7 @@ exit(-1);
 
 static void unassigned_mem_writeb(void *opaque, target_phys_addr_t addr, uint32_t val)
 {
-	printf("Unassigned mem write " TARGET_FMT_plx " = 0x%x\n", addr, val);
+	printf("Unassigned mem writeb " TARGET_FMT_plx " = 0x%x pc %x \n", addr, val,cpu_single_env->regs[15] );
 	exit(-1);
 	
 #ifdef DEBUG_UNASSIGNED
@@ -2358,7 +2358,7 @@ static void unassigned_mem_writeb(void *opaque, target_phys_addr_t addr, uint32_
 
 static void unassigned_mem_writew(void *opaque, target_phys_addr_t addr, uint32_t val)
 {
-	printf("Unassigned mem write " TARGET_FMT_plx " = 0x%x\n", addr, val);
+	printf("Unassigned mem writew " TARGET_FMT_plx " = 0x%x pc %x \n", addr, val,cpu_single_env->regs[15]);
 	exit(-1);
 #ifdef DEBUG_UNASSIGNED
     printf("Unassigned mem write " TARGET_FMT_plx " = 0x%x\n", addr, val);
@@ -2370,7 +2370,7 @@ static void unassigned_mem_writew(void *opaque, target_phys_addr_t addr, uint32_
 
 static void unassigned_mem_writel(void *opaque, target_phys_addr_t addr, uint32_t val)
 {
-	printf("Unassigned mem write " TARGET_FMT_plx " = 0x%x\n", addr, val);
+	printf("Unassigned mem writel " TARGET_FMT_plx " = 0x%x pc %x \n", addr, val,cpu_single_env->regs[15] );
 	exit(-1);
 #ifdef DEBUG_UNASSIGNED
     printf("Unassigned mem write " TARGET_FMT_plx " = 0x%x\n", addr, val);
