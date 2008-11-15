@@ -1668,6 +1668,8 @@ uint32_t HELPER(get_cp15)(CPUState *env, uint32_t insn)
                 return 1;
             case ARM_CPUID_CORTEXA8:
                 return 0;
+            case ARM_CPUID_OMAP3530:
+            	  return 2;
             default:
                 goto bad_reg;
             }
