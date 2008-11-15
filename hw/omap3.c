@@ -342,10 +342,11 @@ static struct omap_l4_agent_info_s omap3_l4_agent_info[] = {
     {3, 82, 2, 1},              /* WDTIMER 2 */
     {4, 3, 2, 1},               /* SCM */
     {5, 84, 2, 1},              /* GP TIMER 1 */
-    {6, 86, 2, 1},              /* 32K Sync timer */
-    {7, 21, 2, 1},              /* uart1 */
-    {8, 23, 2, 1},              /* uart2 */
-    {9, 96, 2, 1},              /* uart3 */
+    {6, 110, 2, 1},              /* GP TIMER 2 */
+    {7, 86, 2, 1},              /* 32K Sync timer */
+    {8, 21, 2, 1},              /* uart1 */
+    {9, 23, 2, 1},              /* uart2 */
+    {10, 96, 2, 1},              /* uart3 */
 };
 
 struct omap_target_agent_s *omap3_l4ta_get(struct omap_l4_s *bus, int cs)
@@ -1022,7 +1023,7 @@ static inline void omap3_cm_dpll3_update(struct omap3_cm_s *s)
                          m * 2);
         omap_clk_setrate(omap_findclk(s->mpu, "omap3_emu_core_alwon_clk"),
                          (n + 1) * m3, m * 2);
-        //OMAP3_DEBUG(("coreclk %d \n",omap_clk_getrate(omap_findclk(s->mpu, "omap3_core_clk"))));
+        OMAP3_DEBUG(("coreclk %d \n",omap_clk_getrate(omap_findclk(s->mpu, "omap3_core_clk"))));
     }
 
 
@@ -1078,13 +1079,13 @@ static inline void omap3_cm_dpll4_update(struct omap3_cm_s *s)
         omap_clk_setrate(omap_findclk(s->mpu, "omap3_per_alwon_clk"),
                          (n + 1) * m6, m * 2);
 
-        //OMAP3_DEBUG(("omap3_96m_fclk %d \n",omap_clk_getrate(omap_findclk(s->mpu, "omap3_96m_fclk"))));
-        //OMAP3_DEBUG(("omap3_54m_fclk %d \n",omap_clk_getrate(omap_findclk(s->mpu, "omap3_54m_fclk"))));
-        //OMAP3_DEBUG(("omap3_dss1_alwon_fclk %d \n",omap_clk_getrate(omap_findclk(s->mpu, "omap3_dss1_alwon_fclk"))));
-        //OMAP3_DEBUG(("omap3_cam_mclk %d \n",omap_clk_getrate(omap_findclk(s->mpu, "omap3_cam_mclk"))));
-        //OMAP3_DEBUG(("omap3_per_alwon_clk %d \n",omap_clk_getrate(omap_findclk(s->mpu, "omap3_per_alwon_clk"))));
-        //OMAP3_DEBUG(("omap3_48m_fclk %d \n",omap_clk_getrate(omap_findclk(s->mpu, "omap3_48m_fclk"))));
-        //OMAP3_DEBUG(("omap3_12m_fclk %d \n",omap_clk_getrate(omap_findclk(s->mpu, "omap3_12m_fclk"))));
+        OMAP3_DEBUG(("omap3_96m_fclk %d \n",omap_clk_getrate(omap_findclk(s->mpu, "omap3_96m_fclk"))));
+        OMAP3_DEBUG(("omap3_54m_fclk %d \n",omap_clk_getrate(omap_findclk(s->mpu, "omap3_54m_fclk"))));
+        OMAP3_DEBUG(("omap3_dss1_alwon_fclk %d \n",omap_clk_getrate(omap_findclk(s->mpu, "omap3_dss1_alwon_fclk"))));
+        OMAP3_DEBUG(("omap3_cam_mclk %d \n",omap_clk_getrate(omap_findclk(s->mpu, "omap3_cam_mclk"))));
+        OMAP3_DEBUG(("omap3_per_alwon_clk %d \n",omap_clk_getrate(omap_findclk(s->mpu, "omap3_per_alwon_clk"))));
+        OMAP3_DEBUG(("omap3_48m_fclk %d \n",omap_clk_getrate(omap_findclk(s->mpu, "omap3_48m_fclk"))));
+        OMAP3_DEBUG(("omap3_12m_fclk %d \n",omap_clk_getrate(omap_findclk(s->mpu, "omap3_12m_fclk"))));
 
     }
 
@@ -1347,6 +1348,8 @@ static uint32_t omap3_cm_read(void *opaque, target_phys_addr_t addr)
 
     switch (offset)
     {
+    case 0x0:
+    	return s->cm_fclken_iva2;
     case 0x04:
         return s->cm_clken_pll_iva2;
     case 0x24:
@@ -1402,6 +1405,8 @@ static uint32_t omap3_cm_read(void *opaque, target_phys_addr_t addr)
         return s->cm_fclken1_core;
     case 0xa10:
         return s->cm_iclken1_core;
+    case 0xa14:
+    	 return s->cm_iclken2_core;
     case 0xc00:                /*CM_FCLKEN_WKUP */
         return s->cm_fclken_wkup;
     case 0xc10:                /*CM_ICLKEN_WKUP */
@@ -1430,8 +1435,16 @@ static uint32_t omap3_cm_read(void *opaque, target_phys_addr_t addr)
         if ((s->cm_clken_pll & 0x70000) == 0x10000)
             ret |= 0x3fffd;
         return ret;
+    case 0xe00:
+    	return s->cm_fclken_dss;
+   	case 0xe10:
+    	return s->cm_iclken_dss;
     case 0xe40:
         return s->cm_clksel_dss;
+    case 0xf00:
+    	return s->cm_fclken_cam;
+    case 0xf10:
+    	return s->cm_iclken_cam;
     case 0xf40:
         return s->cm_clksel_cam;
     case 0x1000:
@@ -1462,6 +1475,9 @@ static void omap3_cm_write(void *opaque, target_phys_addr_t addr,
         OMAP_RO_REG(addr);
         exit(-1);
         break;
+    case 0x0:
+    	s->cm_fclken_iva2 = value & 0x1;
+    	break;
     case 0x4:                  /*CM_CLKEN_PLL_IVA2 */
         s->cm_clken_pll_iva2 = value & 0x7ff;
         omap3_cm_iva2_update(s);
@@ -1490,9 +1506,13 @@ static void omap3_cm_write(void *opaque, target_phys_addr_t addr,
         break;
     case 0xa00:
         s->cm_fclken1_core = value & 0x43fffe00;
+         break;
     case 0xa10:
         s->cm_iclken1_core = value & 0x7ffffed2;
-
+         break;
+    case 0xa14:
+    	 s->cm_iclken2_core = value & 0x1f;
+    	 break;
     case 0xa40:                /*CM_CLKSEL_CORE */
         s->cm_clksel_core = (value & 0xcf);
         s->cm_clksel_core |= 0x700;
@@ -1537,10 +1557,22 @@ static void omap3_cm_write(void *opaque, target_phys_addr_t addr,
         s->cm_clksel3_pll = value & 0x1f;
         omap3_cm_dpll4_update(s);
         break;
+    case 0xe00:
+    	s->cm_fclken_dss = value & 0x7;
+    	break;
+   	case 0xe10:
+    	s->cm_iclken_dss = value & 0x1;
+    	break;
     case 0xe40:
         s->cm_clksel_dss = value & 0x1f1f;
         omap3_cm_dpll4_update(s);
         break;
+    case 0xf00:
+    	s->cm_fclken_cam = value & 0x3;
+    	break;
+    case 0xf10:
+    	s->cm_iclken_cam = value & 0x1;
+    	break;
     case 0xf40:
         s->cm_clksel_cam = value & 0x1f;
         omap3_cm_dpll4_update(s);
@@ -1952,14 +1984,15 @@ static uint32_t omap3_scm_read8(void *opaque, target_phys_addr_t addr)
     case 0x2f0:
         return s->control_status & 0xff;
     case 0x2f1:
-        return (s->control_status & 0xff00) >> 8;;
+        return (s->control_status & 0xff00) >> 8;
     case 0x2f2:
-        return (s->control_status & 0xff0000) >> 16;;
+        return (s->control_status & 0xff0000) >> 16;
     case 0x2f3:
-        return (s->control_status & 0xff000000) >> 24;;
-
+        return (s->control_status & 0xff000000) >> 24;
+    
+	
     default:
-        printf("omap3_scm_read8 addr %x \n", addr);
+        printf("omap3_scm_read8 addr %x offset %x \n", addr,offset);
         exit(-1);
     }
 }
@@ -2067,8 +2100,8 @@ static void omap3_scm_write8(void *opaque, target_phys_addr_t addr,
 #endif
     default:
     	 /*we do not care scm write*/
-        printf("omap3_scm_write8 addr %x offset %x pc %x \n", addr, offset,
-               cpu_single_env->regs[15] - 0x80008000 + 0x80e80000);
+        //printf("omap3_scm_write8 addr %x offset %x pc %x \n \n", addr, offset,
+        //       cpu_single_env->regs[15] - 0x80008000 + 0x80e80000);
         break;
 
     }
@@ -2646,27 +2679,32 @@ struct omap_mpu_state_s *omap3530_mpu_init(unsigned long sdram_size,
                                        s->irq[0][OMAP_INT_35XX_GPTIMER1],
                                        omap_findclk(s, "omap3_gp1_fclk"),
                                        omap_findclk(s, "omap3_wkup_l4_iclk"));
-
-    omap_synctimer_init(omap3_l4ta_get(s->l4, 6), s,
+    s->gptimer[1] = omap_gp_timer_init(omap3_l4ta_get(s->l4, 6),
+                                       s->irq[0][OMAP_INT_35XX_GPTIMER2],
+                                       omap_findclk(s, "omap3_gp2_fclk"),
+                                       omap_findclk(s, "omap3_wkup_l4_iclk"));
+    
+	
+    omap_synctimer_init(omap3_l4ta_get(s->l4, 7), s,
                         omap_findclk(s, "omap3_sys_32k"), NULL);
 
     s->sdrc = omap_sdrc_init(0x6d000000);
     s->gpmc = omap_gpmc_init(0x6e000000, s->irq[0][OMAP_INT_35XX_GPMC_IRQ]);
 
-    s->uart[0] = omap2_uart_init(omap3_l4ta_get(s->l4, 7),
+    s->uart[0] = omap2_uart_init(omap3_l4ta_get(s->l4, 8),
                                  s->irq[0][OMAP_INT_35XX_UART1_IRQ],
                                  omap_findclk(s, "omap3_uart1_fclk"),
                                  omap_findclk(s, "omap3_uart1_iclk"),
                                  s->drq[OMAP24XX_DMA_UART1_TX],
                                  s->drq[OMAP24XX_DMA_UART1_RX], serial_hds[0]);
-    s->uart[1] = omap2_uart_init(omap3_l4ta_get(s->l4, 8),
+    s->uart[1] = omap2_uart_init(omap3_l4ta_get(s->l4, 9),
                                  s->irq[0][OMAP_INT_35XX_UART2_IRQ],
                                  omap_findclk(s, "omap3_uart2_fclk"),
                                  omap_findclk(s, "omap3_uart2_iclk"),
                                  s->drq[OMAP24XX_DMA_UART2_TX],
                                  s->drq[OMAP24XX_DMA_UART2_RX],
                                  serial_hds[0] ? serial_hds[1] : 0);
-    s->uart[2] = omap2_uart_init(omap3_l4ta_get(s->l4, 9),
+    s->uart[2] = omap2_uart_init(omap3_l4ta_get(s->l4, 10),
                                  s->irq[0][OMAP_INT_35XX_UART3_IRQ],
                                  omap_findclk(s, "omap3_uart2_fclk"),
                                  omap_findclk(s, "omap3_uart3_iclk"),
