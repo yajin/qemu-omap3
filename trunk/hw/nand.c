@@ -290,8 +290,10 @@ static void nand_command(struct nand_flash_s *s)
     case NAND_CMD_BLOCKERASE2:
         if (nand_flash_ids[s->chip_id].options & NAND_SAMSUNG_LP)
             s->addr <<= 16;
+        else if ((s->manf_id==NAND_MFR_MICRON)&&(s->chip_id==0xba))
+        	s->addr <<= 16;
         else
-            s->addr <<= 8;
+           s->addr <<= 8;
 
         if (s->wp) {
             s->blk_erase(s);
@@ -300,7 +302,12 @@ static void nand_command(struct nand_flash_s *s)
 
     case NAND_CMD_READSTATUS:
     	 if ((s->manf_id==NAND_MFR_MICRON)&&(s->chip_id==0xba))
-    	 	s->status |= 0x60; /*flash is ready*/ 
+    	 	s->status |= 0x60; /*flash is ready */ 
+    	 if (s->wp)
+    	 	s->status |= 0x80;
+    	 else
+    	 	s->status &= ~0x80;
+    	 
         s->io[0] = s->status;
         s->ioaddr = s->io;
         s->iolen = 1;
@@ -472,6 +479,11 @@ uint8_t nand_getio(struct nand_flash_s *s)
     return *(s->ioaddr ++);
 }
 
+void nand_set_wp(struct nand_flash_s *s, uint8_t value)
+{
+	s->wp = value;
+}
+
 void nand_write_command(struct nand_flash_s *s, uint8_t value)
 {
 	/*00-30*/
@@ -488,11 +500,13 @@ void nand_write_command(struct nand_flash_s *s, uint8_t value)
 		s->offset = 0;
 	}
 	s->cmd = value;
-	if (s->cmd == NAND_CMD_READSTATUS ||
-        s->cmd == NAND_CMD_BLOCKERASE1 ||
-        s->cmd == NAND_CMD_NOSERIALREAD2 ||
-        s->cmd == NAND_CMD_RANDOMREAD2 ||
-        s->cmd == NAND_CMD_RESET)
+        if (s->cmd == NAND_CMD_READSTATUS ||
+                s->cmd == NAND_CMD_PAGEPROGRAM2 ||
+                s->cmd == NAND_CMD_BLOCKERASE1 ||
+                s->cmd == NAND_CMD_BLOCKERASE2 ||
+                s->cmd == NAND_CMD_NOSERIALREAD2 ||
+                s->cmd == NAND_CMD_RANDOMREAD2 ||
+                s->cmd == NAND_CMD_RESET)
             nand_command(s);
 
         if (s->cmd != NAND_CMD_RANDOMREAD2) 
@@ -533,6 +547,7 @@ void nand_write_address(struct nand_flash_s *s, uint8_t value)
 /*16 bit operation*/
 void nand_write_data16(struct nand_flash_s *s, uint16_t value)
 {
+	 
 	 if (s->cmd == NAND_CMD_PAGEPROGRAM1) 
 	 {
         if (s->iolen < (1 << s->page_shift) + (1 << s->oob_shift))
@@ -695,7 +710,6 @@ static void glue(nand_blk_write_, PAGE_SIZE)(struct nand_flash_s *s)
             printf("%s: read error in sector %i\n", __FUNCTION__, sector);
             return;
         }
-
         memcpy(iobuf + soff, s->io, s->iolen);
 
         if (bdrv_write(s->bdrv, sector, iobuf, PAGE_SECTORS + 2) == -1)
@@ -710,7 +724,6 @@ static void glue(nand_blk_erase_, PAGE_SIZE)(struct nand_flash_s *s)
     uint32_t i, page, addr;
     uint8_t iobuf[0x200] = { [0 ... 0x1ff] = 0xff, };
     addr = s->addr & ~((1 << (ADDR_SHIFT + s->erase_shift)) - 1);
-
     if (PAGE(addr) >= s->pages)
         return;
 

@@ -25,6 +25,7 @@ void nand_setpins(struct nand_flash_s *s,
 void nand_getpins(struct nand_flash_s *s, int *rb);
 void nand_setio(struct nand_flash_s *s, uint8_t value);
 uint8_t nand_getio(struct nand_flash_s *s);
+void nand_set_wp(struct nand_flash_s *s, uint8_t value);
 void nand_write_command(struct nand_flash_s *s, uint8_t value);
 void nand_write_address(struct nand_flash_s *s, uint8_t value);
 void nand_write_data16(struct nand_flash_s *s, uint16_t value);
