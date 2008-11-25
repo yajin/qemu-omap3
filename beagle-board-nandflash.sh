@@ -4,8 +4,8 @@
 # Put the xloader,u-boot,kernel and rootfs into nand flash image.
 # 
 #
-# beagle-board-nandflash.sh  <xloader-image>   <nandflashimage>  x-loader
-# beagle-board-nandflash.sh  <uboot-image>   <nandflashimage>  uboot	
+# beagle-board-nandflash.sh  <x-loader-image>   <nandflashimage>  x-loader
+# beagle-board-nandflash.sh  <u-boot-image>   <nandflashimage>  u-boot	
 # beagle-board-nandflash.sh  <kernel-image>   <nandflashimage>  kernel
 # beagle-board-nandflash.sh  <rootfs>   <nandflashimage>  rootfs
 	
