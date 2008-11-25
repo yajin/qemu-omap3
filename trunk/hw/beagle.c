@@ -101,12 +101,12 @@ static void beagle_nand_write16(void *opaque, target_phys_addr_t addr,
 
 
 CPUReadMemoryFunc *beagle_nand_readfn[] = {
-        omap_badwidth_read8,
+        beagle_nand_read16,
         beagle_nand_read16,
         omap_badwidth_read32,
 };
     CPUWriteMemoryFunc *beagle_nand_writefn[] = {
-        omap_badwidth_write8,
+        beagle_nand_write16,
         beagle_nand_write16,
         omap_badwidth_write32,
 };
@@ -138,6 +138,8 @@ static void beagle_nand_setup(struct beagle_s *s)
 	
 	/*MT29F2G16ABC*/
 	s->nand = nand_init(NAND_MFR_MICRON,0xba);
+	/*wp=1, no write protect!!! */
+	nand_set_wp(s->nand, 1);
 	s->nand_base = 0x6e00007c ;
 
 	iomemtype = cpu_register_io_memory(0, beagle_nand_readfn,
