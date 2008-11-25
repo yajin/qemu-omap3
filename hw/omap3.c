@@ -28,7 +28,7 @@
 #include "flash.h"
 #include "soc_dma.h"
 #include "audio/audio.h"
-#include <signal.h>
+
 #define OMAP3_DEBUG(x)    do {  printf x ; } while(0)
 
 static uint32_t omap3_l4ta_read(void *opaque, target_phys_addr_t addr)
