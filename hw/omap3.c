@@ -28,7 +28,7 @@
 #include "flash.h"
 #include "soc_dma.h"
 #include "audio/audio.h"
-
+#include <signal.h>
 #define OMAP3_DEBUG(x)    do {  printf x ; } while(0)
 
 static uint32_t omap3_l4ta_read(void *opaque, target_phys_addr_t addr)
@@ -108,7 +108,8 @@ static struct omap_l4_region_s omap3_l4_region[] = {
 
     [8] = {0x050000, 0x0400, 32},       /*Display subsystem top */
     [9] = {0x050400, 0x0400, 32},       /*Display controller */
-    [10] = {0x050800, 0x0400, 32}, /*RFBI*/[11] = {0x050c00, 0x0400, 32},       /*Video encoder */
+    [10] = {0x050800, 0x0400, 32},      /*RFBI*/
+    [11] = {0x050c00, 0x0400, 32},       /*Video encoder */
     [12] = {0x051000, 0x1000, 32 | 16 | 8},     /*  L4TA3 */
 
     [13] = {0x056000, 0x1000, 32},      /*  SDMA */
@@ -347,6 +348,8 @@ static struct omap_l4_agent_info_s omap3_l4_agent_info[] = {
     {8, 21, 2, 1},              /* uart1 */
     {9, 23, 2, 1},              /* uart2 */
     {10, 96, 2, 1},              /* uart3 */
+    {11, 8, 5, 4},              /* Display */
+    {12, 80, 2, 1},              /* GPIO 0 */
 };
 
 struct omap_target_agent_s *omap3_l4ta_get(struct omap_l4_s *bus, int cs)
@@ -1086,6 +1089,8 @@ static inline void omap3_cm_dpll4_update(struct omap3_cm_s *s)
         OMAP3_DEBUG(("omap3_per_alwon_clk %d \n",omap_clk_getrate(omap_findclk(s->mpu, "omap3_per_alwon_clk"))));
         OMAP3_DEBUG(("omap3_48m_fclk %d \n",omap_clk_getrate(omap_findclk(s->mpu, "omap3_48m_fclk"))));
         OMAP3_DEBUG(("omap3_12m_fclk %d \n",omap_clk_getrate(omap_findclk(s->mpu, "omap3_12m_fclk"))));
+
+        		printf("omap3_cm_dpll4_update \n");
 
     }
 
@@ -2614,6 +2619,7 @@ struct omap_mpu_state_s *omap3530_mpu_init(unsigned long sdram_size,
     qemu_irq *cpu_irq;
     qemu_irq dma_irqs[4];
     int i;
+    //omap_clk gpio_clks[4];
 
 
     s->mpu_model = omap3530;
@@ -2715,8 +2721,24 @@ struct omap_mpu_state_s *omap3530_mpu_init(unsigned long sdram_size,
                                  s->drq[OMAP24XX_DMA_UART3_RX],
                                  serial_hds[0]
                                  && serial_hds[1] ? serial_hds[2] : 0);
+    
     /*attach serial[0] to uart 2 for beagle board */
     omap_uart_attach(s->uart[2], serial_hds[0]);
+#if 0
+    s->dss = omap_dss_init(omap3_l4ta_get(s->l4, 11), 0x68005400, ds,
+                    /* XXX wire M_IRQ_25, D_L2_IRQ_30 and I_IRQ_13 together */
+                    s->irq[0][OMAP_INT_35XX_DSS_IRQ], s->drq[OMAP24XX_DMA_DSS],
+                   NULL,NULL,NULL,NULL,NULL);
+    gpio_clks[0] = NULL;
+    gpio_clks[1] = NULL;
+    gpio_clks[2] = NULL;
+    gpio_clks[3] = NULL;
+    s->gpif = omap3_gpif_init();
+    /*gpio 0*/
+    omap3_gpio_init(s->gpif ,omap3_l4ta_get(s->l4, 12),
+                					&s->irq[0][OMAP_INT_24XX_GPIO_BANK1], 
+                					NULL,NULL,0);
+#endif
 
 
 
