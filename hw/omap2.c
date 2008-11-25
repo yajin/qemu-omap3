@@ -3939,6 +3939,7 @@ struct omap_sysctl_s *omap_sysctl_init(struct omap_target_agent_s *ta,
 /* SDRAM Controller Subsystem */
 struct omap_sdrc_s {
     target_phys_addr_t base;
+    uint32_t mcfg[2];
 
     uint8_t config;
 };
@@ -3952,6 +3953,7 @@ static uint32_t omap_sdrc_read(void *opaque, target_phys_addr_t addr)
 {
     struct omap_sdrc_s *s = (struct omap_sdrc_s *) opaque;
     int offset = addr - s->base;
+    uint32_t cs;
 
     switch (offset) {
     case 0x00:	/* SDRC_REVISION */
@@ -3962,7 +3964,11 @@ static uint32_t omap_sdrc_read(void *opaque, target_phys_addr_t addr)
 
     case 0x14:	/* SDRC_SYSSTATUS */
         return 1;						/* RESETDONE */
-
+        
+    case 0x80:	/* SDRC_MCFG_0 */
+    case 0xb0:	/* SDRC_MCFG_1 */
+    	cs = (offset-0x80)/0x30;
+    	return s->mcfg[cs];
     case 0x40:	/* SDRC_CS_CFG */
     case 0x44:	/* SDRC_SHARING */
     case 0x48:	/* SDRC_ERR_ADDR */
@@ -3972,7 +3978,6 @@ static uint32_t omap_sdrc_read(void *opaque, target_phys_addr_t addr)
     case 0x68:	/* SDRC_DLLB_CTRL */
     case 0x6c:	/* SDRC_DLLB_STATUS */
     case 0x70:	/* SDRC_POWER */
-    case 0x80:	/* SDRC_MCFG_0 */
     case 0x84:	/* SDRC_MR_0 */
     case 0x88:	/* SDRC_EMR1_0 */
     case 0x8c:	/* SDRC_EMR2_0 */
@@ -3983,7 +3988,6 @@ static uint32_t omap_sdrc_read(void *opaque, target_phys_addr_t addr)
     case 0xa0:	/* SDRC_ACTIM_CTRLB_0 */
     case 0xa4:	/* SDRC_RFR_CTRL_0 */
     case 0xa8:	/* SDRC_MANUAL_0 */
-    case 0xb0:	/* SDRC_MCFG_1 */
     case 0xb4:	/* SDRC_MR_1 */
     case 0xb8:	/* SDRC_EMR1_1 */
     case 0xbc:	/* SDRC_EMR2_1 */
@@ -4004,6 +4008,7 @@ static void omap_sdrc_write(void *opaque, target_phys_addr_t addr,
 {
     struct omap_sdrc_s *s = (struct omap_sdrc_s *) opaque;
     int offset = addr - s->base;
+    uint32_t cs;
 
     switch (offset) {
     case 0x00:	/* SDRC_REVISION */
@@ -4022,14 +4027,18 @@ static void omap_sdrc_write(void *opaque, target_phys_addr_t addr,
             omap_sdrc_reset(s);
         s->config = value & 0x18;
         break;
-
+    /*u-boot needs this to determine dram size*/
+    case 0x80:	/* SDRC_MCFG_0 */
+    case 0xb0:	/* SDRC_MCFG_1 */
+    	cs = (offset-0x80)/0x30;
+    	s->mcfg[cs] = value & 0xc77bffff;
+    	break;
     case 0x40:	/* SDRC_CS_CFG */
     case 0x44:	/* SDRC_SHARING */
     case 0x4c:	/* SDRC_ERR_TYPE */
     case 0x60:	/* SDRC_DLLA_SCTRL */
     case 0x68:	/* SDRC_DLLB_CTRL */
     case 0x70:	/* SDRC_POWER */
-    case 0x80:	/* SDRC_MCFG_0 */
     case 0x84:	/* SDRC_MR_0 */
     case 0x88:	/* SDRC_EMR1_0 */
     case 0x8c:	/* SDRC_EMR2_0 */
@@ -4040,7 +4049,6 @@ static void omap_sdrc_write(void *opaque, target_phys_addr_t addr,
     case 0xa0:	/* SDRC_ACTIM_CTRLB_0 */
     case 0xa4:	/* SDRC_RFR_CTRL_0 */
     case 0xa8:	/* SDRC_MANUAL_0 */
-    case 0xb0:	/* SDRC_MCFG_1 */
     case 0xb4:	/* SDRC_MR_1 */
     case 0xb8:	/* SDRC_EMR1_1 */
     case 0xbc:	/* SDRC_EMR2_1 */
@@ -4694,6 +4702,7 @@ struct omap_mpu_state_s *omap2420_mpu_init(unsigned long sdram_size,
                     gpio_clks, omap_findclk(s, "gpio_iclk"), 4);
 
     s->sdrc = omap_sdrc_init(0x68009000);
+    
     s->gpmc = omap_gpmc_init(0x6800a000, s->irq[0][OMAP_INT_24XX_GPMC_IRQ]);
 
     sdindex = drive_get_index(IF_SD, 0, 0);

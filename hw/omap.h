@@ -110,6 +110,8 @@ struct omap_sysctl_s *omap_sysctl_init(struct omap_target_agent_s *ta,
 
 struct omap_sdrc_s;
 struct omap_sdrc_s *omap_sdrc_init(target_phys_addr_t base);
+void omap_sdrc_write_mcfg(struct omap_sdrc_s *s,uint32_t value,uint32_t cs);
+
 
 struct omap_gpmc_s;
 struct omap_gpmc_s *omap_gpmc_init(target_phys_addr_t base, qemu_irq irq);
