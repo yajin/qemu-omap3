@@ -766,6 +766,13 @@ void omap_gpio_out_set(struct omap_gpio_s *s, int line, qemu_irq handler);
 struct omap_gpif_s;
 struct omap_gpif_s *omap2_gpio_init(struct omap_target_agent_s *ta,
                 qemu_irq *irq, omap_clk *fclk, omap_clk iclk, int modules);
+#if 0
+void omap3_gpio_init(struct omap_gpif_s *s,struct omap_target_agent_s *ta,
+                					qemu_irq *irq, omap_clk *fclk, omap_clk iclk, int module_index);
+
+struct omap_gpif_s *omap3_gpif_init();
+#endif
+
 qemu_irq *omap2_gpio_in_get(struct omap_gpif_s *s, int start);
 void omap2_gpio_out_set(struct omap_gpif_s *s, int line, qemu_irq handler);
 
