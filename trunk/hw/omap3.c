@@ -2604,6 +2604,7 @@ static int omap3_validate_addr(struct omap_mpu_state_s *s,
 {
     return 1;
 }
+
 struct omap_mpu_state_s *omap3530_mpu_init(unsigned long sdram_size,
                                            DisplayState * ds, const char *core)
 {
@@ -2689,7 +2690,9 @@ struct omap_mpu_state_s *omap3530_mpu_init(unsigned long sdram_size,
                         omap_findclk(s, "omap3_sys_32k"), NULL);
 
     s->sdrc = omap_sdrc_init(0x6d000000);
+    
     s->gpmc = omap_gpmc_init(0x6e000000, s->irq[0][OMAP_INT_35XX_GPMC_IRQ]);
+    
 
     s->uart[0] = omap2_uart_init(omap3_l4ta_get(s->l4, 8),
                                  s->irq[0][OMAP_INT_35XX_UART1_IRQ],

@@ -222,7 +222,6 @@ static void beagle_init(ram_addr_t ram_size, int vga_ram_size,
         exit(1);
     }
    	s->cpu = omap3530_mpu_init(sdram_size, NULL, NULL);
-
    	beagle_nand_setup(s);
    	beagle_rom_emu(s);
 }
