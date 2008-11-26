@@ -113,11 +113,20 @@ static inline void omap_gp_timer_out(struct omap_gp_timer_s *timer, int level)
 
 static inline uint32_t omap_gp_timer_read(struct omap_gp_timer_s *timer)
 {
-    uint64_t distance;
+    uint64_t distance,rate;
 
     if (timer->st && timer->rate) {
         distance = qemu_get_clock(vm_clock) - timer->time;
-        distance = muldiv64(distance, timer->rate, timer->ticks_per_sec);
+        
+        /*if ticks_per_secis bigger than 32bit, we can not use muldiv64 anymore!*/
+        if (timer->ticks_per_sec>0xffffffff)
+       {
+       	distance = distance/(ticks_per_sec/1000);  /*distance ms*/
+       	rate = timer->rate >> (timer->pre ? timer->ptv + 1 : 0);
+       	distance = muldiv64(distance, rate, 1000);
+       }
+        else
+		   distance = muldiv64(distance, timer->rate, timer->ticks_per_sec);
 
         if (distance >= 0xffffffff - timer->val)
             return 0xffffffff;
@@ -137,17 +146,30 @@ static inline void omap_gp_timer_sync(struct omap_gp_timer_s *timer)
 
 static inline void omap_gp_timer_update(struct omap_gp_timer_s *timer)
 {
-    int64_t expires, matches;
+    int64_t expires, matches,rate;
 
     if (timer->st && timer->rate) {
-        expires = muldiv64(0x100000000ll - timer->val,
+    	if (timer->ticks_per_sec>0xffffffff)
+       {
+       	rate = timer->rate >> (timer->pre ? timer->ptv + 1 : 0); /*1s -> rate ticks*/
+       	expires = muldiv64(0x100000000ll - timer->val, ticks_per_sec, rate);
+       }
+        else
+		   expires = muldiv64(0x100000000ll - timer->val,
                         timer->ticks_per_sec, timer->rate);
+
         qemu_mod_timer(timer->timer, timer->time + expires);
 
         if (timer->ce && timer->match_val >= timer->val) {
+        if (timer->ticks_per_sec>0xffffffff)
+        {
+       	rate = timer->rate >> (timer->pre ? timer->ptv + 1 : 0); /*1s -> rate ticks*/
+       	matches = muldiv64(timer->match_val - timer->val, ticks_per_sec, rate);
+        }
+        else
             matches = muldiv64(timer->match_val - timer->val,
                             timer->ticks_per_sec, timer->rate);
-            qemu_mod_timer(timer->match, timer->time + matches);
+        qemu_mod_timer(timer->match, timer->time + matches);
         } else
             qemu_del_timer(timer->match);
     } else {
@@ -242,6 +264,7 @@ static void omap_gp_timer_clk_setup(struct omap_gp_timer_s *timer)
     omap_clk_adduser(timer->clk,
                     qemu_allocate_irqs(omap_gp_timer_clk_update, timer, 1)[0]);
     timer->rate = omap_clk_getrate(timer->clk);
+    printf("gptimer ckl %x\n",timer->rate);
 }
 
 static void omap_gp_timer_reset(struct omap_gp_timer_s *s)
@@ -275,7 +298,7 @@ static uint32_t omap_gp_timer_readw(void *opaque, target_phys_addr_t addr)
 {
     struct omap_gp_timer_s *s = (struct omap_gp_timer_s *) opaque;
     int offset = addr - s->base;
-   
+   uint32_t ret1;
 
     switch (offset) {
     case 0x00:	/* TIDR */
@@ -311,10 +334,11 @@ static uint32_t omap_gp_timer_readw(void *opaque, target_phys_addr_t addr)
                 (s->st << 0);
 
     case 0x28:	/* TCRR */
-    	return omap_gp_timer_read(s);
-    	//ret1 = omap_gp_timer_read(s);
-    	 //printf("TCRR %d \n",ret1);
-    	 //return ret;
+    	//return omap_gp_timer_read(s);
+    	ret1 = omap_gp_timer_read(s);
+    	//printf("TCRR %d \n",ret1);
+    	//printf("gptimer ckl %x\n",s->rate);
+    	return ret1;
     case 0x2c:	/* TLDR */
         return s->load_val;
 
