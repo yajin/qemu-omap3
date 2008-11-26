@@ -298,7 +298,6 @@ static uint32_t omap_gp_timer_readw(void *opaque, target_phys_addr_t addr)
 {
     struct omap_gp_timer_s *s = (struct omap_gp_timer_s *) opaque;
     int offset = addr - s->base;
-   uint32_t ret1;
 
     switch (offset) {
     case 0x00:	/* TIDR */
@@ -334,11 +333,7 @@ static uint32_t omap_gp_timer_readw(void *opaque, target_phys_addr_t addr)
                 (s->st << 0);
 
     case 0x28:	/* TCRR */
-    	//return omap_gp_timer_read(s);
-    	ret1 = omap_gp_timer_read(s);
-    	//printf("TCRR %d \n",ret1);
-    	//printf("gptimer ckl %x\n",s->rate);
-    	return ret1;
+    	return omap_gp_timer_read(s);
     case 0x2c:	/* TLDR */
         return s->load_val;
 
