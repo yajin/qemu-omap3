@@ -1174,6 +1174,7 @@ static inline void omap3_cm_per_gptimer_update(struct omap3_cm_s *s)
     else
         omap_clk_reparent(omap_findclk(s->mpu, "omap3_gp2_fclk"),
                           omap_findclk(s->mpu, "omap3_32k_fclk"));
+    omap_gp_timer_chage_clk(s->mpu->gptimer[1]);
 
     if (cm_clksel_per & 0x2)
         omap_clk_reparent(omap_findclk(s->mpu, "omap3_gp3_fclk"),
