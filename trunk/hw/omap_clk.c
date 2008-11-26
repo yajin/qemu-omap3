@@ -958,14 +958,14 @@ static struct clk omap3_sys_32k = {
 
 static struct clk omap3_sys_xtalin = {
     .name	= "omap3_sys_xtalin",
-    .rate	= 12000000,
+    .rate	= 13000000,
     .flags	= CLOCK_IN_OMAP353X  | ALWAYS_ENABLED,
 };
 
 /*Is the altclk is enabled in beagle board?*/
 static struct clk omap3_sys_altclk = {
     .name	= "omap3_sys_altclk",
-    .rate	= 12000000,
+    .rate	= 13000000,
     .flags	= CLOCK_IN_OMAP353X  ,
 };
 
