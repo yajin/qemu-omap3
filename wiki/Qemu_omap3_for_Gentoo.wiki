@@ -11,17 +11,39 @@
 
  b. put it into your overlay, eg. /usr/local/overlay/app-emulation/qemu-softmmu"
 
- c. USE="sdl" emerge -1 qemu-softmmu
-    will install this package.
+ c. note: you may probably use gcc-4, so before compile qemu, 
+please downgrade to gcc-3, and gcc-3.4.6 works for me.
+
+#gcc-config -l 
+/etc/env.d/gcc
+ [1] armv4tl-softfloat-linux-gnueabi-4.2.4 *
+
+ [2] i686-pc-linux-gnu-3.3.6
+ [3] i686-pc-linux-gnu-3.4.6 
+ [4] i686-pc-linux-gnu-3.4.6-hardened
+ [5] i686-pc-linux-gnu-3.4.6-hardenednopie
+ [6] i686-pc-linux-gnu-3.4.6-hardenednopiessp
+ [7] i686-pc-linux-gnu-3.4.6-hardenednossp
+ [8] i686-pc-linux-gnu-4.1.2
+ [9] i686-pc-linux-gnu-4.2.3
+ [10] i686-pc-linux-gnu-4.3.2 *
+#gcc-config 
+ * Switching native-compiler to i686-pc-linux-gnu-3.4.6 ...               [ ok ]
+
+last shot:
+#USE="sdl" emerge -1 qemu-softmmu
+ 
+this will install this package.
 
 2. generate qemu image file for beagleboad
  use script "beagle-board-nandflash.sh"
 which could be downlod from http://qemu-omap3.googlecode.com/svn/trunk
- Usage: ./beagle-board-nandflash.sh <image> <destimage> [<partition>]
+ #Usage: ./beagle-board-nandflash.sh <image> <destimage> [<partition>]
  so, following steps will generate the running nand image file for beagleboard
  
-  ./beagle-board-nandflash.sh x-load-bin.ift beagle-nand.bin x-loader
-  ./beagle-board-nandflash.sh u-boot.bin beagle-nand.bin u-boot
+./beagle-board-nandflash.sh x-load-bin.ift beagle-nand.bin x-loader
+  
+./beagle-board-nandflash.sh u-boot.bin beagle-nand.bin u-boot
 
 3. run qemu
   qemu-system-arm -M beagle -mtdblock beagle-nand.bin
