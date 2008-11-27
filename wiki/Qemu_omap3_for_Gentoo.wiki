@@ -1,11 +1,7 @@
-#summary One-sentence summary of this page.
-This is a simple howto which bring up qemu-omap3 (beagleboard)
-for gentoo user.
-= Introduction =
+#labels Featured
+#This is a simple howto which describe howto emulate beagleboard with qemu-omap3, and it's specific for gentoo user 
 
-1. get qemu-omap3 ebuild file
-2. generate qemu image file
-3. run qemu
+= Introduction =
 
 = Details =
 
@@ -13,3 +9,8 @@ Add your content here.  Format your content with:
   * Text in *bold* or _italic_
   * Headings, paragraphs, and lists
   * Automatic links to other wiki pages
+1. get qemu-omap3 ebuild file
+
+2. generate qemu image file
+
+3. run qemu
