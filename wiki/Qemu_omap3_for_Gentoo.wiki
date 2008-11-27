@@ -15,6 +15,7 @@
 please downgrade to gcc-3, and gcc-3.4.6 works for me.
 
 #gcc-config -l 
+
 /etc/env.d/gcc
  [1] armv4tl-softfloat-linux-gnueabi-4.2.4 *
 
@@ -38,7 +39,8 @@ this will install this package.
 2. generate qemu image file for beagleboad
  use script "beagle-board-nandflash.sh"
 which could be downlod from http://qemu-omap3.googlecode.com/svn/trunk
- #Usage: ./beagle-board-nandflash.sh <image> <destimage> [<partition>]
+
+ #Usage: ./beagle-board-nandflash.sh image destimage partition
  so, following steps will generate the running nand image file for beagleboard
  
 ./beagle-board-nandflash.sh x-load-bin.ift beagle-nand.bin x-loader
