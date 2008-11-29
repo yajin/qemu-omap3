@@ -74,9 +74,6 @@ void raise_exception(int exception_index);
 void do_smm_enter(void);
 void __hidden cpu_loop_exit(void);
 
-void OPPROTO op_movl_eflags_T0(void);
-void OPPROTO op_movl_T0_eflags(void);
-
 /* n must be a constant to be efficient */
 static inline target_long lshift(target_long x, int n)
 {
@@ -290,7 +287,7 @@ extern const uint8_t rclb_table[32];
 
 static inline uint32_t compute_eflags(void)
 {
-    return env->eflags | cc_table[CC_OP].compute_all() | (DF & DF_MASK);
+    return env->eflags | helper_cc_compute_all(CC_OP) | (DF & DF_MASK);
 }
 
 /* NOTE: CC_OP must be modified manually to CC_OP_EFLAGS */

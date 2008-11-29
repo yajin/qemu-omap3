@@ -29,6 +29,7 @@
 #include "exec-all.h"
 #include "helper_regs.h"
 #include "qemu-common.h"
+#include "helper.h"
 
 //#define DEBUG_MMU
 //#define DEBUG_BATS
@@ -37,6 +38,24 @@
 //#define DUMP_PAGE_TABLES
 //#define DEBUG_EXCEPTIONS
 //#define FLUSH_ALL_TLBS
+
+/*****************************************************************************/
+/* Exceptions processing */
+
+void raise_exception_err (CPUState *env, int exception, int error_code)
+{
+#if 0
+    printf("Raise exception %3x code : %d\n", exception, error_code);
+#endif
+    env->exception_index = exception;
+    env->error_code = error_code;
+    cpu_loop_exit();
+}
+
+void raise_exception (CPUState *env, int exception)
+{
+    helper_raise_exception_err(exception, 0);
+}
 
 /*****************************************************************************/
 /* PowerPC MMU emulation */
