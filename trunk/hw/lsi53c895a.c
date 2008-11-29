@@ -143,6 +143,14 @@ do { fprintf(stderr, "lsi_scsi: error: " fmt , ##args);} while (0)
 #define LSI_CCNTL0_PMJCTL 0x40
 #define LSI_CCNTL0_ENPMJ  0x80
 
+#define LSI_CCNTL1_EN64DBMV  0x01
+#define LSI_CCNTL1_EN64TIBMV 0x02
+#define LSI_CCNTL1_64TIMOD   0x04
+#define LSI_CCNTL1_DDAC      0x08
+#define LSI_CCNTL1_ZMOD      0x80
+
+#define LSI_CCNTL1_40BIT (LSI_CCNTL1_EN64TIBMV|LSI_CCNTL1_64TIMOD)
+
 #define PHASE_DO          0
 #define PHASE_DI          1
 #define PHASE_CMD         2
@@ -209,6 +217,7 @@ typedef struct {
     uint8_t mbox0;
     uint8_t mbox1;
     uint8_t dfifo;
+    uint8_t ctest2;
     uint8_t ctest3;
     uint8_t ctest4;
     uint8_t ctest5;
@@ -280,6 +289,7 @@ static void lsi_soft_reset(LSIState *s)
     s->mbox0 = 0;
     s->mbox1 = 0;
     s->dfifo = 0;
+    s->ctest2 = 0;
     s->ctest3 = 0;
     s->ctest4 = 0;
     s->ctest5 = 0;
@@ -319,6 +329,13 @@ static void lsi_soft_reset(LSIState *s)
     s->ia = 0;
     s->sbc = 0;
     s->csbc = 0;
+}
+
+static int lsi_dma_40bit(LSIState *s)
+{
+    if ((s->ccntl1 & LSI_CCNTL1_40BIT) == LSI_CCNTL1_40BIT)
+        return 1;
+    return 0;
 }
 
 static uint8_t lsi_reg_readb(LSIState *s, int offset);
@@ -447,7 +464,7 @@ static void lsi_resume_script(LSIState *s)
 static void lsi_do_dma(LSIState *s, int out)
 {
     uint32_t count;
-    uint32_t addr;
+    target_phys_addr_t addr;
 
     if (!s->current_dma_len) {
         /* Wait until data is available.  */
@@ -458,9 +475,14 @@ static void lsi_do_dma(LSIState *s, int out)
     count = s->dbc;
     if (count > s->current_dma_len)
         count = s->current_dma_len;
-    DPRINTF("DMA addr=0x%08x len=%d\n", s->dnad, count);
 
     addr = s->dnad;
+    if (lsi_dma_40bit(s))
+        addr |= ((uint64_t)s->dnad64 << 32);
+    else if (s->sbms)
+        addr |= ((uint64_t)s->sbms << 32);
+
+    DPRINTF("DMA addr=0x" TARGET_FMT_plx " len=%d\n", addr, count);
     s->csbc += count;
     s->dnad += count;
     s->dbc -= count;
@@ -837,7 +859,7 @@ static void lsi_wait_reselect(LSIState *s)
 static void lsi_execute_script(LSIState *s)
 {
     uint32_t insn;
-    uint32_t addr;
+    uint32_t addr, addr_high;
     int opcode;
     int insn_processed = 0;
 
@@ -846,6 +868,7 @@ again:
     insn_processed++;
     insn = read_dword(s, s->dsp);
     addr = read_dword(s, s->dsp + 4);
+    addr_high = 0;
     DPRINTF("SCRIPTS dsp=%08x opcode %08x arg %08x\n", s->dsp, insn, addr);
     s->dsps = addr;
     s->dcmd = insn >> 24;
@@ -868,9 +891,15 @@ again:
             /* Table indirect addressing.  */
             offset = sxt24(addr);
             cpu_physical_memory_read(s->dsa + offset, (uint8_t *)buf, 8);
-            s->dbc = cpu_to_le32(buf[0]);
+            /* byte count is stored in bits 0:23 only */
+            s->dbc = cpu_to_le32(buf[0]) & 0xffffff;
             s->rbc = s->dbc;
             addr = cpu_to_le32(buf[1]);
+
+            /* 40-bit DMA, upper addr bits [39:32] stored in first DWORD of
+             * table, bits [31:24] */
+            if (lsi_dma_40bit(s))
+                addr_high = cpu_to_le32(buf[0]) >> 24;
         }
         if ((s->sstat1 & PHASE_MASK) != ((insn >> 24) & 7)) {
             DPRINTF("Wrong phase got %d expected %d\n",
@@ -879,6 +908,7 @@ again:
             break;
         }
         s->dnad = addr;
+        s->dnad64 = addr_high;
         /* ??? Set ESA.  */
         s->ia = s->dsp - 8;
         switch (s->sstat1 & 0x7) {
@@ -890,6 +920,7 @@ again:
             break;
         case PHASE_DI:
             s->waiting = 2;
+            s->current_dma_len = s->dbc;
             lsi_do_dma(s, 0);
             if (s->waiting)
                 s->waiting = 3;
@@ -1279,7 +1310,7 @@ static uint8_t lsi_reg_readb(LSIState *s, int offset)
     case 0x19: /* CTEST1 */
         return 0;
     case 0x1a: /* CTEST2 */
-        tmp = LSI_CTEST2_DACK | LSI_CTEST2_CM;
+        tmp = s->ctest2 | LSI_CTEST2_DACK | LSI_CTEST2_CM;
         if (s->istat0 & LSI_ISTAT0_SIGP) {
             s->istat0 &= ~LSI_ISTAT0_SIGP;
             tmp |= LSI_CTEST2_SIGP;
@@ -1327,6 +1358,8 @@ static uint8_t lsi_reg_readb(LSIState *s, int offset)
         s->sist1 = 0;
         lsi_update_irq(s);
         return tmp;
+    case 0x46: /* MACNTL */
+        return 0x0f;
     case 0x47: /* GPCNTL0 */
         return 0x0f;
     case 0x48: /* STIME0 */
@@ -1440,6 +1473,9 @@ static void lsi_reg_writeb(LSIState *s, int offset, uint8_t val)
            SCRIPTS register move instructions are.  */
         s->sfbr = val;
         break;
+    case 0x0a: case 0x0b: 
+        /* Openserver writes to these readonly registers on startup */
+	return;    
     case 0x0c: case 0x0d: case 0x0e: case 0x0f:
         /* Linux writes to these readonly registers on startup.  */
         return;
@@ -1469,6 +1505,9 @@ static void lsi_reg_writeb(LSIState *s, int offset, uint8_t val)
     case 0x17: /* MBOX1 */
         s->mbox1 = val;
         break;
+    case 0x1a: /* CTEST2 */
+	s->ctest2 = val & LSI_CTEST2_PCICIE;
+	break;
     case 0x1b: /* CTEST3 */
         s->ctest3 = val & 0x0f;
         break;
@@ -1869,12 +1908,21 @@ void *lsi_scsi_init(PCIBus *bus, int devfn)
         return NULL;
     }
 
+    /* PCI Vendor ID (word) */
     s->pci_dev.config[0x00] = 0x00;
     s->pci_dev.config[0x01] = 0x10;
+    /* PCI device ID (word) */
     s->pci_dev.config[0x02] = 0x12;
     s->pci_dev.config[0x03] = 0x00;
+    /* PCI base class code */
     s->pci_dev.config[0x0b] = 0x01;
-    s->pci_dev.config[0x3d] = 0x01; /* interrupt pin 1 */
+    /* PCI subsystem ID */
+    s->pci_dev.config[0x2e] = 0x00;
+    s->pci_dev.config[0x2f] = 0x10;
+    /* PCI latency timer = 255 */
+    s->pci_dev.config[0x0d] = 0xff;
+    /* Interrupt pin 1 */
+    s->pci_dev.config[0x3d] = 0x01;
 
     s->mmio_io_addr = cpu_register_io_memory(0, lsi_mmio_readfn,
                                              lsi_mmio_writefn, s);

@@ -38,16 +38,20 @@ void kvm_set_phys_mem(target_phys_addr_t start_addr,
                       ram_addr_t size,
                       ram_addr_t phys_offset);
 
+void kvm_physical_sync_dirty_bitmap(target_phys_addr_t start_addr, target_phys_addr_t end_addr);
+
+int kvm_log_start(target_phys_addr_t phys_addr, target_phys_addr_t len);
+int kvm_log_stop(target_phys_addr_t phys_addr, target_phys_addr_t len);
 /* internal API */
 
 struct KVMState;
 typedef struct KVMState KVMState;
 
-int kvm_ioctl(KVMState *s, int type, void *data);
+int kvm_ioctl(KVMState *s, int type, ...);
 
-int kvm_vm_ioctl(KVMState *s, int type, void *data);
+int kvm_vm_ioctl(KVMState *s, int type, ...);
 
-int kvm_vcpu_ioctl(CPUState *env, int type, void *data);
+int kvm_vcpu_ioctl(CPUState *env, int type, ...);
 
 /* Arch specific hooks */
 

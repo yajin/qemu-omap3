@@ -536,13 +536,6 @@ struct CPUPPCState {
 #if (TARGET_LONG_BITS > HOST_LONG_BITS) || defined(HOST_I386)
     target_ulong t2;
 #endif
-#if !defined(TARGET_PPC64)
-    /* temporary fixed-point registers
-     * used to emulate 64 bits registers on 32 bits targets
-     */
-    uint64_t t0_64, t1_64, t2_64;
-#endif
-    ppc_avr_t avr0, avr1, avr2;
 
     /* general purpose registers */
     target_ulong gpr[32];
@@ -568,10 +561,6 @@ struct CPUPPCState {
     target_ulong tgpr[4]; /* Used to speed-up TLB assist handlers */
 
     /* Floating point execution context */
-    /* temporary float registers */
-    float64 ft0;
-    float64 ft1;
-    float64 ft2;
     float_status fp_status;
     /* floating point registers */
     float64 fpr[32];
@@ -826,16 +815,19 @@ static inline void cpu_clone_regs(CPUState *env, target_ulong newsp)
 }
 #endif
 
-#define CPU_PC_FROM_TB(env, tb) env->nip = tb->pc
-
 #include "cpu-all.h"
+#include "exec-all.h"
 
 /*****************************************************************************/
 /* CRF definitions */
-#define CRF_LT  3
-#define CRF_GT  2
-#define CRF_EQ  1
-#define CRF_SO  0
+#define CRF_LT        3
+#define CRF_GT        2
+#define CRF_EQ        1
+#define CRF_SO        0
+#define CRF_CH        (1 << 4)
+#define CRF_CL        (1 << 3)
+#define CRF_CH_OR_CL  (1 << 2)
+#define CRF_CH_AND_CL (1 << 1)
 
 /* XER definitions */
 #define XER_SO  31
@@ -1427,5 +1419,18 @@ enum {
 };
 
 /*****************************************************************************/
+
+static inline void cpu_pc_from_tb(CPUState *env, TranslationBlock *tb)
+{
+    env->nip = tb->pc;
+}
+
+static inline void cpu_get_tb_cpu_state(CPUState *env, target_ulong *pc,
+                                        target_ulong *cs_base, int *flags)
+{
+    *pc = env->nip;
+    *cs_base = 0;
+    *flags = env->hflags;
+}
 
 #endif /* !defined (__CPU_PPC_H__) */

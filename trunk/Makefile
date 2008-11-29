@@ -74,10 +74,12 @@ OBJS+=ssd0303.o ssd0323.o ads7846.o stellaris_input.o twl92230.o
 OBJS+=tmp105.o lm832x.o
 OBJS+=scsi-disk.o cdrom.o
 OBJS+=scsi-generic.o
-OBJS+=usb.o usb-hub.o usb-linux.o usb-hid.o usb-msd.o usb-wacom.o
+OBJS+=usb.o usb-hub.o usb-$(HOST_USB).o usb-hid.o usb-msd.o usb-wacom.o
 OBJS+=usb-serial.o usb-net.o
 OBJS+=sd.o ssi-sd.o
 OBJS+=bt.o bt-host.o bt-vhci.o bt-l2cap.o bt-sdp.o bt-hci.o bt-hid.o usb-bt.o
+OBJS+=buffered_file.o migration.o migration-tcp.o net.o qemu-sockets.o
+OBJS+=qemu-char.o aio.o net-checksum.o savevm.o
 
 ifdef CONFIG_BRLAPI
 OBJS+= baum.o
@@ -86,6 +88,8 @@ endif
 
 ifdef CONFIG_WIN32
 OBJS+=tap-win32.o
+else
+OBJS+=migration-exec.o
 endif
 
 AUDIO_OBJS = audio.o noaudio.o wavaudio.o mixeng.o
@@ -217,6 +221,14 @@ KEYMAPS=da     en-gb  et  fr     fr-ch  is  lt  modifiers  no  pt-br  sv \
 ar      de     en-us  fi  fr-be  hr     it  lv  nl         pl  ru     th \
 common  de-ch  es     fo  fr-ca  hu     ja  mk  nl-be      pt  sl     tr
 
+ifdef INSTALL_BLOBS
+BLOBS=bios.bin vgabios.bin vgabios-cirrus.bin ppc_rom.bin \
+video.x openbios-sparc32 openbios-sparc64 pxe-ne2k_pci.bin \
+pxe-rtl8139.bin pxe-pcnet.bin pxe-e1000.bin
+else
+BLOBS=
+endif
+
 install-doc: $(DOCS)
 	mkdir -p "$(DESTDIR)$(docdir)"
 	$(INSTALL) -m 644 qemu-doc.html  qemu-tech.html "$(DESTDIR)$(docdir)"
@@ -232,12 +244,12 @@ install: all $(if $(BUILD_DOCS),install-doc)
 ifneq ($(TOOLS),)
 	$(INSTALL) -m 755 -s $(TOOLS) "$(DESTDIR)$(bindir)"
 endif
+ifneq ($(BLOBS),)
 	mkdir -p "$(DESTDIR)$(datadir)"
-	set -e; for x in bios.bin vgabios.bin vgabios-cirrus.bin ppc_rom.bin \
-		video.x openbios-sparc32 openbios-sparc64 pxe-ne2k_pci.bin \
-		pxe-rtl8139.bin pxe-pcnet.bin pxe-e1000.bin; do \
+	set -e; for x in $(BLOBS); do \
 		$(INSTALL) -m 644 $(SRC_PATH)/pc-bios/$$x "$(DESTDIR)$(datadir)"; \
 	done
+endif
 ifndef CONFIG_WIN32
 	mkdir -p "$(DESTDIR)$(datadir)/keymaps"
 	set -e; for x in $(KEYMAPS); do \

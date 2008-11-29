@@ -21,24 +21,13 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-#include "hw/hw.h"
-#include "hw/boards.h"
-#include "hw/usb.h"
-#include "hw/pcmcia.h"
-#include "hw/pc.h"
-#include "hw/audiodev.h"
-#include "hw/isa.h"
-#include "hw/baum.h"
-#include "hw/bt.h"
+#include "qemu-common.h"
 #include "net.h"
 #include "console.h"
 #include "sysemu.h"
-#include "gdbstub.h"
 #include "qemu-timer.h"
 #include "qemu-char.h"
-#include "block.h"
 #include "audio/audio.h"
-#include "migration.h"
 
 #include <unistd.h>
 #include <fcntl.h>
@@ -279,7 +268,7 @@ int parse_host_port(struct sockaddr_in *saddr, const char *str)
     if (buf[0] == '\0') {
         saddr->sin_addr.s_addr = 0;
     } else {
-        if (isdigit(buf[0])) {
+        if (qemu_isdigit(buf[0])) {
             if (!inet_aton(buf, &saddr->sin_addr))
                 return -1;
         } else {
@@ -679,7 +668,7 @@ int tap_alloc(char *dev, size_t dev_size)
 
     if( *dev ){
        ptr = dev;
-       while( *ptr && !isdigit((int)*ptr) ) ptr++;
+       while( *ptr && !qemu_isdigit((int)*ptr) ) ptr++;
        ppa = atoi(ptr);
     }
 
@@ -790,6 +779,12 @@ static int tap_open(char *ifname, int ifname_size)
     pstrcpy(ifname, ifname_size, dev);
     fcntl(fd, F_SETFL, O_NONBLOCK);
     return fd;
+}
+#elif defined (_AIX)
+static int tap_open(char *ifname, int ifname_size)
+{
+    fprintf (stderr, "no tap on AIX\n");
+    return -1;
 }
 #else
 static int tap_open(char *ifname, int ifname_size)
@@ -1452,6 +1447,7 @@ int net_client_init(const char *device, const char *p)
         vlan->nb_host_devs++;
         ret = tap_win32_init(vlan, ifname);
     } else
+#elif defined (_AIX)
 #else
     if (!strcmp(device, "tap")) {
         char ifname[64];

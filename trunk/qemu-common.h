@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <string.h>
+#include <strings.h>
 #include <inttypes.h>
 #include <limits.h>
 #include <time.h>
@@ -29,6 +30,7 @@
 
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
+#define WINVER 0x0501  /* needed for ipv6 bits */
 #include <windows.h>
 #define fsync _commit
 #define lseek _lseeki64
@@ -92,6 +94,22 @@ char *pstrcat(char *buf, int buf_size, const char *s);
 int strstart(const char *str, const char *val, const char **ptr);
 int stristart(const char *str, const char *val, const char **ptr);
 time_t mktimegm(struct tm *tm);
+
+#define qemu_isalnum(c)		isalnum((unsigned char)(c))
+#define qemu_isalpha(c)		isalpha((unsigned char)(c))
+#define qemu_iscntrl(c)		iscntrl((unsigned char)(c))
+#define qemu_isdigit(c)		isdigit((unsigned char)(c))
+#define qemu_isgraph(c)		isgraph((unsigned char)(c))
+#define qemu_islower(c)		islower((unsigned char)(c))
+#define qemu_isprint(c)		isprint((unsigned char)(c))
+#define qemu_ispunct(c)		ispunct((unsigned char)(c))
+#define qemu_isspace(c)		isspace((unsigned char)(c))
+#define qemu_isupper(c)		isupper((unsigned char)(c))
+#define qemu_isxdigit(c)	isxdigit((unsigned char)(c))
+#define qemu_tolower(c)		tolower((unsigned char)(c))
+#define qemu_toupper(c)		toupper((unsigned char)(c))
+#define qemu_isascii(c)		isascii((unsigned char)(c))
+#define qemu_toascii(c)		toascii((unsigned char)(c))
 
 void *qemu_malloc(size_t size);
 void *qemu_realloc(void *ptr, size_t size);
