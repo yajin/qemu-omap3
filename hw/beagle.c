@@ -44,6 +44,7 @@ struct beagle_s {
     
 	target_phys_addr_t nand_base;
     struct nand_flash_s *nand;
+    struct omap3_lcd_panel_s *lcd_panel;
 };
 
 
@@ -210,6 +211,13 @@ static int beagle_nand_read_page(struct beagle_s *s,uint8_t *buf, uint16_t page_
 		s->cpu->env->regs[15] = loadaddr;
 }
 
+static void beagle_dss_setup(struct beagle_s *s, DisplayState *ds)
+{
+	s->lcd_panel = omap3_lcd_panel_init(ds);
+	omap3_lcd_panel_attach(s->cpu->dss, 0, s->lcd_panel);
+	s->lcd_panel->dss = s->cpu->dss;
+}
+
 static void beagle_init(ram_addr_t ram_size, int vga_ram_size,
                 const char *boot_device, DisplayState *ds,
                 const char *kernel_filename, const char *kernel_cmdline,
@@ -226,6 +234,8 @@ static void beagle_init(ram_addr_t ram_size, int vga_ram_size,
    	s->cpu = omap3530_mpu_init(sdram_size, NULL, NULL);
    	beagle_nand_setup(s);
    	beagle_rom_emu(s);
+   	beagle_dss_setup(s,ds);
+
 }
 
 

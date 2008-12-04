@@ -349,7 +349,12 @@ static struct omap_l4_agent_info_s omap3_l4_agent_info[] = {
     {9, 23, 2, 1},              /* uart2 */
     {10, 96, 2, 1},              /* uart3 */
     {11, 8, 5, 4},              /* Display */
-    {12, 80, 2, 1},              /* GPIO 0 */
+    {12, 80, 2, 1},              /* GPIO 1 */
+    {13, 126, 2, 1},              /* GPIO 2 */
+    {14, 128, 2, 1},              /* GPIO 3 */
+    {15, 130, 2, 1},              /* GPIO 4 */
+    {16, 132, 2, 1},              /* GPIO 5 */
+    {17, 134, 2, 1},              /* GPIO 6 */
 };
 
 struct omap_target_agent_s *omap3_l4ta_get(struct omap_l4_s *bus, int cs)
@@ -2725,21 +2730,31 @@ struct omap_mpu_state_s *omap3530_mpu_init(unsigned long sdram_size,
     
     /*attach serial[0] to uart 2 for beagle board */
     omap_uart_attach(s->uart[2], serial_hds[0]);
-#if 0
+
     s->dss = omap_dss_init(omap3_l4ta_get(s->l4, 11), 0x68005400, ds,
-                    /* XXX wire M_IRQ_25, D_L2_IRQ_30 and I_IRQ_13 together */
                     s->irq[0][OMAP_INT_35XX_DSS_IRQ], s->drq[OMAP24XX_DMA_DSS],
                    NULL,NULL,NULL,NULL,NULL);
-    gpio_clks[0] = NULL;
-    gpio_clks[1] = NULL;
-    gpio_clks[2] = NULL;
-    gpio_clks[3] = NULL;
+
+    //gpio_clks[0] = NULL;
+    //gpio_clks[1] = NULL;
+    //gpio_clks[2] = NULL;
+    //gpio_clks[3] = NULL;
+
     s->gpif = omap3_gpif_init();
-    /*gpio 0*/
+    /*gpio 1*/
     omap3_gpio_init(s->gpif ,omap3_l4ta_get(s->l4, 12),
-                					&s->irq[0][OMAP_INT_24XX_GPIO_BANK1], 
+                					&s->irq[0][OMAP_INT_35XX_GPIO_BANK1], 
                 					NULL,NULL,0);
-#endif
+
+    /*gpio 5*/
+    omap3_gpio_init(s->gpif ,omap3_l4ta_get(s->l4, 16),
+                					&s->irq[0][OMAP_INT_35XX_GPIO_BANK5], 
+                					NULL,NULL,0);
+     /*gpio 6*/
+    omap3_gpio_init(s->gpif ,omap3_l4ta_get(s->l4, 17),
+                					&s->irq[0][OMAP_INT_35XX_GPIO_BANK6], 
+                					NULL,NULL,5);
+
 
 
 
