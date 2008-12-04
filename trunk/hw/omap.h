@@ -851,6 +851,15 @@ struct rfbi_chip_s {
     void (*block)(void *opaque, int dc, void *buf, size_t len, int pitch);
     uint16_t (*read)(void *opaque, int dc);
 };
+typedef void (*omap3_lcd_panel_fn_t)(uint8_t *, const uint8_t *, unsigned int);
+struct omap3_lcd_panel_s {
+	struct omap_dss_s *dss;
+	DisplayState *state;
+	QEMUConsole *console;
+	omap3_lcd_panel_fn_t *line_fn_tab[2];
+	omap3_lcd_panel_fn_t line_fn;
+	uint32_t invalidate;
+};
 struct omap_dss_s;
 void omap_dss_reset(struct omap_dss_s *s);
 struct omap_dss_s *omap_dss_init(struct omap_target_agent_s *ta,
@@ -859,6 +868,9 @@ struct omap_dss_s *omap_dss_init(struct omap_target_agent_s *ta,
                 omap_clk fck1, omap_clk fck2, omap_clk ck54m,
                 omap_clk ick1, omap_clk ick2);
 void omap_rfbi_attach(struct omap_dss_s *s, int cs, struct rfbi_chip_s *chip);
+void omap3_lcd_panel_attach(struct omap_dss_s *s, int cs, struct omap3_lcd_panel_s *lcd_panel);
+void *omap3_lcd_panel_init(DisplayState *ds);
+
 
 /* omap_mmc.c */
 struct omap_mmc_s;
