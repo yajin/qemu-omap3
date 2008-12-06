@@ -1144,12 +1144,22 @@ static inline void omap3_lcd_panel_invalidate_display(void *opaque) {
     struct omap3_lcd_panel_s *s = (struct omap3_lcd_panel_s *)opaque;
     s->invalidate = 1;
 }
+
+/*uint64_t start,end;
+int test =0 ;
+#include "qemu-timer.h"*/
 static void omap3_lcd_panel_update_display(void *opaque)
 {
 	struct omap3_lcd_panel_s *s = (struct omap3_lcd_panel_s *)opaque;
 	struct omap_dss_s *dss = s->dss;
-	uint32_t lcd_width,lcd_height,graphic_width,graphic_height,start_x,start_y,lcd_Bpp,dss_Bpp,linesize,x,y,copy_width,copy_height;
+	uint32_t lcd_width,lcd_height;
+	uint32_t graphic_width,graphic_height;
+	uint32_t start_x,start_y;
+	uint32_t lcd_Bpp,dss_Bpp;
+	uint32_t linesize,x,y;
+	uint32_t copy_width,copy_height;
 	uint8_t *src, *dest;
+	
 
 	if (!dss->lcd.active)
     	return;
@@ -1231,6 +1241,16 @@ static void omap3_lcd_panel_update_display(void *opaque)
  	}
 		
  	dpy_update(s->state, start_x, start_y, graphic_width, graphic_height);
+ 	/*if (test==0)
+ 		start = qemu_get_clock(vm_clock);
+ 	test++;
+ 	if (test==100)
+ 		{
+ 			end = qemu_get_clock(vm_clock);
+ 			printf("%lld s \n",(end-start));
+ 			exit(1);
+ 		}*/
+ 		
 	
 }
 
