@@ -106,12 +106,22 @@ put_uboot()
 	put_no_oob $1 $uboot_page_offset
 	echo "put u-boot into flash image done!"
 }
+put_kernel()
+{
+	echo "Linux kernel image name:"$kernel_image_name
+	put_no_oob $1 $kernel_page_offset
+	echo "put Linux kernel into flash image done!"
+}
+
 case "$3" in
 	x-loader)
 		put_xloader $1
 		;;
 	u-boot)
 		put_uboot $1
+		;;
+	kernel)
+		put_kernel $1
 		;;
 	*)
 		echo "Unknown partition $3"
