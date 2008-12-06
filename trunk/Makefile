@@ -184,7 +184,9 @@ libqemu_user.a: $(USER_OBJS)
 	rm -f $@ 
 	$(AR) rcs $@ $(USER_OBJS)
 
-######################################################################
+#####################################################################
+bb_nandflash_ecc$(EXESUF): bb_nandflash_ecc.o
+	$(CC) $(LDFLAGS) -o $@ $^ -lz $(LIBS)
 
 qemu-img$(EXESUF): qemu-img.o qemu-tool.o osdep.o $(BLOCK_OBJS)
 	$(CC) $(LDFLAGS) -o $@ $^ -lz $(LIBS)
