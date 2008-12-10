@@ -2341,7 +2341,7 @@ void qemu_ram_free(ram_addr_t addr)
 
 static uint32_t unassigned_mem_readb(void *opaque, target_phys_addr_t addr)
 {
-	printf("Unassigned mem readb " TARGET_FMT_plx "\n", addr);
+	printf("Unassigned mem readb " TARGET_FMT_plx "pc "TARGET_FMT_plx"\n", addr,cpu_single_env->regs[15] );
 	exit(-1);
 #ifdef DEBUG_UNASSIGNED
     printf("Unassigned mem read " TARGET_FMT_plx "\n", addr);
@@ -2354,7 +2354,7 @@ static uint32_t unassigned_mem_readb(void *opaque, target_phys_addr_t addr)
 
 static uint32_t unassigned_mem_readw(void *opaque, target_phys_addr_t addr)
 {
-	printf("Unassigned mem readw " TARGET_FMT_plx "\n", addr);
+    printf("Unassigned mem readw " TARGET_FMT_plx "pc "TARGET_FMT_plx"\n", addr,cpu_single_env->regs[15] );
 	exit(-1);
 #ifdef DEBUG_UNASSIGNED
     printf("Unassigned mem read " TARGET_FMT_plx "\n", addr);
@@ -2367,7 +2367,7 @@ static uint32_t unassigned_mem_readw(void *opaque, target_phys_addr_t addr)
 
 static uint32_t unassigned_mem_readl(void *opaque, target_phys_addr_t addr)
 {
-printf("Unassigned mem readl " TARGET_FMT_plx "\n", addr);
+printf("Unassigned mem readl " TARGET_FMT_plx "pc "TARGET_FMT_plx"\n", addr,cpu_single_env->regs[15] );
 exit(-1);
 #ifdef DEBUG_UNASSIGNED
     printf("Unassigned mem read " TARGET_FMT_plx "\n", addr);
