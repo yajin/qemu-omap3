@@ -2723,6 +2723,8 @@ static uint32_t omap_tap_read(void *opaque, target_phys_addr_t addr)
             return 0x000000f0;
         case omap3430:
             return 0x000000f0;
+        case omap3530:
+			 return 0x000F00F0;
         default:
             cpu_abort(cpu_single_env, "%s: Bad mpu model\n", __FUNCTION__);
         }
@@ -2736,6 +2738,7 @@ static uint32_t omap_tap_read(void *opaque, target_phys_addr_t addr)
         case omap2430:
             return 0xcafeb68a;	/* ES 2.2 */
         case omap3430:
+        case omap3530:
             return 0xcafeb7ae;	/* ES 2 */
         default:
             cpu_abort(cpu_single_env, "%s: Bad mpu model\n", __FUNCTION__);
