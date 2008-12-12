@@ -1183,6 +1183,12 @@ static void omap3_lcd_panel_update_display(void *opaque)
     	 fprintf(stderr, "%s: rotation is not supported \n", __FUNCTION__);
         exit(1);
     }
+    if (!s->line_fn)
+   {
+    	 fprintf(stderr, "%s:s->line_fn is NULL. Not supported gfx_format \n", __FUNCTION__);
+        exit(1);
+    }
+
 
     /* Resolution */
     lcd_width = dss->lcd.nx;
