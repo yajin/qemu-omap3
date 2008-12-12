@@ -458,6 +458,8 @@ static uint32_t omap2_inth_read(void *opaque, target_phys_addr_t addr)
 
     switch (offset) {
     case 0x00:	/* INTC_REVISION */
+    	 if (s->base == 0x48200000) /*for OMAP3530*/
+    	 	return 0x40;
         return 0x21;
 
     case 0x10:	/* INTC_SYSCONFIG */
