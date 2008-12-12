@@ -663,6 +663,7 @@ static uint32_t omap3_prm_read(void *opaque, target_phys_addr_t addr)
     case 0x1270:
         return s->prm_clksrc_ctrl;
     default:
+    	 printf("prm READ offset %x\n",offset);
         exit(-1);
     }
 }
@@ -798,6 +799,7 @@ struct omap3_cm_s
     uint32_t cm_idlest_wkup;    /*0x4800 4c20 */
     uint32_t cm_autoidle_wkup;  /*0x4800 4c30 */
     uint32_t cm_clksel_wkup;    /*0x4800 4c40 */
+    uint32_t cm_c48;                  /*0x4800 4c48 */
 
     /*Clock_Control_Reg_CM Register */
     uint32_t cm_clken_pll;      /*0x4800 4d00 */
@@ -1107,6 +1109,37 @@ static inline void omap3_cm_dpll4_update(struct omap3_cm_s *s)
 
 }
 
+static inline void omap3_cm_dpll5_update(struct omap3_cm_s *s)
+{
+	 uint32_t m, n, m2, cm_idlest2_ckgen;
+    uint32_t bypass = 1;
+
+    cm_idlest2_ckgen = s->cm_idlest2_ckgen;;
+
+    /*dpll5 bypass mode */
+    if ((cm_idlest2_ckgen & 0x1) == 0x0) 
+    {
+        bypass = 1;
+    }
+
+    if (bypass == 1)
+    {
+        omap_clk_setrate(omap_findclk(s->mpu, "omap3_120m_fclk"), 1, 1);
+    }
+    else
+    {
+    	 m = (s->cm_clksel4_pll & 0x7ff00)>>8;
+        n = s->cm_clksel4_pll & 0x3f00;
+        m2 = s->cm_clksel5_pll & 0x1f;
+
+        OMAP3_DEBUG(("dpll5 m %d n %d m2 %d  m3 %d\n",m,n,m2 ));
+        omap_clk_setrate(omap_findclk(s->mpu, "omap3_120m_fclk"), (n + 1) * m2,
+                         m);
+        OMAP3_DEBUG(("omap3_120m_fclk %d \n",omap_clk_getrate(omap_findclk(s->mpu, "omap3_120m_fclk"))));
+    }
+
+
+}
 static inline void omap3_cm_48m_update(struct omap3_cm_s *s)
 {
     if (s->cm_clksel1_pll & 0x8)
@@ -1362,7 +1395,8 @@ static uint32_t omap3_cm_read(void *opaque, target_phys_addr_t addr)
     int offset = addr - s->base;
     uint32_t ret;
     uint32_t bypass, m;
-
+//    if (offset!=0xd20)
+//printf("CM READ offset %x\n",offset);
     switch (offset)
     {
     case 0x0:
@@ -1424,6 +1458,8 @@ static uint32_t omap3_cm_read(void *opaque, target_phys_addr_t addr)
         return s->cm_iclken1_core;
     case 0xa14:
     	 return s->cm_iclken2_core;
+    case 0xa48:
+    	 return s->cm_clkstctrl_core;
     case 0xc00:                /*CM_FCLKEN_WKUP */
         return s->cm_fclken_wkup;
     case 0xc10:                /*CM_ICLKEN_WKUP */
@@ -1433,14 +1469,22 @@ static uint32_t omap3_cm_read(void *opaque, target_phys_addr_t addr)
         return 0x0;
     case 0xc40:
         return s->cm_clksel_wkup;
+    case 0xc48:
+    	return s->cm_c48;
     case 0xd00:                /*CM_CLKEN_PLL */
         return s->cm_clken_pll;
+    case 0xd24:
+    	return s->cm_idlest2_ckgen;
     case 0xd40:                /*CM_CLKSEL1_PLL */
         return s->cm_clksel1_pll;
     case 0xd44:
         return s->cm_clksel2_pll;
     case 0xd48:                /*CM_CLKSEL3_PLL */
         return s->cm_clksel3_pll;
+    case 0xd4c:
+        return s->cm_clksel4_pll;
+    case 0xd50:                /*CM_CLKSEL5_PLL */
+        return s->cm_clksel5_pll;
     case 0xd20:                /*CM_IDLEST_CKGEN */
         /*FIXME: all clock is active. we do not care it. */
         ret = 0x3ffff;
@@ -1452,6 +1496,8 @@ static uint32_t omap3_cm_read(void *opaque, target_phys_addr_t addr)
         if ((s->cm_clken_pll & 0x70000) == 0x10000)
             ret |= 0x3fffd;
         return ret;
+    case 0xd70:
+    	 return s->cm_clkout_ctrl;
     case 0xe00:
     	return s->cm_fclken_dss;
    	case 0xe10:
@@ -1474,7 +1520,7 @@ static uint32_t omap3_cm_read(void *opaque, target_phys_addr_t addr)
         return s->cm_clksel1_emu;
 
     default:
-        printf("omap3_cm_read addr %x offset %x \n", addr, offset);
+        printf("omap3_cm_read addr %x offset %x pc %x \n", addr, offset,cpu_single_env->regs[15] );
         exit(-1);
     }
 }
@@ -1531,8 +1577,8 @@ static void omap3_cm_write(void *opaque, target_phys_addr_t addr,
     	 s->cm_iclken2_core = value & 0x1f;
     	 break;
     case 0xa40:                /*CM_CLKSEL_CORE */
-        s->cm_clksel_core = (value & 0xcf);
-        s->cm_clksel_core |= 0x700;
+        s->cm_clksel_core = (value & 0xff);
+        s->cm_clksel_core |= 0x100;
         omap3_cm_gp10_update(s);
         omap3_cm_gp11_update(s);
         omap3_cm_l3clk_update(s);
@@ -1574,6 +1620,14 @@ static void omap3_cm_write(void *opaque, target_phys_addr_t addr,
         s->cm_clksel3_pll = value & 0x1f;
         omap3_cm_dpll4_update(s);
         break;
+    case 0xd4c:                /*CM_CLKSEL4_PLL */  
+      	s->cm_clksel4_pll = value & 0x7ff7f;
+        omap3_cm_dpll5_update(s);
+        break;
+     case 0xd50:                /*CM_CLKSEL5_PLL */
+        s->cm_clksel5_pll = value & 0x1f;
+        omap3_cm_dpll5_update(s);
+        break;
     case 0xe00:
     	s->cm_fclken_dss = value & 0x7;
     	break;
@@ -1612,7 +1666,7 @@ static void omap3_cm_write(void *opaque, target_phys_addr_t addr,
         break;
 
     default:
-        printf("omap3_cm_write addr %x value %x \n", addr, value);
+        printf("omap3_cm_write addr %x value %x pc %x\n", addr, value,cpu_single_env->regs[15] );
         exit(-1);
     }
 }
@@ -1983,34 +2037,263 @@ struct omap3_scm_s
     target_phys_addr_t base;
     struct omap_mpu_state_s *mpu;
 
-    uint32_t control_status;    /*0x4800 22F0 */
+	uint8 interface[48];           /*0x4800 2000*/
+	uint8 padconfs[576];         /*0x4800 2030*/
+	uint32 general[228];            /*0x4800 2270*/
+	uint8 mem_wkup[1024];     /*0x4800 2600*/
+	uint8 padconfs_wkup[84]; /*0x4800 2a00*/
+	uint32 general_wkup[8];    /*0x4800 2a60*/
+
+    
 };
 
-static void omap3_scm_reset(struct omap3_scm_s *s)
+#define PADCONFS_VALUE(wakeup0,wakeup1,offmode0,offmode1, \
+						inputenable0,inputenable1,pupd0,pupd1,muxmode0,muxmode1,offset) \
+	do { \
+		 *(padconfs+offset/4) = (wakeup0 <<14)|(offmode0<<9)|(inputenable0<<8)|(pupd0<<3)|(muxmode0); \
+		 *(padconfs+offset/4) |= (wakeup1 <<30)|(offmode1<<25)|(inputenable1<<24)|(pupd1<<19)|(muxmode1<<16); \
+} while (0)
+
+void omap3_scm_reset(struct omap3_scm_s *s)
 {
-    s->control_status = 0x300;
+	 uint32 * padconfs;
+    padconfs = (uint32 *)(s->padconfs);
+    PADCONFS_VALUE(0,0,0,0,1,1,0,0,0,0,0x0);
+    PADCONFS_VALUE(0,0,0,0,1,1,0,0,0,0,0x4);
+    PADCONFS_VALUE(0,0,0,0,1,1,0,0,0,0,0x8);
+    PADCONFS_VALUE(0,0,0,0,1,1,0,0,0,0,0xc);
+    PADCONFS_VALUE(0,0,0,0,1,1,0,0,0,0,0x10);
+    PADCONFS_VALUE(0,0,0,0,1,1,0,0,0,0,0x14);
+    PADCONFS_VALUE(0,0,0,0,1,1,0,0,0,0,0x18);
+    PADCONFS_VALUE(0,0,0,0,1,1,0,0,0,0,0x1c);
+    PADCONFS_VALUE(0,0,0,0,1,1,0,0,0,0,0x20);
+    PADCONFS_VALUE(0,0,0,0,1,1,0,0,0,0,0x24);
+    PADCONFS_VALUE(0,0,0,0,1,1,0,0,0,0,0x28);
+    PADCONFS_VALUE(0,0,0,0,1,1,0,0,0,0,0x2c);
+    PADCONFS_VALUE(0,0,0,0,1,1,0,0,0,0,0x30);
+    PADCONFS_VALUE(0,0,0,0,1,1,0,0,0,0,0x34);
+    PADCONFS_VALUE(0,0,0,0,1,1,0,0,0,0,0x38);
+    PADCONFS_VALUE(0,0,0,0,1,1,0,0,0,0,0x3c);
+    PADCONFS_VALUE(0,0,0,0,1,1,0,0,0,0,0x40);
+    PADCONFS_VALUE(0,0,0,0,1,1,0,0,0,0,0x44);
+    PADCONFS_VALUE(0,0,0,0,1,1,0,1,0,7,0x48);
+    PADCONFS_VALUE(0,0,0,0,1,1,1,1,7,7,0x4c);
+    PADCONFS_VALUE(0,0,0,0,1,1,1,1,7,7,0x50);
+    PADCONFS_VALUE(0,0,0,0,1,1,3,3,7,7,0x54);
+    PADCONFS_VALUE(0,0,0,0,1,1,3,3,7,7,0x58);
+    PADCONFS_VALUE(0,0,0,0,1,1,3,3,7,0,0x5c);
+    PADCONFS_VALUE(0,0,0,0,1,1,3,3,0,0,0x60);
+    PADCONFS_VALUE(0,0,0,0,1,1,3,3,0,0,0x64);
+    PADCONFS_VALUE(0,0,0,0,1,1,3,3,0,0,0x68);
+    PADCONFS_VALUE(0,0,0,0,1,1,3,3,0,0,0x6c);
+    PADCONFS_VALUE(0,0,0,0,1,1,3,3,0,0,0x70);
+    PADCONFS_VALUE(0,0,0,0,1,1,3,3,0,0,0x74);
+    PADCONFS_VALUE(0,0,0,0,1,1,3,3,0,0,0x78);
+    PADCONFS_VALUE(0,0,0,0,1,1,3,3,0,0,0x7c);
+    PADCONFS_VALUE(0,0,0,0,1,1,0,3,0,7,0x80);
+    PADCONFS_VALUE(0,0,0,0,1,1,3,3,7,7,0x84);
+    PADCONFS_VALUE(0,0,0,0,1,1,3,3,7,7,0x88);
+    PADCONFS_VALUE(0,0,0,0,1,1,3,0,7,0,0x8c);
+    PADCONFS_VALUE(0,0,0,0,1,1,0,0,0,0,0x90);
+    PADCONFS_VALUE(0,0,0,0,1,1,0,0,0,0,0x94);
+    PADCONFS_VALUE(0,0,0,0,1,1,1,0,7,0,0x98);
+    PADCONFS_VALUE(0,0,0,0,1,1,3,3,0,7,0x9c);
+    PADCONFS_VALUE(0,0,0,0,1,1,3,3,7,7,0xa0);
+    PADCONFS_VALUE(0,0,0,0,1,1,3,3,7,7,0xa4);
+    PADCONFS_VALUE(0,0,0,0,1,1,3,1,7,7,0xa8);
+    PADCONFS_VALUE(0,0,0,0,1,1,1,1,7,7,0xac);
+    PADCONFS_VALUE(0,0,0,0,1,1,1,1,7,7,0xb0);
+    PADCONFS_VALUE(0,0,0,0,1,1,1,1,7,7,0xb4);
+    PADCONFS_VALUE(0,0,0,0,1,1,1,1,7,7,0xb8);
+    PADCONFS_VALUE(0,0,0,0,1,1,1,1,7,7,0xbc);
+    PADCONFS_VALUE(0,0,0,0,1,1,1,1,7,7,0xc0);
+    PADCONFS_VALUE(0,0,0,0,1,1,1,1,7,7,0xc4);
+    PADCONFS_VALUE(0,0,0,0,1,1,1,1,7,7,0xc8);
+    PADCONFS_VALUE(0,0,0,0,1,1,1,1,7,7,0xcc);
+    PADCONFS_VALUE(0,0,0,0,1,1,1,1,7,7,0xd0);
+    PADCONFS_VALUE(0,0,0,0,1,1,1,1,7,7,0xd4);
+    PADCONFS_VALUE(0,0,0,0,1,1,1,1,7,7,0xd8);
+    PADCONFS_VALUE(0,0,0,0,1,1,1,1,7,7,0xdc);
+    PADCONFS_VALUE(0,0,0,0,1,1,1,1,7,7,0xe0);
+    PADCONFS_VALUE(0,0,0,0,1,1,1,1,7,7,0xe4);
+    PADCONFS_VALUE(0,0,0,0,1,1,1,1,7,7,0xe8);
+    PADCONFS_VALUE(0,0,0,0,1,1,1,1,7,7,0xec);
+    PADCONFS_VALUE(0,0,0,0,1,1,1,1,7,7,0xf0);
+    PADCONFS_VALUE(0,0,0,0,1,1,1,1,7,7,0xf4);
+    PADCONFS_VALUE(0,0,0,0,1,1,1,1,7,7,0xf8);
+    PADCONFS_VALUE(0,0,0,0,1,1,1,1,7,7,0xfc);
+    PADCONFS_VALUE(0,0,0,0,1,1,1,1,7,7,0x100);
+    PADCONFS_VALUE(0,0,0,0,1,1,1,1,7,7,0x104);
+    PADCONFS_VALUE(0,0,0,0,1,1,1,1,7,7,0x108);
+    PADCONFS_VALUE(0,0,0,0,1,1,1,1,7,7,0x10c);
+    PADCONFS_VALUE(0,0,0,0,1,1,1,1,7,7,0x110);
+    PADCONFS_VALUE(0,0,0,0,1,1,1,1,7,7,0x114);
+    PADCONFS_VALUE(0,0,0,0,1,1,1,1,7,7,0x118);
+    PADCONFS_VALUE(0,0,0,0,1,1,1,1,7,7,0x11c);
+    PADCONFS_VALUE(0,0,0,0,1,1,1,1,7,7,0x120);
+    PADCONFS_VALUE(0,0,0,0,1,1,1,1,7,7,0x124);
+    PADCONFS_VALUE(0,0,0,0,1,1,1,3,7,7,0x128);
+    PADCONFS_VALUE(0,0,0,0,1,1,3,3,7,7,0x12c);
+    PADCONFS_VALUE(0,0,0,0,1,1,3,3,7,7,0x130);
+    PADCONFS_VALUE(0,0,0,0,1,1,1,1,7,7,0x134);
+    PADCONFS_VALUE(0,0,0,0,1,1,1,1,7,7,0x138);
+    PADCONFS_VALUE(0,0,0,0,1,1,1,1,7,7,0x13c);
+    PADCONFS_VALUE(0,0,0,0,1,1,1,1,7,7,0x140);
+    PADCONFS_VALUE(0,0,0,0,1,1,3,3,7,7,0x144);
+    PADCONFS_VALUE(0,0,0,0,1,1,3,3,7,7,0x148);
+    PADCONFS_VALUE(0,0,0,0,1,1,1,1,7,7,0x14c);
+    PADCONFS_VALUE(0,0,0,0,1,1,1,1,7,7,0x150);
+    PADCONFS_VALUE(0,0,0,0,1,1,1,1,7,7,0x154);
+    PADCONFS_VALUE(0,0,0,0,1,1,1,1,7,7,0x158);
+    PADCONFS_VALUE(0,0,0,0,1,1,1,1,7,7,0x15c);
+    PADCONFS_VALUE(0,0,0,0,1,1,1,1,7,7,0x160);
+    PADCONFS_VALUE(0,0,0,0,1,1,1,1,7,7,0x164);
+    PADCONFS_VALUE(0,0,0,0,1,1,1,3,7,7,0x168);
+    PADCONFS_VALUE(0,0,0,0,1,1,3,3,7,7,0x16c);
+    PADCONFS_VALUE(0,0,0,0,1,1,3,1,7,7,0x170);
+    PADCONFS_VALUE(0,0,0,0,1,1,3,1,7,7,0x174);
+    PADCONFS_VALUE(0,0,0,0,1,1,1,1,7,7,0x178);
+    PADCONFS_VALUE(0,0,0,0,1,1,1,1,7,7,0x17c);
+    PADCONFS_VALUE(0,0,0,0,1,1,1,1,7,7,0x180);
+    PADCONFS_VALUE(0,0,0,0,1,1,1,1,7,7,0x184);
+    PADCONFS_VALUE(0,0,0,0,1,1,1,3,7,7,0x188);
+    PADCONFS_VALUE(0,0,0,0,1,1,3,3,7,7,0x18c);
+    PADCONFS_VALUE(0,0,0,0,1,1,3,3,7,7,0x190);
+    PADCONFS_VALUE(0,0,0,0,1,1,3,3,7,7,0x194);
+    PADCONFS_VALUE(0,0,0,0,1,1,1,1,7,7,0x198);
+    PADCONFS_VALUE(0,0,0,0,1,1,1,3,7,7,0x19c);
+    PADCONFS_VALUE(0,0,0,0,1,1,3,3,7,7,0x1a0);
+    PADCONFS_VALUE(0,0,0,0,1,1,3,1,7,7,0x1a4);
+    PADCONFS_VALUE(0,0,0,0,1,1,1,1,7,7,0x1a8);
+    PADCONFS_VALUE(0,0,0,0,1,1,3,1,7,7,0x1ac);
+    PADCONFS_VALUE(0,0,0,0,1,1,3,1,7,7,0x1b0);
+    PADCONFS_VALUE(0,0,0,0,1,1,1,1,0,0,0x1b4);
+    PADCONFS_VALUE(0,0,0,0,1,1,1,1,0,0,0x1b8);
+    PADCONFS_VALUE(0,0,0,0,1,1,1,1,0,0,0x1bc);
+    PADCONFS_VALUE(0,0,0,0,1,1,1,1,0,0,0x1c0);
+    PADCONFS_VALUE(0,0,0,0,1,1,1,1,0,0,0x1c4);
+    PADCONFS_VALUE(0,0,0,0,1,1,1,1,0,0,0x1c8);
+    PADCONFS_VALUE(0,0,0,0,1,1,1,1,0,0,0x1cc);
+    PADCONFS_VALUE(0,0,0,0,1,1,1,1,0,0,0x1d0);
+    PADCONFS_VALUE(0,0,0,0,1,1,1,1,0,0,0x1d4);
+    PADCONFS_VALUE(0,0,0,0,1,1,1,1,0,0,0x1d8);
+    PADCONFS_VALUE(0,0,0,0,1,1,1,1,0,0,0x1dc);
+    PADCONFS_VALUE(0,0,0,0,1,1,1,1,0,0,0x1e0);
+    PADCONFS_VALUE(0,0,0,0,1,1,1,1,0,0,0x1e4);
+    PADCONFS_VALUE(0,0,0,0,1,1,1,1,0,0,0x1e8);
+    PADCONFS_VALUE(0,0,0,0,1,1,1,1,0,0,0x1ec);
+    PADCONFS_VALUE(0,0,0,0,1,1,1,1,0,0,0x1f0);
+    PADCONFS_VALUE(0,0,0,0,1,1,1,1,0,0,0x1f4);
+    PADCONFS_VALUE(0,0,0,0,1,1,1,1,0,0,0x1f8);
+    PADCONFS_VALUE(0,0,0,0,1,1,1,1,0,0,0x1fc);
+    PADCONFS_VALUE(0,0,0,0,1,1,1,1,0,0,0x200);
+    PADCONFS_VALUE(0,0,0,0,1,1,1,1,0,0,0x204);
+    PADCONFS_VALUE(0,0,0,0,1,1,1,1,0,0,0x208);
+    PADCONFS_VALUE(0,0,0,0,1,1,1,1,0,0,0x20c);
+    PADCONFS_VALUE(0,0,0,0,1,1,1,1,0,0,0x210);
+    PADCONFS_VALUE(0,0,0,0,1,1,1,1,0,0,0x214);
+    PADCONFS_VALUE(0,0,0,0,1,1,1,1,0,0,0x218);
+    PADCONFS_VALUE(0,0,0,0,1,1,1,1,0,0,0x21c);
+    PADCONFS_VALUE(0,0,0,0,1,1,3,3,0,0,0x220);
+    PADCONFS_VALUE(0,0,0,0,1,1,3,1,0,0,0x224);
+    PADCONFS_VALUE(0,0,0,0,1,1,0,1,0,0,0x228);
+    PADCONFS_VALUE(0,0,0,0,1,1,0,1,0,0,0x22c);
+    PADCONFS_VALUE(0,0,0,0,1,1,3,3,7,7,0x230);
+    PADCONFS_VALUE(0,0,0,0,1,1,3,3,7,7,0x234);
+
+
+	padconfs = (uint32 *)(s->general);
+	s->general[1] = 0x4000000;  /*0x4800 2274*/
+	s->general[0x1c] = 0x1;  /*0x4800 22e0*/
+	s->general[0x75] = 0x7fc0;  /*0x4800 2444*/
+	s->general[0x76] = 0xaa;  /*0x4800 2448*/
+	s->general[0x7c] = 0x2700;  /*0x4800 2460*/
+	s->general[0x7d] = 0x300000;  /*0x4800 2464*/
+	s->general[0x7e] = 0x300000;  /*0x4800 2468*/
+	s->general[0x81] = 0xffff;  /*0x4800 2474*/
+	s->general[0x82] = 0xffff;  /*0x4800 2478*/
+	s->general[0x83] = 0xffff;  /*0x4800 247c*/
+	s->general[0x84] = 0x6;  /*0x4800 2480*/
+	s->general[0x85] = 0xffffffff;  /*0x4800 2484*/
+	s->general[0x86] = 0xffff;  /*0x4800 2488*/
+	s->general[0x87] = 0xffff;  /*0x4800 248c*/
+	s->general[0x88] = 0x1;  /*0x4800 2490*/
+	s->general[0x8b] = 0xffffffff;  /*0x4800 249c*/
+	s->general[0x8c] = 0xffff;  /*0x4800 24a0*/
+	s->general[0x8e] = 0xffff;  /*0x4800 24a8*/
+	s->general[0x8f] = 0xffff;  /*0x4800 24ac*/
+	s->general[0x91] = 0xffff;  /*0x4800 24b4*/
+	s->general[0x92] = 0xffff;  /*0x4800 24b8*/
+	s->general[0xac] = 0x109;  /*0x4800 2520*/
+	s->general[0xb2] = 0xffff;  /*0x4800 2538*/
+	s->general[0xb3] = 0xffff;  /*0x4800 253c*/
+	s->general[0xb4] = 0xffff;  /*0x4800 2540*/
+	PADCONFS_VALUE(0,0,0,0,1,1,3,3,4,4,0x368);
+    PADCONFS_VALUE(0,0,0,0,1,1,3,3,4,4,0x36c);
+    PADCONFS_VALUE(0,0,0,0,1,1,3,3,4,4,0x370);
+    PADCONFS_VALUE(0,0,0,0,1,1,1,1,4,4,0x374);
+    PADCONFS_VALUE(0,0,0,0,1,1,1,1,4,4,0x378);
+    PADCONFS_VALUE(0,0,0,0,1,1,1,1,4,4,0x37c);
+    PADCONFS_VALUE(0,0,0,0,1,1,1,1,4,4,0x380);
+    PADCONFS_VALUE(0,0,0,0,1,1,1,1,4,4,0x384);
+    PADCONFS_VALUE(0,0,0,0,1,1,1,1,4,4,0x388);
+
+    
+
+	padconfs = (uint32 *)(s->padconfs_wkup);
+	PADCONFS_VALUE(0,0,0,0,1,1,3,3,0,0,0x0);
+	PADCONFS_VALUE(0,0,0,0,1,1,0,0,0,0,0x4);
+	PADCONFS_VALUE(0,0,0,0,1,1,3,0,0,0,0x8);
+	PADCONFS_VALUE(0,0,0,0,1,1,0,0,0,0,0xc);
+	PADCONFS_VALUE(0,0,0,0,1,1,0,0,0,0,0x10);
+	PADCONFS_VALUE(0,0,0,0,1,1,0,0,0,0,0x14);
+	PADCONFS_VALUE(0,0,0,0,1,1,1,1,7,7,0x18);
+	PADCONFS_VALUE(0,0,0,0,1,1,1,1,0,0,0x1c);
+	PADCONFS_VALUE(0,0,0,0,1,1,3,3,0,0,0x20);
+	PADCONFS_VALUE(0,0,0,0,1,1,3,3,0,0,0x24);
+	PADCONFS_VALUE(0,0,0,0,1,1,1,1,0,0,0x2c);
+
+
+	s->general_wkup[0] = 0x66ff; /*0x4800 2A60*/
+	    
 }
 
 static uint32_t omap3_scm_read8(void *opaque, target_phys_addr_t addr)
 {
     struct omap3_scm_s *s = (struct omap3_scm_s *) opaque;
     int offset = addr - s->base;
-
+    uint8_t* temp;
+	
     switch (offset)
     {
-    case 0x2f0:
+
+    	 case 0x00 ... 0x2f:
+    	 	return s->interface[offset];
+    	 case 0x30 ... 0x26f:
+    	 	return s->padconfs[offset-0x30];
+    	 case 0x270 ... 0x5ff:
+    	 	temp = (uint8_t *)s->general;
+    	 	return temp[offset-0x270];
+    	case 0x600 ... 0x9ff:
+    		return s->mem_wkup[offset-0x600];
+    	case 0xa00 ... 0xa5f:
+    		return s->padconfs_wkup[offset-0xa00];
+    	case 0xa60 ... 0xa7f:
+    		temp = (uint8_t *)s->general_wkup;
+    	 	return temp[offset-0xa60];
+    /* case 0x2f0:
         return s->control_status & 0xff;
     case 0x2f1:
         return (s->control_status & 0xff00) >> 8;
     case 0x2f2:
         return (s->control_status & 0xff0000) >> 16;
     case 0x2f3:
-        return (s->control_status & 0xff000000) >> 24;
-    
+        return (s->control_status & 0xff000000) >> 24;    */
 	
     default:
-        printf("omap3_scm_read8 addr %x offset %x \n", addr,offset);
-        exit(-1);
+        printf("omap3_scm_read8 addr %x offset %x pc %x  \n", addr,offset,cpu_single_env->regs[15] );
+        return 0;
+      
     }
 }
 
@@ -2036,90 +2319,37 @@ static void omap3_scm_write8(void *opaque, target_phys_addr_t addr,
 {
     struct omap3_scm_s *s = (struct omap3_scm_s *) opaque;
     int offset = addr - s->base;
+    uint8_t* temp;
 
     switch (offset)
     {
-#if 0
-    case 0x30...0 x33:         /*sdrc_d0 sdrc_d1 */
-    case 0x34...0 x37:         /*sdrc_d2 sdrc_d3 */
-    case 0x38...0 x3b:         /*sdrc_d4 sdrc_d5 */
-    case 0x3c...0 x3f:         /*sdrc_d6 sdrc_d7 */
-    case 0x40...0 x43:         /*sdrc_d8 sdrc_d9 */
-    case 0x44...0 x47:         /*sdrc_d10 sdrc_d11 */
-    case 0x48...0 x4b:         /*sdrc_d12 sdrc_d13 */
-    case 0x4c...0 x4f:         /*sdrc_d14 sdrc_d15 */
-    case 0x50...0 x53:         /*sdrc_d16 sdrc_d17 */
-    case 0x54...0 x57:         /*sdrc_d18 sdrc_d19 */
-    case 0x58...0 x5b:         /*sdrc_d20 sdrc_d21 */
-    case 0x5c...0 x5f:         /*sdrc_d22 sdrc_d23 */
-    case 0x60...0 x63:         /*sdrc_d24 sdrc_d25 */
-    case 0x64...0 x67:         /*sdrc_d26 sdrc_d27 */
-    case 0x68...0 x6b:         /*sdrc_d28 sdrc_d29 */
-    case 0x6c...0 x6f:         /*sdrc_d30 sdrc_d31 */
-    case 0x70...0 x73:         /*sdrcclk sdrcdqs0 */
-    case 0x74...0 x77:         /*sdrcdqs1 sdrcdqs2 */
-    case 0x78...0 x7b:         /*sdrcdqs3 gpmca1 */
-    case 0x7c...0 x7f:         /*gpmca2 gpmca3 */
-    case 0x80...0 x83:         /*gpmca4 gpmca5 */
-    case 0x84...0 x87:         /*gpmca6 gpmca7 */
-    case 0x88...0 x8b:         /*gpmca8 gpmca9 */
-    case 0x8c...0 x8f:         /*gpmca10 gpmcd0 */
-    case 0x90...0 x93:         /*gpmcd1 gpmcd2 */
-    case 0x94...0 x97:         /*gpmcd3 gpmcd4 */
-    case 0x98...0 x9b:         /*gpmcd5 gpmcd6 */
-    case 0x9c...0 x9f:         /*gpmcd7 gpmcd8 */
-    case 0xa0...0 xa3:         /*gpmcd9 gpmcd10 */
-    case 0xa4...0 xa7:         /*gpmcd11 gpmcd12 */
-    case 0xa8...0 xab:         /*gpmcd13 gpmcd14 */
-    case 0xac...0 xaf:         /*gpmcd15 gpmcncs0 */
-    case 0xb0...0 xb3:         /*gpmcncs1 gpmcncs2 */
-    case 0xb4...0 xb7:         /*gpmcncs3 gpmcncs4 */
-    case 0xb8...0 xbb:         /*gpmcncs5 gpmcncs6 */
-    case 0xbc...0 xbf:         /*gpmcncs7 gpmcclk */
-    case 0xc0...0 xc3:
-    case 0xc4...0 xc7:
-    case 0xc8...0 xcb:         /*gpmcnbe1 gpmcnwp */
-    case 0xcc...0 xcf:         /*gpmcwait0 gpmcwait1 */
-    case 0xd0...0 xd3:         /*gpmcwait2 gpmcwait3 */
+    	 case 0x00 ... 0x2f:
+    	 	s->interface[offset] = value;
+    	 	break;
+    	 case 0x30 ... 0x26f:
+    	 	s->padconfs[offset-0x30] = value;
+    	 	break;
+    	 case 0x270 ... 0x5ff:
+    	 	temp = (uint8_t *)s->general;
+    	 	temp[offset-0x270] = value;
+    	 	break;
+    	case 0x600 ... 0x9ff:
+    		s->mem_wkup[offset-0x600] = value;
+    		break;
+    	case 0xa00 ... 0xa5f:
+    		s->padconfs_wkup[offset-0xa00] = value;
+    		break;
+    	case 0xa60 ... 0xa7f:
+    		temp = (uint8_t *)s->general_wkup;
+    	 	temp[offset-0xa60] = value;
+    	 	break;
 
-    case 0x100...0 x103:       /*dssdata18 dssdata19 */
-    case 0x104...0 x107:       /*dssdata20 dssdata21 */
-    case 0x130...0 x133:       /*camwen camstrobe */
-
-
-    case 0x17c...0 x17f:       /*uart1 tx uart1rts */
-    case 0x180...0 x183:       /*uart1 cts uart1 rx */
-    case 0x190...0 x193:       /*mcbsp1_dx mcbsp1_dr */
-    case 0x198...0 x19b:
-    case 0x19c...0 x19f:
-    case 0x1a0...0 x1a3:
-    case 0x1e0...0 x1e3:       /*sys nirq sys_clkout2 */
-
-    case 0x260...0 x263:       /*sys nirq sys_clkout2 */
-    case 0x264...0 x267:       /*sys nirq sys_clkout2 */
-
-    case 0xa04...0 xa07:
-    case 0xa08...0 xa0b:       /*sys_boot0 */
-    case 0xa0c...0 xa0f:       /*sys_boot1 sys_boot2 */
-    case 0xa10...0 xa13:       /*sys_boot3 sys_boot4 */
-    case 0xa14...0 xa17:       /*sys_boot5 sys_boot6 */
-    case 0xa1c...0 xa1f:       /*JTAG_nTRST JTAG_TCK */
-    case 0xa20...0 xa23:       /*JTAG_TMS JTAG_TDI */
-    case 0xa24...0 xa27:       /*JTAG_EMU0 JTAG_EMU1 */
-    case 0xa28...0 xa2b:
-    case 0xa2c...0 xa2f:
-    case 0xa30...0 xa33:
-    case 0xa40...0 xa43:
-    case 0xa44...0 xa47:
-    case 0xa48...0 xa4b:
-
-        break;
-#endif
     default:
     	 /*we do not care scm write*/
-        //printf("omap3_scm_write8 addr %x offset %x pc %x \n \n", addr, offset,
-        //       cpu_single_env->regs[15] - 0x80008000 + 0x80e80000);
-        break;
+        printf("omap3_scm_write8 addr %x offset %x pc %x \n \n", addr, offset,
+               cpu_single_env->regs[15] - 0x80008000 + 0x80e80000);
+    	 exit(1);
+        //break;
 
     }
 }
@@ -2548,6 +2778,26 @@ struct omap3_sms_s
     uint32_t size;
     struct omap_mpu_state_s *mpu;
 
+    uint32 sms_sysconfig;
+    uint32 sms_sysstatus;
+    uint32 sms_rg_att[8];
+    uint32 sms_rg_rdperm[8];
+    uint32 sms_rg_wrperm[8];
+    uint32 sms_rg_start[7];
+    uint32 sms_rg_end[7];
+    uint32 sms_security_control;
+    uint32 sms_class_arbiter0;
+    uint32 sms_class_arbiter1;
+    uint32 sms_class_arbiter2;
+    uint32 sms_interclass_arbiter;
+    uint32 sms_class_rotation[3];
+    uint32 sms_err_addr;
+    uint32 sms_err_type;
+    uint32 sms_pow_ctrl;
+    uint32 sms_rot_control[12];
+    uint32 sms_rot_size[12];
+    uint32 sms_rot_physical_ba[12];
+
 
 };
 
@@ -2558,6 +2808,113 @@ static uint32_t omap3_sms_read32(void *opaque, target_phys_addr_t addr)
 
     switch (offset)
     {
+    case 0x10:
+    	return s->sms_sysconfig;
+    case 0x14:
+    	return s->sms_sysstatus;
+    case 0x48:
+    case 0x68:
+    case 0x88:
+    case 0xa8:
+    case 0xc8:
+    case 0xe8:
+    case 0x108:
+    case 0x128:
+    	return s->sms_rg_att[(offset-0x48)/0x20];
+    case 0x50:
+    case 0x70:
+    case 0x90:
+    case 0xb0:
+    case 0xd0:
+    case 0xf0:
+    case 0x110:
+    case 0x130:
+    	return s->sms_rg_rdperm[(offset-0x50)/0x20];
+    case 0x58:
+    case 0x78:
+    case 0x98:
+    case 0xb8:
+    case 0xd8:
+    case 0xf8:
+    case 0x118:
+    	return s->sms_rg_wrperm[(offset-0x58)/0x20];
+    case 0x60:
+    case 0x80:
+    case 0xa0:
+    case 0xc0:
+    case 0xe0:
+    case 0x100:
+    case 0x120:
+    	return s->sms_rg_start[(offset-0x60)/0x20];
+
+    case 0x64:
+    case 0x84:
+    case 0xa4:
+    case 0xc4:
+    case 0xe4:
+    case 0x104:
+    case 0x124:
+    	return s->sms_rg_end[(offset-0x64)/0x20];
+    case 0x140:
+    	return s->sms_security_control;
+    case 0x150:
+    	return s->sms_class_arbiter0;
+	case 0x154:
+		return s->sms_class_arbiter1;
+	case 0x158:
+		return s->sms_class_arbiter2;
+	case 0x160:
+		return s->sms_interclass_arbiter;
+	case 0x164:
+	case 0x168:
+	case 0x16c:
+		return s->sms_class_rotation[(offset-0x164)/4];
+	case 0x170:
+		return s->sms_err_addr;
+	case 0x174:
+		return s->sms_err_type;
+	case 0x178:
+		return s->sms_pow_ctrl;
+	case 0x180:
+	case 0x190:
+	case 0x1a0:
+	case 0x1b0:
+	case 0x1c0:
+	case 0x1d0:
+	case 0x1e0:
+	case 0x1f0:
+	case 0x200:
+	case 0x210:
+	case 0x220:
+	case 0x230:
+		return s->sms_rot_control[(offset-0x180)/0x10];
+	case 0x184:
+	case 0x194:
+	case 0x1a4:
+	case 0x1b4:
+	case 0x1c4:
+	case 0x1d4:
+	case 0x1e4:
+	case 0x1f4:
+	case 0x204:
+	case 0x214:
+	case 0x224:
+	case 0x234:
+		return s->sms_rot_size[(offset-0x184)/0x10];
+
+	case 0x188:
+	case 0x198:
+	case 0x1a8:
+	case 0x1b8:
+	case 0x1c8:
+	case 0x1d8:
+	case 0x1e8:
+	case 0x1f8:
+	case 0x208:
+	case 0x218:
+	case 0x228:
+	case 0x238:
+		return s->sms_rot_size[(offset-0x188)/0x10];
 
     default:
         printf("omap3_sms_read32 addr %x \n", addr);
@@ -2574,9 +2931,133 @@ static void omap3_sms_write32(void *opaque, target_phys_addr_t addr,
 
     switch (offset)
     {
+    case 0x14:
+    	OMAP_RO_REG(addr);
+        return;
+    case 0x10:
+    	s->sms_sysconfig = value & 0x1f;
+    	break;
+    
     case 0x48:
-        break;
-    default:
+    case 0x68:
+    case 0x88:
+    case 0xa8:
+    case 0xc8:
+    case 0xe8:
+    case 0x108:
+    case 0x128:
+    	s->sms_rg_att[(offset-0x48)/0x20] = value;
+    	break;
+    case 0x50:
+    case 0x70:
+    case 0x90:
+    case 0xb0:
+    case 0xd0:
+    case 0xf0:
+    case 0x110:
+    case 0x130:
+    	s->sms_rg_rdperm[(offset-0x50)/0x20] = value&0xffff;
+    	break;
+    case 0x58:
+    case 0x78:
+    case 0x98:
+    case 0xb8:
+    case 0xd8:
+    case 0xf8:
+    case 0x118:
+    	s->sms_rg_wrperm[(offset-0x58)/0x20] = value&0xffff;
+    	break;    	
+    case 0x60:
+    case 0x80:
+    case 0xa0:
+    case 0xc0:
+    case 0xe0:
+    case 0x100:
+    case 0x120:
+    	s->sms_rg_start[(offset-0x60)/0x20] = value;
+    	break;
+    case 0x64:
+    case 0x84:
+    case 0xa4:
+    case 0xc4:
+    case 0xe4:
+    case 0x104:
+    case 0x124:
+    	s->sms_rg_end[(offset-0x64)/0x20] = value;
+    	break;
+    case 0x140:
+    	s->sms_security_control = value &0xfffffff;
+    	break;
+    case 0x150:
+    	s->sms_class_arbiter0 = value;
+    	break;
+	case 0x154:
+		s->sms_class_arbiter1 = value;
+		break;
+	case 0x158:
+		s->sms_class_arbiter2 = value;
+		break;
+	case 0x160:
+		s->sms_interclass_arbiter = value;
+		break;
+	case 0x164:
+	case 0x168:
+	case 0x16c:
+		s->sms_class_rotation[(offset-0x164)/4] = value;
+		break;
+	case 0x170:
+		s->sms_err_addr = value;
+		break;
+	case 0x174:
+		s->sms_err_type = value;
+		break;
+	case 0x178:
+		s->sms_pow_ctrl = value;
+		break;
+	case 0x180:
+	case 0x190:
+	case 0x1a0:
+	case 0x1b0:
+	case 0x1c0:
+	case 0x1d0:
+	case 0x1e0:
+	case 0x1f0:
+	case 0x200:
+	case 0x210:
+	case 0x220:
+	case 0x230:
+		s->sms_rot_control[(offset-0x180)/0x10] = value;
+		break;
+	case 0x184:
+	case 0x194:
+	case 0x1a4:
+	case 0x1b4:
+	case 0x1c4:
+	case 0x1d4:
+	case 0x1e4:
+	case 0x1f4:
+	case 0x204:
+	case 0x214:
+	case 0x224:
+	case 0x234:
+		s->sms_rot_size[(offset-0x184)/0x10] = value;
+		break;
+
+	case 0x188:
+	case 0x198:
+	case 0x1a8:
+	case 0x1b8:
+	case 0x1c8:
+	case 0x1d8:
+	case 0x1e8:
+	case 0x1f8:
+	case 0x208:
+	case 0x218:
+	case 0x228:
+	case 0x238:
+		s->sms_rot_size[(offset-0x188)/0x10] = value;   
+		break;
+	default:
         printf("omap3_sms_write32 addr %x\n", addr);
         exit(-1);
     }
@@ -2593,6 +3074,20 @@ static CPUWriteMemoryFunc *omap3_sms_writefn[] = {
     omap_badwidth_write32,
     omap3_sms_write32,
 };
+
+static void omap3_sms_reset(struct omap3_sms_s *s)
+{
+	
+	s->sms_sysconfig = 0x1;
+	s->sms_class_arbiter0 = 0x500000;
+	s->sms_class_arbiter1 = 0x500;
+	s->sms_class_arbiter2 = 0x55000;
+	s->sms_interclass_arbiter = 0x400040;
+	s->sms_class_rotation[0] = 0x1;
+	s->sms_class_rotation[1] = 0x1;
+	s->sms_class_rotation[2] = 0x1;
+	s->sms_pow_ctrl = 0x80;
+}
 struct omap3_sms_s *omap3_sms_init(struct omap_mpu_state_s *mpu)
 {
     int iomemtype;
