@@ -662,6 +662,8 @@ static uint32_t omap3_prm_read(void *opaque, target_phys_addr_t addr)
         return s->prm_clksel;
     case 0x1270:
         return s->prm_clksrc_ctrl;
+    case 0x129c:
+    	 return s->prm_polctrl;
     default:
     	 printf("prm READ offset %x\n",offset);
         exit(-1);
@@ -694,6 +696,9 @@ static void omap3_prm_write(void *opaque, target_phys_addr_t addr,
         //OMAP3_DEBUG(("s->prm_clksrc_ctrl  %x \n",s->prm_clksrc_ctrl ));
         //OMAP3_DEBUG(("RATE %d \n",omap_clk_getrate(omap_findclk(s->mpu, "omap3_sys_clk"))));
         break;
+    case 0x129c:
+    	 s->prm_polctrl = value&0xf;
+    	 break;
 
     default:
         printf("omap3_prm_write addr %x value %x \n", addr, value);
@@ -1362,7 +1367,8 @@ static void omap3_cm_reset(struct omap3_cm_s *s)
 
     s->cm_fclken_per = 0x0;
     s->cm_iclken_per = 0x0;
-    s->cm_idlest_per = 0x3ffff;
+    //s->cm_idlest_per = 0x3ffff;
+    s->cm_idlest_per = 0x0; //enable GPIO access
     s->cm_autoidle_per = 0x0;
     s->cm_clksel_per = 0x0;
     s->cm_sleepdep_per = 0x0;
@@ -1514,8 +1520,12 @@ static uint32_t omap3_cm_read(void *opaque, target_phys_addr_t addr)
         return s->cm_fclken_per;
     case 0x1010:
         return s->cm_iclken_per;
+    case 0x1020:
+    	return s->cm_idlest_per ;
     case 0x1040:
         return s->cm_clksel_per;
+    case 0x1048:
+    	return s->cm_clkstctrl_per;
     case 0x1140:               /*CM_CLKSEL1_EMU */
         return s->cm_clksel1_emu;
 
@@ -1654,10 +1664,16 @@ static void omap3_cm_write(void *opaque, target_phys_addr_t addr,
     case 0x1010:
         s->cm_iclken_per = value & 0x3ffff;
         break;
+    case 0x1020:
+    	s->cm_idlest_per = value & 0x3ffff;
+    	break;
     case 0x1040:
         s->cm_clksel_per = value & 0xff;
         omap3_cm_per_gptimer_update(s);
         break;
+    case 0x1048:
+    	 s->cm_clkstctrl_per = value &0x7;
+    	 break;
     case 0x1140:               /*CM_CLKSEL1_EMU */
         s->cm_clksel1_emu = value & 0x1f1f3fff;
         //printf("cm_clksel1_emu %x\n",s->cm_clksel1_emu);
@@ -3244,7 +3260,7 @@ struct omap_mpu_state_s *omap3530_mpu_init(unsigned long sdram_size,
     s->l4 = omap_l4_init(OMAP3_L4_BASE, sizeof(omap3_l4_agent_info));
 
     cpu_irq = arm_pic_init_cpu(s->env);
-    s->ih[0] = omap2_inth_init(0x480fe000, 0x1000, 3, &s->irq[0],
+    s->ih[0] = omap2_inth_init(0x48200000, 0x1000, 3, &s->irq[0],
                                cpu_irq[ARM_PIC_CPU_IRQ],
                                cpu_irq[ARM_PIC_CPU_FIQ], omap_findclk(s,
                                                                       "omap3_mpu_intc_fclk"),
@@ -3326,7 +3342,7 @@ struct omap_mpu_state_s *omap3530_mpu_init(unsigned long sdram_size,
     s->dss = omap_dss_init(omap3_l4ta_get(s->l4, 11), 0x68005400, ds,
                     s->irq[0][OMAP_INT_35XX_DSS_IRQ], s->drq[OMAP24XX_DMA_DSS],
                    NULL,NULL,NULL,NULL,NULL);
-
+#if 0
     //gpio_clks[0] = NULL;
     //gpio_clks[1] = NULL;
     //gpio_clks[2] = NULL;
@@ -3346,7 +3362,7 @@ struct omap_mpu_state_s *omap3530_mpu_init(unsigned long sdram_size,
     omap3_gpio_init(s->gpif ,omap3_l4ta_get(s->l4, 17),
                 					&s->irq[0][OMAP_INT_35XX_GPIO_BANK6], 
                 					NULL,NULL,5);
-
+#endif
      omap_tap_init(omap3_l4ta_get(s->l4, 18), s);
 
 
