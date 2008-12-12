@@ -53,6 +53,8 @@ config-host.mak
 qemu-nbd
 qemu-nbd.8
 qemu-nbd.pod
+bb_nandflash_ecc
+
 
 
 
