@@ -214,153 +214,167 @@ static struct omap_l4_region_s omap3_l4_region[] = {
     [79] = {0x309000, 0x1000, 32 | 16 | 8},     /*  L4TA4 */
 
      /*L4 WAKEUP MEMORY SPACE */
-    [80] = {0x30a000, 0x800, 32 | 16 | 8},        /*TAP.undocument*/
-    [81] = {0x30a800, 0x1000, 32 | 16 | 8},     /*  L4TA4 */
+    [80] = {0x304000, 0x1000, 32 | 16}, /* GPTIMER12  */
+    [81] = {0x305000, 0x1000, 32 | 16 | 8},     /*  L4TA4 */
+    
+    [82] = {0x30a000, 0x800, 32 | 16 | 8},        /*TAP.undocument*/
+    [83] = {0x30a800, 0x1000, 32 | 16 | 8},     /*  L4TA4 */
 
 
-    [82] = {0x310000, 0x1000, 32 | 16 | 8},     /* GPIO1  */
-    [83] = {0x311000, 0x1000, 32 | 16 | 8},     /*  L4TA4 */
+    [84] = {0x310000, 0x1000, 32 | 16 | 8},     /* GPIO1  */
+    [85] = {0x311000, 0x1000, 32 | 16 | 8},     /*  L4TA4 */
 
-    [84] = {0x314000, 0x1000, 32 | 16}, /* WDTIMER2  */
-    [85] = {0x315000, 0x1000, 32 | 16 | 8},     /*  L4TA4 */
+    [86] = {0x314000, 0x1000, 32 | 16}, /* WDTIMER2  */
+    [87] = {0x315000, 0x1000, 32 | 16 | 8},     /*  L4TA4 */
 
-    [86] = {0x318000, 0x1000, 32 | 16}, /* GPTIMER1  */
-    [87] = {0x319000, 0x1000, 32 | 16 | 8},     /*  L4TA4 */
+    [88] = {0x318000, 0x1000, 32 | 16}, /* GPTIMER1  */
+    [89] = {0x319000, 0x1000, 32 | 16 | 8},     /*  L4TA4 */
 
-    [88] = {0x320000, 0x1000, 32 | 16}, /* 32K Timer */
-    [89] = {0x321000, 0x1000, 32 | 16 | 8},     /*  L4TA2 */
+    [90] = {0x320000, 0x1000, 32 | 16}, /* 32K Timer */
+    [91] = {0x321000, 0x1000, 32 | 16 | 8},     /*  L4TA2 */
 
-    [90] = {0x328000, 0x800, 32 | 16 | 8},      /* AP  */
-    [91] = {0x328800, 0x800, 32 | 16 | 8},      /* IP  */
-    [92] = {0x329000, 0x1000, 32 | 16 | 8},     /* LA  */
-    [93] = {0x32a000, 0x800, 32 | 16 | 8},      /* LA  */
-    [94] = {0x340000, 0x1000, 32 | 16 | 8},     /*  L4TA4 */
+    [92] = {0x328000, 0x800, 32 | 16 | 8},      /* AP  */
+    [93] = {0x328800, 0x800, 32 | 16 | 8},      /* IP  */
+    [94] = {0x329000, 0x1000, 32 | 16 | 8},     /* LA  */
+    [95] = {0x32a000, 0x800, 32 | 16 | 8},      /* LA  */
+    [96] = {0x340000, 0x1000, 32 | 16 | 8},     /*  L4TA4 */
 
     /*L4 Peripheral MEMORY SPACE */
-    [95] = {0x1000000, 0x800, 32 | 16 | 8},     /* AP  */
-    [96] = {0x1000800, 0x800, 32 | 16 | 8},     /* IP  */
-    [97] = {0x1001000, 0x1000, 32 | 16 | 8},    /* LA  */
+    [97] = {0x1000000, 0x800, 32 | 16 | 8},     /* AP  */
+    [98] = {0x1000800, 0x800, 32 | 16 | 8},     /* IP  */
+    [99] = {0x1001000, 0x1000, 32 | 16 | 8},    /* LA  */
 
-    [98] = {0x1020000, 0x1000, 32 | 16 | 8},    /* UART3 */
-    [99] = {0x1021000, 0x1000, 32 | 16 | 8},    /*  L4TA4 */
+    [100] = {0x1020000, 0x1000, 32 | 16 | 8},    /* UART3 */
+    [101] = {0x1021000, 0x1000, 32 | 16 | 8},    /*  L4TA4 */
 
-    [100] = {0x1022000, 0x1000, 32},     /* MCBSP 2 */
-    [101] = {0x1023000, 0x1000, 32 | 16 | 8},    /*  L4TA4 */
+    [102] = {0x1022000, 0x1000, 32},     /* MCBSP 2 */
+    [103] = {0x1023000, 0x1000, 32 | 16 | 8},    /*  L4TA4 */
+    
+    [104] = {0x1024000, 0x1000, 32},    /* MCBSP 3 */
+    [105] = {0x1025000, 0x1000, 32 | 16 | 8},   /*  L4TA4 */
 
-    [102] = {0x1024000, 0x1000, 32},    /* MCBSP 3 */
-    [103] = {0x1025000, 0x1000, 32 | 16 | 8},   /*  L4TA4 */
+    [106] = {0x1026000, 0x1000, 32},    /* MCBSP 4 */
+    [107] = {0x1027000, 0x1000, 32 | 16 | 8},   /*  L4TA4 */
 
-    [104] = {0x1026000, 0x1000, 32},    /* MCBSP 4 */
-    [105] = {0x1027000, 0x1000, 32 | 16 | 8},   /*  L4TA4 */
+    [108] = {0x1028000, 0x1000, 32},    /* MCBSP 2 (sidetone) */
+    [109] = {0x1029000, 0x1000, 32 | 16 | 8},   /*  L4TA4 */
 
-    [106] = {0x1028000, 0x1000, 32},    /* MCBSP 2 (sidetone) */
-    [107] = {0x1029000, 0x1000, 32 | 16 | 8},   /*  L4TA4 */
+    [110] = {0x102a000, 0x1000, 32},    /* MCBSP 3 (sidetone) */
+    [111] = {0x102b000, 0x1000, 32 | 16 | 8},   /*  L4TA4 */
 
-    [108] = {0x102a000, 0x1000, 32},    /* MCBSP 3 (sidetone) */
-    [109] = {0x102b000, 0x1000, 32 | 16 | 8},   /*  L4TA4 */
+    [112] = {0x1030000, 0x1000, 32 | 16},       /* WDTIMER3  */
+    [113] = {0x1031000, 0x1000, 32 | 16 | 8},   /*  L4TA4 */
 
-    [110] = {0x1030000, 0x1000, 32 | 16},       /* WDTIMER3  */
-    [111] = {0x1031000, 0x1000, 32 | 16 | 8},   /*  L4TA4 */
+    [114] = {0x1032000, 0x1000, 32 | 16},       /* GPTIMER2 */
+    [115] = {0x1033000, 0x1000, 32 | 16 | 8},   /*  L4TA4 */
 
-    [112] = {0x1032000, 0x1000, 32 | 16},       /* GPTIMER2 */
-    [113] = {0x1033000, 0x1000, 32 | 16 | 8},   /*  L4TA4 */
+    [116] = {0x1034000, 0x1000, 32 | 16},       /* GPTIMER3 */
+    [117] = {0x1035000, 0x1000, 32 | 16 | 8},   /*  L4TA4 */
 
-    [114] = {0x1034000, 0x1000, 32 | 16},       /* GPTIMER3 */
-    [115] = {0x1035000, 0x1000, 32 | 16 | 8},   /*  L4TA4 */
+    [118] = {0x1036000, 0x1000, 32 | 16},       /* GPTIMER4 */
+    [119] = {0x1037000, 0x1000, 32 | 16 | 8},   /*  L4TA4 */
 
-    [116] = {0x1036000, 0x1000, 32 | 16},       /* GPTIMER4 */
-    [117] = {0x1037000, 0x1000, 32 | 16 | 8},   /*  L4TA4 */
+    [120] = {0x1038000, 0x1000, 32 | 16},       /* GPTIMER5 */
+    [121] = {0x1039000, 0x1000, 32 | 16 | 8},   /*  L4TA4 */
 
-    [118] = {0x1038000, 0x1000, 32 | 16},       /* GPTIMER5 */
-    [119] = {0x1039000, 0x1000, 32 | 16 | 8},   /*  L4TA4 */
+    [122] = {0x103a000, 0x1000, 32 | 16},       /* GPTIMER6 */
+    [123] = {0x103b000, 0x1000, 32 | 16 | 8},   /*  L4TA4 */
 
-    [120] = {0x103a000, 0x1000, 32 | 16},       /* GPTIMER6 */
-    [121] = {0x103b000, 0x1000, 32 | 16 | 8},   /*  L4TA4 */
+    [124] = {0x103c000, 0x1000, 32 | 16},       /* GPTIMER7 */
+    [125] = {0x103d000, 0x1000, 32 | 16 | 8},   /*  L4TA4 */
 
-    [122] = {0x103c000, 0x1000, 32 | 16},       /* GPTIMER7 */
-    [123] = {0x103d000, 0x1000, 32 | 16 | 8},   /*  L4TA4 */
+    [126] = {0x103e000, 0x1000, 32 | 16},       /* GPTIMER8 */
+    [127] = {0x103f000, 0x1000, 32 | 16 | 8},   /*  L4TA4 */
 
-    [124] = {0x103e000, 0x1000, 32 | 16},       /* GPTIMER8 */
-    [125] = {0x103f000, 0x1000, 32 | 16 | 8},   /*  L4TA4 */
+    [128] = {0x1040000, 0x1000, 32 | 16},       /* GPTIMER9 */
+    [129] = {0x1041000, 0x1000, 32 | 16 | 8},   /*  L4TA4 */
 
-    [126] = {0x1040000, 0x1000, 32 | 16},       /* GPTIMER9 */
-    [127] = {0x1041000, 0x1000, 32 | 16 | 8},   /*  L4TA4 */
+    [130] = {0x1050000, 0x1000, 32 | 16 | 8},   /* GPIO2 */
+    [131] = {0x1051000, 0x1000, 32 | 16 | 8},   /*  L4TA4 */
 
-    [128] = {0x1050000, 0x1000, 32 | 16 | 8},   /* GPIO2 */
-    [129] = {0x1051000, 0x1000, 32 | 16 | 8},   /*  L4TA4 */
+    [132] = {0x1052000, 0x1000, 32 | 16 | 8},   /* GPIO3 */
+    [133] = {0x1053000, 0x1000, 32 | 16 | 8},   /*  L4TA4 */
 
-    [130] = {0x1052000, 0x1000, 32 | 16 | 8},   /* GPIO3 */
-    [131] = {0x1053000, 0x1000, 32 | 16 | 8},   /*  L4TA4 */
+    [134] = {0x1054000, 0x1000, 32 | 16 | 8},   /* GPIO4 */
+    [135] = {0x1055000, 0x1000, 32 | 16 | 8},   /*  L4TA4 */
 
-    [132] = {0x1054000, 0x1000, 32 | 16 | 8},   /* GPIO4 */
-    [133] = {0x1055000, 0x1000, 32 | 16 | 8},   /*  L4TA4 */
+    [136] = {0x1056000, 0x1000, 32 | 16 | 8},   /* GPIO5 */
+    [137] = {0x1057000, 0x1000, 32 | 16 | 8},   /*  L4TA4 */
 
-    [134] = {0x1056000, 0x1000, 32 | 16 | 8},   /* GPIO5 */
-    [135] = {0x1057000, 0x1000, 32 | 16 | 8},   /*  L4TA4 */
-
-    [136] = {0x1058000, 0x1000, 32 | 16 | 8},   /* GPIO6 */
-    [137] = {0x1059000, 0x1000, 32 | 16 | 8},   /*  L4TA4 */
+    [138] = {0x1058000, 0x1000, 32 | 16 | 8},   /* GPIO6 */
+    [139] = {0x1059000, 0x1000, 32 | 16 | 8},   /*  L4TA4 */
 
     /*L4 Emulation MEMORY SPACE */
-    [138] = {0xc006000, 0x800, 32 | 16 | 8},    /* AP  */
-    [139] = {0xc006800, 0x800, 32 | 16 | 8},    /* IP  */
-    [140] = {0xc007000, 0x1000, 32 | 16 | 8},   /* LA  */
-    [141] = {0xc008000, 0x800, 32 | 16 | 8},    /* DAP  */
+    [140] = {0xc006000, 0x800, 32 | 16 | 8},    /* AP  */
+    [141] = {0xc006800, 0x800, 32 | 16 | 8},    /* IP  */
+    [142] = {0xc007000, 0x1000, 32 | 16 | 8},   /* LA  */
+    [143] = {0xc008000, 0x800, 32 | 16 | 8},    /* DAP  */
 
-    [142] = {0xc010000, 0x8000, 32 | 16 | 8},   /* MPU Emulation */
-    [143] = {0xc018000, 0x1000, 32 | 16 | 8},   /*  L4TA4 */
+    [144] = {0xc010000, 0x8000, 32 | 16 | 8},   /* MPU Emulation */
+    [145] = {0xc018000, 0x1000, 32 | 16 | 8},   /*  L4TA4 */
 
-    [144] = {0xc019000, 0x8000, 32},    /* TPIU */
-    [145] = {0xc01a000, 0x1000, 32 | 16 | 8},   /*  L4TA4 */
+    [146] = {0xc019000, 0x8000, 32},    /* TPIU */
+    [147] = {0xc01a000, 0x1000, 32 | 16 | 8},   /*  L4TA4 */
 
-    [146] = {0xc01b000, 0x8000, 32},    /* ETB */
-    [147] = {0xc01c000, 0x1000, 32 | 16 | 8},   /*  L4TA4 */
+    [148] = {0xc01b000, 0x8000, 32},    /* ETB */
+    [149] = {0xc01c000, 0x1000, 32 | 16 | 8},   /*  L4TA4 */
 
-    [148] = {0xc01d000, 0x8000, 32},    /* DAOCTL */
-    [149] = {0xc01e000, 0x1000, 32 | 16 | 8},   /*  L4TA4 */
+    [150] = {0xc01d000, 0x8000, 32},    /* DAOCTL */
+    [151] = {0xc01e000, 0x1000, 32 | 16 | 8},   /*  L4TA4 */
 
-    [150] = {0xc706000, 0x2000, 32},    /* PR Region A */
-    [151] = {0xc706800, 0x800, 32},     /* PR Region B */
-    [152] = {0xc709000, 0x1000, 32 | 16 | 8},   /*  L4TA4 */
+    [152] = {0xc706000, 0x2000, 32},    /* PR Region A */
+    [153] = {0xc706800, 0x800, 32},     /* PR Region B */
+    [154] = {0xc709000, 0x1000, 32 | 16 | 8},   /*  L4TA4 */
 
-    [153] = {0xc710000, 0x1000, 32 | 16 | 8},   /* GPIO1 */
-    [154] = {0xc711000, 0x1000, 32 | 16 | 8},   /*  L4TA4 */
+    [155] = {0xc710000, 0x1000, 32 | 16 | 8},   /* GPIO1 */
+    [156] = {0xc711000, 0x1000, 32 | 16 | 8},   /*  L4TA4 */
 
-    [155] = {0xc714000, 0x1000, 32 | 16},       /* WDTIMER 2 */
-    [156] = {0xc715000, 0x1000, 32 | 16 | 8},   /*  L4TA4 */
+    [157] = {0xc714000, 0x1000, 32 | 16},       /* WDTIMER 2 */
+    [158] = {0xc715000, 0x1000, 32 | 16 | 8},   /*  L4TA4 */
 
-    [157] = {0xc718000, 0x1000, 32 | 16 | 8},   /* GPTIMER 1 */
-    [158] = {0xc719000, 0x1000, 32 | 16 | 8},   /*  L4TA4 */
+    [159] = {0xc718000, 0x1000, 32 | 16 | 8},   /* GPTIMER 1 */
+    [160] = {0xc719000, 0x1000, 32 | 16 | 8},   /*  L4TA4 */
 
-    [159] = {0xc720000, 0x1000, 32 | 16},       /* 32k timer */
-    [160] = {0xc721000, 0x1000, 32 | 16 | 8},   /*  L4TA4 */
+    [161] = {0xc720000, 0x1000, 32 | 16},       /* 32k timer */
+    [162] = {0xc721000, 0x1000, 32 | 16 | 8},   /*  L4TA4 */
 
-    [161] = {0xc728000, 0x800, 32 | 16 | 8},    /* AP  */
-    [162] = {0xc728800, 0x800, 32 | 16 | 8},    /* IP  */
-    [163] = {0xc729000, 0x1000, 32 | 16 | 8},   /* LA  */
-    [164] = {0xc72a000, 0x800, 32 | 16 | 8},    /* DAP  */
+    [163] = {0xc728000, 0x800, 32 | 16 | 8},    /* AP  */
+    [164] = {0xc728800, 0x800, 32 | 16 | 8},    /* IP  */
+    [165] = {0xc729000, 0x1000, 32 | 16 | 8},   /* LA  */
+    [166] = {0xc72a000, 0x800, 32 | 16 | 8},    /* DAP  */
 
 };
 static struct omap_l4_agent_info_s omap3_l4_agent_info[] = {
     {0, 0, 2, 1},                /* System Control module */
     {1, 5, 3, 2},                /* CM */
     {2, 77, 3, 2},               /* PRM */
-    {3, 84, 2, 1},               /* WDTIMER 2 */
+    {3, 86, 2, 1},               /* WDTIMER 2 */
     {4, 3, 2, 1},                 /* SCM */
-    {5, 86, 2, 1},               /* GP TIMER 1 */
-    {6, 112, 2, 1},              /* GP TIMER 2 */
-    {7, 88, 2, 1},                /* 32K Sync timer */
-    {8, 21, 2, 1},                /* uart1 */
-    {9, 23, 2, 1},                /* uart2 */
-    {10, 98, 2, 1},              /* uart3 */
-    {11, 8, 5, 4},                /* Display */
-    {12, 82, 2, 1},               /* GPIO 1 */
-    {13, 128, 2, 1},              /* GPIO 2 */
-    {14, 130, 2, 1},              /* GPIO 3 */
-    {15, 132, 2, 1},              /* GPIO 4 */
-    {16, 134, 2, 1},              /* GPIO 5 */
-    {17, 136, 2, 1},              /* GPIO 6 */
-    {18,80, 2, 1},                 /* TAP */
+    {5, 88, 2, 1},               /* GP TIMER 1 */
+    {6, 114, 2, 1},              /* GP TIMER 2 */
+    {7, 116, 2, 1},              /* GP TIMER 3 */
+    {8, 118, 2, 1},              /* GP TIMER 4 */
+    {9, 120, 2, 1},              /* GP TIMER 5 */
+    {10, 122, 2, 1},              /* GP TIMER 6 */
+    {11, 124, 2, 1},              /* GP TIMER 7 */
+    {12, 126, 2, 1},              /* GP TIMER 8 */
+    {13, 128, 2, 1},              /* GP TIMER 9 */
+    {14, 31, 2, 1},              /* GP TIMER 10 */
+    {15, 33, 2, 1},              /* GP TIMER 11 */
+    {16, 80, 2, 1},              /* GP TIMER 12 */
+    {17, 90, 2, 1},                /* 32K Sync timer */
+    {18, 21, 2, 1},                /* uart1 */
+    {19, 23, 2, 1},                /* uart2 */
+    {20, 100, 2, 1},              /* uart3 */
+    {21, 8, 5, 4},                /* Display */
+    {22, 84, 2, 1},               /* GPIO 1 */
+    {23, 130, 2, 1},              /* GPIO 2 */
+    {24, 132, 2, 1},              /* GPIO 3 */
+    {25, 134, 2, 1},              /* GPIO 4 */
+    {26, 136, 2, 1},              /* GPIO 5 */
+    {27, 138, 2, 1},              /* GPIO 6 */
+    {28,82, 2, 1},                 /* TAP */
+    
 };
 
 struct omap_target_agent_s *omap3_l4ta_get(struct omap_l4_s *bus, int cs)
@@ -658,12 +672,52 @@ static uint32_t omap3_prm_read(void *opaque, target_phys_addr_t addr)
 
     switch (offset)
     {
+    case 0x804:
+    	return s->prm_revision;
+    case 0x814:
+    	return s->prm_sysconfig;
     case 0xd40:
         return s->prm_clksel;
+    case 0x1220:
+    	return s->prm_vc_smps_sa;
+    case 0x1224:
+    	return s->prm_vc_smps_vol_ra ;
+    case 0x1228:
+    	return s->prm_vc_smps_cmd_ra ;
+    case 0x122c:
+    	return s->prm_vc_cmd_val_0 ;
+    case 0x1230:
+    	return s->prm_vc_cmd_val_1 ;
+    case 0x1234:
+    	return s->prm_vc_hc_conf;
+    case 0x1238:
+    	return s->prm_vc_i2c_cfg;
+    case 0x123c:
+    	return s->prm_vc_bypass_val;
+	case 0x1250:
+    	return s->prm_rstctrl;
+	case 0x1254:
+    	return s->prm_rsttimer;
+    case 0x1258:
+    	return s->prm_rstst;
+    case 0x1260:
+    	return s->prm_voltctrl;
+    case 0x1264:
+    	return s->prm_sram_pcharge;    	
     case 0x1270:
         return s->prm_clksrc_ctrl;
+    case 0x1280:
+    	return s->prm_obs;
+    case 0x1290:
+    	return s->prm_voltsetup1;
+    case 0x1294:
+    	return s->prm_voltoffset;
+    case 0x1298:
+    	return s->prm_clksetup;
     case 0x129c:
-    	 return s->prm_polctrl;
+    	return s->prm_polctrl;
+    case 0x12a0:
+    	return s->prm_voltsetup2;
     default:
     	 printf("prm READ offset %x\n",offset);
         exit(-1);
@@ -687,18 +741,71 @@ static void omap3_prm_write(void *opaque, target_phys_addr_t addr,
 
     switch (offset)
     {
+    case 0x814:
+    	s->prm_sysconfig = value &0x1;
+    	break;
     case 0xd40:
         s->prm_clksel = value & 0x7;
         break;
+    case 0x1220:
+    	s->prm_vc_smps_sa = value & 0x7f007f;
+    	break;
+    case 0x1224:
+    	s->prm_vc_smps_vol_ra = value & 0xff00ff;
+    	break;
+    case 0x1228:
+    	s->prm_vc_smps_cmd_ra = value & 0xff00ff;
+    	break;
+    case 0x122c:
+    	s->prm_vc_cmd_val_0 = value ;
+    	break;
+    case 0x1230:
+    	s->prm_vc_cmd_val_1 = value ;
+    	break;
+    case 0x1234:
+    	s->prm_vc_hc_conf = value & 0x1f001f;
+    	break;
+    case 0x1238:
+    	s->prm_vc_i2c_cfg = value & 0x3f;
+    	break;
+    case 0x123c:
+    	s->prm_vc_bypass_val = value;
+    	break;
+    case 0x1250:
+    	s->prm_rstctrl = value & 0x7;
+    	/*TODO: Software reset*/
+    	break;
+    case 0x1254:
+    	s->prm_rsttimer = value & 0x1fff;
+    	break;
+    case 0x1258:
+    	s->prm_rstst = value & 0x7ff;
+    	break;
+    case 0x1260:
+    	s->prm_voltctrl = value & 0x1f;
+    	break;
+    case 0x1264:
+    	s->prm_sram_pcharge = value &0xff;
+    	break;
     case 0x1270:
         s->prm_clksrc_ctrl = value & (0xd8);
         omap3_prm_clksrc_ctrl_update(s, s->prm_clksrc_ctrl);
-        //OMAP3_DEBUG(("s->prm_clksrc_ctrl  %x \n",s->prm_clksrc_ctrl ));
-        //OMAP3_DEBUG(("RATE %d \n",omap_clk_getrate(omap_findclk(s->mpu, "omap3_sys_clk"))));
         break;
+    case 0x1290:
+    	s->prm_voltsetup1 = value;
+    	break;
+    case 0x1294:
+    	s->prm_voltoffset = value&0xffff;
+    	break;
+    case 0x1298:
+    	s->prm_clksetup = value&0xffff;
+    	break;
     case 0x129c:
     	 s->prm_polctrl = value&0xf;
     	 break;
+    case 0x12a0:
+    	s->prm_voltsetup2 = value & 0xffff;
+    	break;
 
     default:
         printf("omap3_prm_write addr %x value %x \n", addr, value);
@@ -915,7 +1022,7 @@ static inline void omap3_cm_clksel_wkup_update(struct omap3_cm_s *s,
     /*Tell GPTIMER to generate new clk rate */
     omap_gp_timer_chage_clk(s->mpu->gptimer[0]);
 
-    //OMAP3_DEBUG(("omap3_gp1_fclk %d \n",omap_clk_getrate(omap_findclk(s->mpu, "omap3_gp1_fclk"))));
+    OMAP3_DEBUG(("omap3_gp1_fclk %d \n",omap_clk_getrate(omap_findclk(s->mpu, "omap3_gp1_fclk"))));
 
     /*TODO:CM_USIM_CLK CLKSEL_RM */
 }
@@ -1179,11 +1286,8 @@ static inline void omap3_cm_gp10_update(struct omap3_cm_s *s)
         omap_clk_reparent(gp10_fclk, omap_findclk(s->mpu, "omap3_32k_fclk"));
 
     /*Tell GPTIMER10 to generate new clk rate */
-    //omap_gp_timer_chage_clk(s->mpu->gptimer[0]);
-
-    //      OMAP3_DEBUG(("omap3_gp10_fclk %d \n",omap_clk_getrate(omap_findclk(s->mpu, "omap3_gp10_fclk"))));
-
-
+    omap_gp_timer_chage_clk(s->mpu->gptimer[9]);
+    OMAP3_DEBUG(("omap3_gp10_fclk %d \n",omap_clk_getrate(omap_findclk(s->mpu, "omap3_gp10_fclk"))));
 }
 static inline void omap3_cm_gp11_update(struct omap3_cm_s *s)
 {
@@ -1194,9 +1298,10 @@ static inline void omap3_cm_gp11_update(struct omap3_cm_s *s)
     else
         omap_clk_reparent(gp11_fclk, omap_findclk(s->mpu, "omap3_32k_fclk"));
     /*Tell GPTIMER10 to generate new clk rate */
-    //omap_gp_timer_chage_clk(s->mpu->gptimer[0]);
-    //OMAP3_DEBUG(("omap3_gp11_fclk %d \n",omap_clk_getrate(omap_findclk(s->mpu, "omap3_gp11_fclk"))));
+    omap_gp_timer_chage_clk(s->mpu->gptimer[10]);
+    OMAP3_DEBUG(("omap3_gp11_fclk %d \n",omap_clk_getrate(omap_findclk(s->mpu, "omap3_gp11_fclk"))));
 }
+
 static inline void omap3_cm_l3clk_update(struct omap3_cm_s *s)
 {
     omap_clk l3_iclk = omap_findclk(s->mpu, "omap3_l3_iclk");
@@ -1231,6 +1336,7 @@ static inline void omap3_cm_per_gptimer_update(struct omap3_cm_s *s)
     else
         omap_clk_reparent(omap_findclk(s->mpu, "omap3_gp3_fclk"),
                           omap_findclk(s->mpu, "omap3_32k_fclk"));
+    omap_gp_timer_chage_clk(s->mpu->gptimer[2]);
 
     if (cm_clksel_per & 0x4)
         omap_clk_reparent(omap_findclk(s->mpu, "omap3_gp4_fclk"),
@@ -1238,6 +1344,7 @@ static inline void omap3_cm_per_gptimer_update(struct omap3_cm_s *s)
     else
         omap_clk_reparent(omap_findclk(s->mpu, "omap3_gp4_fclk"),
                           omap_findclk(s->mpu, "omap3_32k_fclk"));
+    omap_gp_timer_chage_clk(s->mpu->gptimer[3]);
 
     if (cm_clksel_per & 0x8)
         omap_clk_reparent(omap_findclk(s->mpu, "omap3_gp5_fclk"),
@@ -1245,6 +1352,7 @@ static inline void omap3_cm_per_gptimer_update(struct omap3_cm_s *s)
     else
         omap_clk_reparent(omap_findclk(s->mpu, "omap3_gp5_fclk"),
                           omap_findclk(s->mpu, "omap3_32k_fclk"));
+    omap_gp_timer_chage_clk(s->mpu->gptimer[4]);
 
     if (cm_clksel_per & 0x10)
         omap_clk_reparent(omap_findclk(s->mpu, "omap3_gp6_fclk"),
@@ -1252,12 +1360,15 @@ static inline void omap3_cm_per_gptimer_update(struct omap3_cm_s *s)
     else
         omap_clk_reparent(omap_findclk(s->mpu, "omap3_gp6_fclk"),
                           omap_findclk(s->mpu, "omap3_32k_fclk"));
+    omap_gp_timer_chage_clk(s->mpu->gptimer[5]);
+    
     if (cm_clksel_per & 0x20)
         omap_clk_reparent(omap_findclk(s->mpu, "omap3_gp7_fclk"),
                           omap_findclk(s->mpu, "omap3_sys_clk"));
     else
         omap_clk_reparent(omap_findclk(s->mpu, "omap3_gp7_fclk"),
                           omap_findclk(s->mpu, "omap3_32k_fclk"));
+    omap_gp_timer_chage_clk(s->mpu->gptimer[6]);
 
 
     if (cm_clksel_per & 0x40)
@@ -1266,17 +1377,25 @@ static inline void omap3_cm_per_gptimer_update(struct omap3_cm_s *s)
     else
         omap_clk_reparent(omap_findclk(s->mpu, "omap3_gp8_fclk"),
                           omap_findclk(s->mpu, "omap3_32k_fclk"));
+    omap_gp_timer_chage_clk(s->mpu->gptimer[7]);
+    
     if (cm_clksel_per & 0x80)
         omap_clk_reparent(omap_findclk(s->mpu, "omap3_gp9_fclk"),
                           omap_findclk(s->mpu, "omap3_sys_clk"));
     else
         omap_clk_reparent(omap_findclk(s->mpu, "omap3_gp9_fclk"),
                           omap_findclk(s->mpu, "omap3_32k_fclk"));
+    omap_gp_timer_chage_clk(s->mpu->gptimer[8]);
 
     /*TODO:Tell GPTIMER to generate new clk rate */
-
-    //OMAP3_DEBUG(("omap3_gp9_fclk %d \n",omap_clk_getrate(omap_findclk(s->mpu, "omap3_gp9_fclk"))));
-    //OMAP3_DEBUG(("omap3_gp8_fclk %d \n",omap_clk_getrate(omap_findclk(s->mpu, "omap3_gp8_fclk"))));
+    OMAP3_DEBUG(("omap3_gp2_fclk %d \n",omap_clk_getrate(omap_findclk(s->mpu, "omap3_gp2_fclk"))));
+    OMAP3_DEBUG(("omap3_gp3_fclk %d \n",omap_clk_getrate(omap_findclk(s->mpu, "omap3_gp3_fclk"))));
+	OMAP3_DEBUG(("omap3_gp4_fclk %d \n",omap_clk_getrate(omap_findclk(s->mpu, "omap3_gp4_fclk"))));
+    OMAP3_DEBUG(("omap3_gp5_fclk %d \n",omap_clk_getrate(omap_findclk(s->mpu, "omap3_gp5_fclk"))));
+    OMAP3_DEBUG(("omap3_gp6_fclk %d \n",omap_clk_getrate(omap_findclk(s->mpu, "omap3_gp6_fclk"))));
+    OMAP3_DEBUG(("omap3_gp7_fclk %d \n",omap_clk_getrate(omap_findclk(s->mpu, "omap3_gp7_fclk"))));
+    OMAP3_DEBUG(("omap3_gp8_fclk %d \n",omap_clk_getrate(omap_findclk(s->mpu, "omap3_gp8_fclk"))));
+    OMAP3_DEBUG(("omap3_gp9_fclk %d \n",omap_clk_getrate(omap_findclk(s->mpu, "omap3_gp9_fclk"))));
 
 
 }
@@ -1309,8 +1428,11 @@ static void omap3_cm_reset(struct omap3_cm_s *s)
     s->cm_iclken1_core = 0x42;
     s->cm_iclken2_core = 0x0;
     s->cm_iclken3_core = 0x0;
-    s->cm_idlest1_core = 0xffffffff;
-    s->cm_idlest2_core = 0x1f;
+    /*allow access to devices*/
+    //s->cm_idlest1_core = 0xffffffff;
+    s->cm_idlest1_core = 0x0;
+    //s->cm_idlest2_core = 0x1f;
+    s->cm_idlest2_core = 0x0;
     s->cm_idlest3_core = 0xf;
     s->cm_autoidle1_core = 0x0;
     s->cm_autoidle2_core = 0x0;
@@ -1329,7 +1451,8 @@ static void omap3_cm_reset(struct omap3_cm_s *s)
 
     s->cm_fclken_wkup = 0x0;
     s->cm_iclken_wkup = 0x0;
-    s->cm_idlest_wkup = 0x2ff;
+    /*assume all clock can be accessed*/
+    s->cm_idlest_wkup = 0x0;
     s->cm_autoidle_wkup = 0x0;
     s->cm_clksel_wkup = 0x12;
 
@@ -1349,7 +1472,8 @@ static void omap3_cm_reset(struct omap3_cm_s *s)
 
     s->cm_fclken_dss = 0x0;
     s->cm_iclken_dss = 0x0;
-    s->cm_idlest_dss = 0x3;
+    /*dss can be accessed*/
+    s->cm_idlest_dss = 0x0;
     s->cm_autoidle_dss = 0x0;
     s->cm_clksel_dss = 0x1010;
     s->cm_sleepdep_dss = 0x0;
@@ -1464,6 +1588,10 @@ static uint32_t omap3_cm_read(void *opaque, target_phys_addr_t addr)
         return s->cm_iclken1_core;
     case 0xa14:
     	 return s->cm_iclken2_core;
+    case 0xa20:
+    	return s->cm_idlest1_core;
+    case 0xa24:
+    	return s->cm_idlest2_core;
     case 0xa48:
     	 return s->cm_clkstctrl_core;
     case 0xc00:                /*CM_FCLKEN_WKUP */
@@ -1481,6 +1609,8 @@ static uint32_t omap3_cm_read(void *opaque, target_phys_addr_t addr)
         return s->cm_clken_pll;
     case 0xd24:
     	return s->cm_idlest2_ckgen;
+    case 0xd30:
+    	return s->cm_autoidle_pll;
     case 0xd40:                /*CM_CLKSEL1_PLL */
         return s->cm_clksel1_pll;
     case 0xd44:
@@ -1508,8 +1638,16 @@ static uint32_t omap3_cm_read(void *opaque, target_phys_addr_t addr)
     	return s->cm_fclken_dss;
    	case 0xe10:
     	return s->cm_iclken_dss;
+    case 0xe20:
+    	return s->cm_idlest_dss;
     case 0xe40:
         return s->cm_clksel_dss;
+    case 0xe44:
+        return s->cm_sleepdep_dss;
+    case 0xe48:
+        return s->cm_clkstctrl_dss;
+    case 0xe4c:
+        return s->cm_clkstst_dss;
     case 0xf00:
     	return s->cm_fclken_cam;
     case 0xf10:
@@ -1615,6 +1753,9 @@ static void omap3_cm_write(void *opaque, target_phys_addr_t addr,
         omap3_cm_dpll3_update(s);
         omap3_cm_dpll4_update(s);
         break;
+    case 0xd30:
+    	s->cm_autoidle_pll = value & 0x3f;
+    	break;
     case 0xd40:                /*CM_CLKSEL1_PLL */
         //OMAP3_DEBUG(("WD40 value %x \n",value));
         s->cm_clksel1_pll = value & 0xffffbffc;
@@ -1648,6 +1789,13 @@ static void omap3_cm_write(void *opaque, target_phys_addr_t addr,
         s->cm_clksel_dss = value & 0x1f1f;
         omap3_cm_dpll4_update(s);
         break;
+   case 0xe44:
+   		s->cm_sleepdep_dss = value & 0x7;
+       break;
+   case 0xe48:
+   		s->cm_clkstctrl_dss = value & 0x3;
+       break;
+        
     case 0xf00:
     	s->cm_fclken_cam = value & 0x3;
     	break;
@@ -3303,10 +3451,51 @@ struct omap_mpu_state_s *omap3530_mpu_init(unsigned long sdram_size,
     s->gptimer[1] = omap_gp_timer_init(omap3_l4ta_get(s->l4, 6),
                                        s->irq[0][OMAP_INT_35XX_GPTIMER2],
                                        omap_findclk(s, "omap3_gp2_fclk"),
+                                       omap_findclk(s, "omap3_per_l4_iclk"));
+    s->gptimer[2] = omap_gp_timer_init(omap3_l4ta_get(s->l4, 7),
+                                       s->irq[0][OMAP_INT_35XX_GPTIMER3],
+                                       omap_findclk(s, "omap3_gp3_fclk"),
+                                       omap_findclk(s, "omap3_per_l4_iclk"));
+    s->gptimer[3] = omap_gp_timer_init(omap3_l4ta_get(s->l4, 8),
+                                       s->irq[0][OMAP_INT_35XX_GPTIMER4],
+                                       omap_findclk(s, "omap3_gp4_fclk"),
+                                       omap_findclk(s, "omap3_per_l4_iclk"));
+    s->gptimer[4] = omap_gp_timer_init(omap3_l4ta_get(s->l4, 9),
+                                       s->irq[0][OMAP_INT_35XX_GPTIMER5],
+                                       omap_findclk(s, "omap3_gp5_fclk"),
+                                       omap_findclk(s, "omap3_per_l4_iclk"));
+    s->gptimer[5] = omap_gp_timer_init(omap3_l4ta_get(s->l4, 10),
+                                       s->irq[0][OMAP_INT_35XX_GPTIMER6],
+                                       omap_findclk(s, "omap3_gp6_fclk"),
+                                       omap_findclk(s, "omap3_per_l4_iclk"));
+    s->gptimer[6] = omap_gp_timer_init(omap3_l4ta_get(s->l4, 11),
+                                       s->irq[0][OMAP_INT_35XX_GPTIMER7],
+                                       omap_findclk(s, "omap3_gp7_fclk"),
+                                       omap_findclk(s, "omap3_per_l4_iclk"));
+    s->gptimer[7] = omap_gp_timer_init(omap3_l4ta_get(s->l4, 12),
+                                       s->irq[0][OMAP_INT_35XX_GPTIMER8],
+                                       omap_findclk(s, "omap3_gp8_fclk"),
+                                       omap_findclk(s, "omap3_per_l4_iclk"));
+    s->gptimer[8] = omap_gp_timer_init(omap3_l4ta_get(s->l4, 13),
+                                       s->irq[0][OMAP_INT_35XX_GPTIMER9],
+                                       omap_findclk(s, "omap3_gp9_fclk"),
+                                       omap_findclk(s, "omap3_per_l4_iclk"));
+    s->gptimer[9] = omap_gp_timer_init(omap3_l4ta_get(s->l4, 14),
+                                       s->irq[0][OMAP_INT_35XX_GPTIMER10],
+                                       omap_findclk(s, "omap3_gp10_fclk"),
+                                       omap_findclk(s, "omap3_core_l4_iclk"));
+    s->gptimer[10] = omap_gp_timer_init(omap3_l4ta_get(s->l4, 15),
+                                       s->irq[0][OMAP_INT_35XX_GPTIMER11],
+                                       omap_findclk(s, "omap3_gp12_fclk"),
+                                       omap_findclk(s, "omap3_core_l4_iclk"));
+    s->gptimer[11] = omap_gp_timer_init(omap3_l4ta_get(s->l4, 16),
+                                       s->irq[0][OMAP_INT_35XX_GPTIMER12],
+                                       omap_findclk(s, "omap3_gp12_fclk"),
                                        omap_findclk(s, "omap3_wkup_l4_iclk"));
+
     
 	
-    omap_synctimer_init(omap3_l4ta_get(s->l4, 7), s,
+    omap_synctimer_init(omap3_l4ta_get(s->l4, 17), s,
                         omap_findclk(s, "omap3_sys_32k"), NULL);
 
     s->sdrc = omap_sdrc_init(0x6d000000);
@@ -3314,20 +3503,20 @@ struct omap_mpu_state_s *omap3530_mpu_init(unsigned long sdram_size,
     s->gpmc = omap_gpmc_init(0x6e000000, s->irq[0][OMAP_INT_35XX_GPMC_IRQ]);
     
 
-    s->uart[0] = omap2_uart_init(omap3_l4ta_get(s->l4, 8),
+    s->uart[0] = omap2_uart_init(omap3_l4ta_get(s->l4, 18),
                                  s->irq[0][OMAP_INT_35XX_UART1_IRQ],
                                  omap_findclk(s, "omap3_uart1_fclk"),
                                  omap_findclk(s, "omap3_uart1_iclk"),
                                  s->drq[OMAP24XX_DMA_UART1_TX],
                                  s->drq[OMAP24XX_DMA_UART1_RX], serial_hds[0]);
-    s->uart[1] = omap2_uart_init(omap3_l4ta_get(s->l4, 9),
+    s->uart[1] = omap2_uart_init(omap3_l4ta_get(s->l4, 19),
                                  s->irq[0][OMAP_INT_35XX_UART2_IRQ],
                                  omap_findclk(s, "omap3_uart2_fclk"),
                                  omap_findclk(s, "omap3_uart2_iclk"),
                                  s->drq[OMAP24XX_DMA_UART2_TX],
                                  s->drq[OMAP24XX_DMA_UART2_RX],
                                  serial_hds[0] ? serial_hds[1] : 0);
-    s->uart[2] = omap2_uart_init(omap3_l4ta_get(s->l4, 10),
+    s->uart[2] = omap2_uart_init(omap3_l4ta_get(s->l4, 20),
                                  s->irq[0][OMAP_INT_35XX_UART3_IRQ],
                                  omap_findclk(s, "omap3_uart2_fclk"),
                                  omap_findclk(s, "omap3_uart3_iclk"),
@@ -3339,10 +3528,10 @@ struct omap_mpu_state_s *omap3530_mpu_init(unsigned long sdram_size,
     /*attach serial[0] to uart 2 for beagle board */
     omap_uart_attach(s->uart[2], serial_hds[0]);
 
-    s->dss = omap_dss_init(omap3_l4ta_get(s->l4, 11), 0x68005400, ds,
+    s->dss = omap_dss_init(omap3_l4ta_get(s->l4, 21), 0x68005400, ds,
                     s->irq[0][OMAP_INT_35XX_DSS_IRQ], s->drq[OMAP24XX_DMA_DSS],
                    NULL,NULL,NULL,NULL,NULL);
-#if 0
+
     //gpio_clks[0] = NULL;
     //gpio_clks[1] = NULL;
     //gpio_clks[2] = NULL;
@@ -3350,20 +3539,32 @@ struct omap_mpu_state_s *omap3530_mpu_init(unsigned long sdram_size,
 
     s->gpif = omap3_gpif_init();
     /*gpio 1*/
-    omap3_gpio_init(s->gpif ,omap3_l4ta_get(s->l4, 12),
+    omap3_gpio_init(s->gpif ,omap3_l4ta_get(s->l4, 22),
                 					&s->irq[0][OMAP_INT_35XX_GPIO_BANK1], 
                 					NULL,NULL,0);
+    /*gpio 2*/
+    omap3_gpio_init(s->gpif ,omap3_l4ta_get(s->l4, 23),
+                					&s->irq[0][OMAP_INT_35XX_GPIO_BANK2], 
+                					NULL,NULL,1);
+    /*gpio 3*/
+    omap3_gpio_init(s->gpif ,omap3_l4ta_get(s->l4, 24),
+                					&s->irq[0][OMAP_INT_35XX_GPIO_BANK3], 
+                					NULL,NULL,2);
+    /*gpio 4*/
+    omap3_gpio_init(s->gpif ,omap3_l4ta_get(s->l4, 25),
+                					&s->irq[0][OMAP_INT_35XX_GPIO_BANK4], 
+                					NULL,NULL,3);
 
     /*gpio 5*/
-    omap3_gpio_init(s->gpif ,omap3_l4ta_get(s->l4, 16),
+    omap3_gpio_init(s->gpif ,omap3_l4ta_get(s->l4, 26),
                 					&s->irq[0][OMAP_INT_35XX_GPIO_BANK5], 
-                					NULL,NULL,0);
+                					NULL,NULL,4);
      /*gpio 6*/
-    omap3_gpio_init(s->gpif ,omap3_l4ta_get(s->l4, 17),
+    omap3_gpio_init(s->gpif ,omap3_l4ta_get(s->l4, 27),
                 					&s->irq[0][OMAP_INT_35XX_GPIO_BANK6], 
                 					NULL,NULL,5);
-#endif
-     omap_tap_init(omap3_l4ta_get(s->l4, 18), s);
+
+     omap_tap_init(omap3_l4ta_get(s->l4, 28), s);
 
 
 
