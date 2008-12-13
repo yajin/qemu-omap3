@@ -712,9 +712,11 @@ static uint32_t omap_gpio_module_read(void *opaque, target_phys_addr_t addr)
     struct omap2_gpio_s *s = (struct omap2_gpio_s *) opaque;
     int offset = addr - s->base;
 
-
     switch (offset) {
     case 0x00:	/* GPIO_REVISION */
+    	 if ((s->base == 0x48310000) || (s->base == 0x49050000) ||(s->base == 0x49052000)
+    	 	 || (s->base == 0x49054000) || (s->base == 0x49056000) ||(s->base == 0x49058000))
+    	 	return 0x25;  /*for OMAP3530*/
         return 0x18;
 
     case 0x10:	/* GPIO_SYSCONFIG */
@@ -1008,7 +1010,6 @@ static void omap_gpio_module_init(struct omap2_gpio_s *s,
     iomemtype = l4_register_io_memory(0, omap_gpio_module_readfn,
                     omap_gpio_module_writefn, s);
     s->base = omap_l4_attach(ta, region, iomemtype);
-    printf("s->base %x\n",s->base);
 }
 
 struct omap_gpif_s {
@@ -1124,7 +1125,6 @@ struct omap_gpif_s *omap2_gpio_init(struct omap_target_agent_s *ta,
     return s;
 }
 
-#if 0
 struct omap_gpif_s *omap3_gpif_init()
 {
 	struct omap_gpif_s *s = (struct omap_gpif_s *)
@@ -1140,7 +1140,7 @@ void omap3_gpio_init(struct omap_gpif_s *s,struct omap_target_agent_s *ta,
     omap_gpio_module_init(s->module + module_index, ta, 0,
                         irq[module_index], 0, 0, NULL,NULL);
 }
-#endif
+
 
 qemu_irq *omap2_gpio_in_get(struct omap_gpif_s *s, int start)
 {
