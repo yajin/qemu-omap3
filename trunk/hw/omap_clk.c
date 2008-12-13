@@ -1241,6 +1241,13 @@ static struct clk omap3_gp1_fclk = {
     .parent	= &omap3_32k_fclk,        /*omap3_32k_fclk and omap3_sys_clk*/
 };
 
+static struct clk omap3_gp12_fclk = {
+    .name	= "omap3_gp12_fclk",
+    .flags	= CLOCK_IN_OMAP353X ,
+    .parent	= &omap3_32k_fclk,        /*SECURE_32K_FCLK -> 32-kHz oscillator */
+};
+
+
 
 /*PER Power Domain clock*/
 /*gp2-gp9 timer*/
@@ -1296,6 +1303,12 @@ static struct clk omap3_per_48m_fclk = {
     .parent	= &omap3_48m_fclk,        
 };
 
+static struct clk omap3_per_l4_iclk = {
+    .name	= "omap3_per_l4_iclk",
+    .flags	= CLOCK_IN_OMAP353X,
+    .enabled = 1,
+    .parent	= &omap3_l4_iclk, 
+};
 
 
 /*UART Clocks*/
@@ -1540,6 +1553,7 @@ static struct clk *onchip_clks[] = {
     &omap3_wkup_32k_fclk,
     &omap3_wkup_l4_iclk,
     &omap3_gp1_fclk,
+    &omap3_gp12_fclk,
     &omap3_gp2_fclk,
     &omap3_gp3_fclk,
     &omap3_gp4_fclk,
@@ -1550,6 +1564,7 @@ static struct clk *onchip_clks[] = {
     &omap3_gp9_fclk,
     &omap3_per_96m_fclk,
     &omap3_per_48m_fclk,
+    &omap3_per_l4_iclk,
     &omap3_uart1_fclk,
     &omap3_uart1_iclk,
     &omap3_uart2_fclk,
