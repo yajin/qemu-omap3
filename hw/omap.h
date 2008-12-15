@@ -1081,7 +1081,7 @@ struct omap_mpu_state_s {
 	struct omap3_scm_s *omap3_scm;
 	struct omap3_pm_s *omap3_pm;
 	struct omap3_sms_s *omap3_sms;
-
+	
     
 };
 
@@ -1305,6 +1305,11 @@ struct omap_l4_agent_info_s {
     int regions;
     int ta_region;
 };
-
-
+#if 0
+struct omap3_l3_agent_info_s {
+    target_phys_addr_t base;
+    char *l3_name;
+    void *data_ptr;
+};
+#endif
 #endif /* hw_omap_h */
