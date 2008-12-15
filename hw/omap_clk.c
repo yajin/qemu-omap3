@@ -1373,6 +1373,12 @@ static struct clk omap3_sdma_iclk = {
 };
 
 
+/*CLKOUT*/
+static struct clk omap3_sys_clkout2 = {
+    .name	= "omap3_sys_clkout2",
+    .flags	= CLOCK_IN_OMAP353X ,
+    .parent	= &omap3_core_clk,        /*CORE_CLK CM_SYS_CLK CM_96M_FCLK 54 MHz clock*/
+};
 
 static struct clk *onchip_clks[] = {
     /* OMAP 1 */
@@ -1575,6 +1581,7 @@ static struct clk *onchip_clks[] = {
     &omap3_mpu_intc_iclk,
     &omap3_sdma_fclk,
     &omap3_sdma_iclk,
+    &omap3_sys_clkout2,
 
     0
 };
