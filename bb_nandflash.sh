@@ -112,7 +112,12 @@ put_kernel()
 	put_no_oob $1 $kernel_page_offset
 	echo "put Linux kernel into flash image done!"
 }
-
+put_rootfs()
+{
+	echo "rootfs image name:"$rootfs_image_name
+	put_no_oob $1 $rootfs_page_offset
+	echo "put rootfs into flash image done!"
+}
 case "$3" in
 	x-loader)
 		put_xloader $1
@@ -122,6 +127,9 @@ case "$3" in
 		;;
 	kernel)
 		put_kernel $1
+		;;
+	rootfs)
+		put_rootfs $1
 		;;
 	*)
 		echo "Unknown partition $3"
