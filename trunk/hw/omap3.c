@@ -672,12 +672,139 @@ static uint32_t omap3_prm_read(void *opaque, target_phys_addr_t addr)
 
     switch (offset)
     {
+    case 0x50:
+    	return s->rm_rstctrl_iva2;
+    case 0x58:
+    	return s->rm_rstst_iva2;
+    case 0xc8:
+    	return s->pm_wkdep_iva2 ;
+    case 0xe0:
+    	return s->pm_pwstctrl_iva2;
+    case 0xe4:
+    	return s->pm_pwstst_iva2;
+    case 0xe8:
+    	return s->pm_prepwstst_iva2;
+    case 0xf8:
+    	return s->pm_irqstatus_iva2;
+    case 0xfc:
+    	return s->pm_irqenable_iva2;
+
     case 0x804:
     	return s->prm_revision;
     case 0x814:
     	return s->prm_sysconfig;
+    case 0x818:
+    	return s->prm_irqstatus_mpu;
+    case 0x81c:
+    	return s->prm_irqenable_mpu;
+
+    case 0x958:
+    	return s->rm_rstst_mpu;
+    case 0x9c8:
+    	return s->pm_wkdep_mpu;
+    case 0x9d4:
+    	return s->pm_evgenctrl_mpu;
+    case 0x9d8:
+    	return s->pm_evgenontim_mpu;
+    case 0x9dc:
+    	return s->pm_evgenofftim_mpu;
+    case 0x9e0:
+    	return s->pm_pwstctrl_mpu;
+    case 0x9e4:
+    	return s->pm_pwstst_mpu;
+    case 0x9e8:
+    	return s->pm_perpwstst_mpu;
+
+    case 0xa58:
+    	return s->rm_rstst_core;
+    case 0xaa0:
+    	return s->pm_wken1_core;
+    case 0xaa4:
+    	return s->pm_mpugrpsel1_core;
+    case 0xaa8:
+    	return s->pm_iva2grpsel1_core;
+    case 0xab0:
+    	return s->pm_wkst1_core;
+    case 0xab8:
+    	return s->pm_wkst3_core;
+    case 0xae0:
+    	return s->pm_pwstctrl_core;
+    case 0xae4:
+    	return s->pm_pwstst_core;
+    case 0xae8:
+    	return s->pm_prepwstst_core;
+
+    case 0xb58:
+    	return s->rm_rstst_sgx;
+    case 0xbc8:
+    	return s->pm_wkdep_sgx;
+    case 0xbe0:
+    	return s->pm_pwstctrl_sgx;
+    case 0xbe4:
+    	return s->pm_pwstst_sgx;
+    case 0xbe8:
+    	return s->pm_prepwstst_sgx;
+
+    	
+    case 0xca0:
+    	return s->pm_wken_wkup;
+   	 case 0xca4:
+    	return s->pm_mpugrpsel_wkup ;
+    case 0xca8:
+    	return s->pm_iva2grpsel_wkup ;
+	 case 0xcb0:
+    	return s->pm_wkst_wkup ;
+
+    	
     case 0xd40:
         return s->prm_clksel;
+    case 0xd70:
+    	return s->prm_clkout_ctrl;
+
+     case 0xe58:
+     	return s->rm_rstst_dss;
+     case 0xea0:
+     	return s->pm_wken_dss;
+     case 0xec8:
+     	return s->pm_wkdep_dss;
+     case 0xee0:
+     	return s->pm_pwstctrl_dss;
+     case 0xee4:
+     	return s->pm_pwstst_dss;
+     case 0xee8:
+     	return s->pm_prepwstst_dss;
+
+     case 0xf58:
+     	return s->rm_rstst_cam;
+     case 0xfc8:
+    	return s->pm_wken_cam ;
+    case 0xfe0:
+    	return s->pm_pwstctrl_cam;
+    case 0xfe4:
+    	return s->pm_pwstst_cam;
+    case 0xfe8:
+    	return s->pm_prepwstst_cam;
+
+    case 0x1058:
+    	return s->rm_rstst_per;
+    case 0x10a0:
+    	return s->pm_wken_per ;
+    case 0x10a4:
+    	return s->pm_mpugrpsel_per;
+    case 0x10a8:
+    	return s->pm_iva2grpsel_per;
+    case 0x10b0:
+    	return s->pm_wkst_per;
+    case 0x10c8:
+    	return s->pm_wkdep_per;
+    case 0x10e0:
+    	return s->pm_pwstctrl_per;
+    case 0x10e4:
+    	return s->pm_pwstst_per;
+    case 0x10e8:
+    	return s->pm_perpwstst_per;
+
+    	
     case 0x1220:
     	return s->prm_vc_smps_sa;
     case 0x1224:
@@ -718,6 +845,37 @@ static uint32_t omap3_prm_read(void *opaque, target_phys_addr_t addr)
     	return s->prm_polctrl;
     case 0x12a0:
     	return s->prm_voltsetup2;
+
+    case 0x1358:
+    	return s->rm_rstst_neon;
+    case 0x13c8:
+   		return s->pm_wkdep_neon ;
+   	case 0x13e0:
+   		return s->pm_pwstctrl_neon;
+   	case 0x13e4:
+   		return s->pm_pwstst_neon;
+   	case 0x13e8:
+   		return s->pm_prepwstst_neon;
+
+   	case 0x1458:
+   		return s->rm_rstst_usbhost;
+   case 0x14a0:
+   		return s->rm_wken_usbhost ;
+   	case 0x14a4:
+   		return s->rm_mpugrpsel_usbhost;
+   	case 0x14a8:
+   		return s->rm_iva2grpsel_usbhost;
+   	case 0x14b0:
+   		return s->rm_wkst_usbhost;
+    case 0x14c8:
+    	return s->rm_wkdep_usbhost;
+    case 0x14e0:
+    	return s->rm_pwstctrl_usbhost;
+    case 0x14e4:
+    	return s->rm_pwstst_usbhost;
+    case 0x14e8:
+    	return s->rm_prepwstst_usbhost;
+
     default:
     	 printf("prm READ offset %x\n",offset);
         exit(-1);
@@ -741,12 +899,114 @@ static void omap3_prm_write(void *opaque, target_phys_addr_t addr,
 
     switch (offset)
     {
+    case 0xc8:
+    	s->pm_wkdep_iva2 = value & 0xb3;
+    	break;
+    case 0xe0:
+    	s->pm_pwstctrl_iva2 = value & 0xff0f0f;
+    	break;
+    case 0xe4:
+    	s->pm_pwstst_iva2 = value & 0x100ff7;
+    	break;
+    case 0xe8:
+    	s->pm_prepwstst_iva2 = value & 0xff7;
+    	break;
     case 0x814:
     	s->prm_sysconfig = value &0x1;
+    	break;
+    case 0x818:
+    	s->prm_irqstatus_mpu = 0x0;
+    	break;
+    case 0x81c:
+    	s->prm_irqenable_mpu = 0x3ffffff;
+    	break;
+    case 0x9c8:
+    	s->pm_wkdep_mpu = value & 0xa5;;
+    	break;
+    case 0x9e0:
+    	s->pm_pwstctrl_mpu = value & 0x3010f;
+    	break;
+    case 0x9e4:
+    	s->pm_pwstst_mpu = value & 0x1000c7;
+    	break;
+    case 0x9e8:
+    	s->pm_perpwstst_mpu = value & 0xc7;
+    	break;
+    case 0xae0:
+    	s->pm_pwstctrl_core = value & 0xf0307;
+    	break;
+    case 0xae4:
+    	s->pm_pwstst_core = value & 0x1000f3;
+    	break;
+    case 0xae8:
+    	s->pm_prepwstst_core = value & 0xf7;
+    	break;
+    case 0xbc8:
+    	s->pm_wkdep_sgx = value & 0x17;
+    	break;
+   case 0xbe0:
+   		s->pm_pwstctrl_sgx = value & 0x30107;
+   		break;
+   	case 0xbe4:
+   		s->pm_pwstst_sgx = value & 0x100003;;
+   		break;
+   	case 0xbe8:
+   		s->pm_prepwstst_sgx = value & 0x3;
+   		break;    	
+    case 0xca0:
+    	s->pm_wken_wkup = value & 0x3cb;
+    	break;
+    case 0xca4:
+    	s->pm_mpugrpsel_wkup = value & 0x3cb;
+    	break;
+    case 0xca8:
+    	s->pm_iva2grpsel_wkup = value & 0x3cb;
+    	break;
+	 case 0xcac:
+    	s->pm_wkst_wkup = value & 0x3cb;
     	break;
     case 0xd40:
         s->prm_clksel = value & 0x7;
         break;
+    case 0xec8:
+     	 s->pm_wkdep_dss = value & 0x16;
+     	 break;
+    case 0xee0:
+    	s->pm_pwstctrl_dss = value & 0x30107;
+    	break;
+    case 0xee4:
+    	s->pm_pwstst_dss = value & 0x100003;
+    	break;
+    case 0xee8:
+    	s->pm_prepwstst_dss = value &0x3;
+    	break;
+    case 0xfc8:
+    	s->pm_wken_cam = value & 0x16;
+     	 break;
+    case 0xfe0:
+    	s->pm_pwstctrl_cam = value & 0x30107;
+    	break;
+    case 0xfe4:
+    	s->pm_pwstst_cam = value & 0x100003;
+    	break;
+    case 0xfe8:
+    	s->pm_prepwstst_cam = value & 0x3;
+    	break;
+    case 0x10c8:
+    	s->pm_wkdep_per = value & 0x17;
+		break;
+    case 0x10a0:
+    	s->pm_wken_per = value & 0x3efff;
+     	break;
+    case 0x10e0:
+		s->pm_pwstctrl_per = value & 0x30107;
+		break;
+	case 0x10e4:
+		s->pm_pwstst_per = value & 0x100003;;
+		break;
+	case 0x10e8:
+		s->pm_perpwstst_per = value & 0x3;
+		break;    	
     case 0x1220:
     	s->prm_vc_smps_sa = value & 0x7f007f;
     	break;
@@ -805,6 +1065,33 @@ static void omap3_prm_write(void *opaque, target_phys_addr_t addr,
     	 break;
     case 0x12a0:
     	s->prm_voltsetup2 = value & 0xffff;
+    	break;
+   case 0x13c8:
+   		s->pm_wkdep_neon = value & 0x2;
+   		break;
+   	case 0x13e0:
+   		s->pm_pwstctrl_neon = value & 0x7;
+   		break;
+   	case 0x13e4:
+   		s->pm_pwstst_neon = value & 0x100003;
+   		break;
+   case 0x13e8:
+   		s->pm_prepwstst_neon = value & 0x3;
+   		break;
+   case 0x14a0:
+   		s->rm_wken_usbhost = value &0x1;
+   		break;
+    case 0x14c8:
+    	s->rm_wkdep_usbhost = value & 0x17;
+    	break;
+    case 0x14e0:
+    	s->rm_pwstctrl_usbhost = value & 0x30117;
+    	break;
+    case 0x14e4:
+    	s->rm_pwstst_usbhost = value & 0x100002;
+    	break;
+    case 0x14e8:
+    	s->rm_prepwstst_usbhost = value & 0x2;
     	break;
 
     default:
@@ -1144,6 +1431,14 @@ static inline void omap3_cm_dpll3_update(struct omap3_cm_s *s)
         m2 = (s->cm_clksel1_pll & 0xf8000000) >> 27;
         m3 = (s->cm_clksel1_emu & 0x1f0000) >> 16;
 
+        if (s->cm_clksel2_emu&0x80000)
+        {
+        	/*override control of DPLL3*/
+        	m = (s->cm_clksel2_emu&0x7ff)>>8;
+        	n =  s->cm_clksel2_emu&0x7f;
+        	OMAP3_DEBUG(("DPLL3 override, m 0x%x n 0x%x \n",m,n));
+        }
+
         //OMAP3_DEBUG(("dpll3 cm_clksel1_pll %x m  %d n %d m2 %d  m3 %d\n",s->cm_clksel1_pll,m,n,m2,m3 ));
         omap_clk_setrate(omap_findclk(s->mpu, "omap3_core_clk"), (n + 1) * m2,
                          m);
@@ -1194,6 +1489,15 @@ static inline void omap3_cm_dpll4_update(struct omap3_cm_s *s)
         m4 = s->cm_clksel_dss & 0x1f;
         m5 = s->cm_clksel_cam & 0x1f;
         m6 = (s->cm_clksel1_emu & 0x1f000000) >> 24;
+
+        if (s->cm_clksel3_emu&0x80000)
+        {
+        	/*override control of DPLL4*/
+        	m = (s->cm_clksel3_emu&0x7ff)>>8;
+        	n =  s->cm_clksel3_emu&0x7f;
+        	OMAP3_DEBUG(("DPLL4 override, m 0x%x n 0x%x \n",m,n));
+        }
+
 
         //OMAP3_DEBUG(("dpll4 m  %d n %d m2 %d  m3 %d m4 %d m5 %d m6 %d \n",m,n,m2,m3,m4,m5,m6 ));
         omap_clk_setrate(omap_findclk(s->mpu, "omap3_96m_fclk"), (n + 1) * m2,
@@ -1399,6 +1703,41 @@ static inline void omap3_cm_per_gptimer_update(struct omap3_cm_s *s)
 
 
 }
+
+
+static inline void omap3_cm_clkout2_update(struct omap3_cm_s *s)
+{
+	uint32 divor;
+	
+	if (!s->cm_clkout_ctrl&0x80)
+		return;
+
+	switch (s->cm_clkout_ctrl&0x3)
+	{
+		case 0x0:
+			omap_clk_reparent(omap_findclk(s->mpu, "omap3_sys_clkout2"),
+                          omap_findclk(s->mpu, "omap3_core_clk"));
+			break;
+		case 0x1:
+			omap_clk_reparent(omap_findclk(s->mpu, "omap3_sys_clkout2"),
+                          omap_findclk(s->mpu, "omap3_sys_clk"));
+			break;
+		case 0x2:
+			omap_clk_reparent(omap_findclk(s->mpu, "omap3_sys_clkout2"),
+                          omap_findclk(s->mpu, "omap3_96m_fclk"));
+			break;
+		case 0x3:
+			omap_clk_reparent(omap_findclk(s->mpu, "omap3_sys_clkout2"),
+                          omap_findclk(s->mpu, "omap3_54m_fclk"));
+			break;
+	}
+
+	divor = (s->cm_clkout_ctrl&0x31)>>3;
+	divor = 1<<divor;
+	omap_clk_setrate(omap_findclk(s->mpu, "omap3_sys_clkout2"), divor, 1);
+	
+}
+
 static void omap3_cm_reset(struct omap3_cm_s *s)
 {
     s->cm_fclken_iva2 = 0x0;
@@ -1429,11 +1768,10 @@ static void omap3_cm_reset(struct omap3_cm_s *s)
     s->cm_iclken2_core = 0x0;
     s->cm_iclken3_core = 0x0;
     /*allow access to devices*/
-    //s->cm_idlest1_core = 0xffffffff;
     s->cm_idlest1_core = 0x0;
-    //s->cm_idlest2_core = 0x1f;
     s->cm_idlest2_core = 0x0;
-    s->cm_idlest3_core = 0xf;
+    /*ide status =0 */
+    s->cm_idlest3_core = 0xa; 
     s->cm_autoidle1_core = 0x0;
     s->cm_autoidle2_core = 0x0;
     s->cm_autoidle3_core = 0x0;
@@ -1533,6 +1871,8 @@ static uint32_t omap3_cm_read(void *opaque, target_phys_addr_t addr)
     	return s->cm_fclken_iva2;
     case 0x04:
         return s->cm_clken_pll_iva2;
+    case 0x20:
+    	return s->cm_idlest_iva2;
     case 0x24:
         if (((s->cm_clken_pll_iva2 & 0x7) == 0x5)
             || ((s->cm_clken_pll_iva2 & 0x7) == 0x1))
@@ -1551,20 +1891,27 @@ static uint32_t omap3_cm_read(void *opaque, target_phys_addr_t addr)
             return 0;
         else
             return 1;
+    case 0x34:
+    	return s->cm_autoidle_pll_iva2;
     case 0x40:
         return s->cm_clksel1_pll_iva2;
     case 0x44:
         return s->cm_clksel2_pll_iva2;
-    case 0xa40:                /*CM_CLKSEL_CORE */
-        return s->cm_clksel_core;
-    case 0xb40:                /*CM_CLKSEL_SGX */
-        return s->cm_clksel_sgx;
+    case 0x48:
+    	return s->cm_clkstctrl_iva2;
+    case 0x4c:
+    	return s->cm_clkstst_iva2;
+
+   case 0x800:
+   		return s->cm_revision;
+   	case 0x810:
+   		return s->cm_sysconfig;
+
+    	
     case 0x904:                /*CM_CLKEN_PLL_MPU */
         return s->cm_clken_pll_mpu;
-    case 0x940:
-        return s->cm_clksel1_pll_mpu;
-    case 0x944:
-        return s->cm_clksel2_pll_mpu;
+   case 0x920:
+   		return s->cm_idlest_mpu & 0x0;  /*MPU is active*/
     case 0x924:
         if ((s->cm_clken_pll_mpu & 0x7) == 0x5)
         {
@@ -1582,8 +1929,23 @@ static uint32_t omap3_cm_read(void *opaque, target_phys_addr_t addr)
             return 0;
         else
             return 1;
+    case 0x934:
+    	return s->cm_autoidle_pll_mpu;
+    case 0x940:
+        return s->cm_clksel1_pll_mpu;
+    case 0x944:
+        return s->cm_clksel2_pll_mpu;
+     case 0x948:
+     	return s->cm_clkstctrl_mpu;
+     case 0x94c:
+     	return s->cm_clkstst_mpu;
+
+
+     	
     case 0xa00:
         return s->cm_fclken1_core;
+    case 0xa08:
+    	return s->cm_fclken3_core;
     case 0xa10:
         return s->cm_iclken1_core;
     case 0xa14:
@@ -1592,8 +1954,35 @@ static uint32_t omap3_cm_read(void *opaque, target_phys_addr_t addr)
     	return s->cm_idlest1_core;
     case 0xa24:
     	return s->cm_idlest2_core;
+    case 0xa28:
+    	return s->cm_idlest3_core;
+    case 0xa30:
+    	return s->cm_autoidle1_core;
+    case 0xa34:
+    	return s->cm_autoidle2_core;
+    case 0xa38:
+    	return s->cm_autoidle3_core;
+    case 0xa40:                /*CM_CLKSEL_CORE */
+        return s->cm_clksel_core;
     case 0xa48:
     	 return s->cm_clkstctrl_core;
+     case 0xa4c:
+     	return s->cm_clkstst_core;
+
+   case 0xb00:
+   		return s->cm_fclken_sgx;
+   	case 0xb10:
+   		return s->cm_iclken_sgx;
+   	case 0xb20:
+   		return s->cm_idlest_sgx&0x0;
+   case 0xb40:                /*CM_CLKSEL_SGX */
+        return s->cm_clksel_sgx;
+   case 0xb48:
+   		return s->cm_clkstctrl_sgx;
+   	case 0xb4c:
+   		return s->cm_clkstst_sgx;
+
+   		
     case 0xc00:                /*CM_FCLKEN_WKUP */
         return s->cm_fclken_wkup;
     case 0xc10:                /*CM_ICLKEN_WKUP */
@@ -1601,16 +1990,58 @@ static uint32_t omap3_cm_read(void *opaque, target_phys_addr_t addr)
     case 0xc20:                /*CM_IDLEST_WKUP */
         /*TODO: Check whether the timer can be accessed. */
         return 0x0;
+    case 0xc30:
+    	return s->cm_idlest_wkup;
     case 0xc40:
         return s->cm_clksel_wkup;
     case 0xc48:
     	return s->cm_c48;
+
+    	
     case 0xd00:                /*CM_CLKEN_PLL */
         return s->cm_clken_pll;
+    case 0xd04:
+    	return s->cm_clken2_pll;
+    case 0xd20:
+    	 /*FIXME: all clock is active. we do not care it. */
+        ret = 0x3ffff;
+
+    	/*DPLL3*/
+    	 bypass = 0;
+    	if (((s->cm_clken_pll & 0x7) == 0x5) || ((s->cm_clken_pll & 0x7) == 0x6))
+	        bypass = 1;
+	   else if ((s->cm_clken_pll & 0x7) == 0x7)
+    	{
+        m = (s->cm_clksel1_pll & 0x7ff0000) >> 16;
+        if ((m == 0) || (m == 1))
+            bypass = 1;
+        else
+            bypass = 0;
+    	}
+	   if (bypass)
+	   		ret &= 0xfffe;
+	   /*DPLL4*/
+	    bypass = 0;
+	   if ((s->cm_clken_pll & 0x70000) == 0x10000)
+    	    bypass = 1;
+	 	else if ((s->cm_clken_pll & 0x70000) == 0x70000)
+	    {
+	        m = (s->cm_clksel2_pll & 0x7ff00) >> 8;
+        if ((m == 0) || (m == 1))
+            bypass = 1;
+        else
+            bypass = 0;
+   	 	}
+    	if (bypass)
+	   		ret &= 0xfffd;
+    	return ret;
+    	
     case 0xd24:
     	return s->cm_idlest2_ckgen;
     case 0xd30:
     	return s->cm_autoidle_pll;
+    case 0xd34:
+    	return s->cm_autoidle2_pll;
     case 0xd40:                /*CM_CLKSEL1_PLL */
         return s->cm_clksel1_pll;
     case 0xd44:
@@ -1621,25 +2052,18 @@ static uint32_t omap3_cm_read(void *opaque, target_phys_addr_t addr)
         return s->cm_clksel4_pll;
     case 0xd50:                /*CM_CLKSEL5_PLL */
         return s->cm_clksel5_pll;
-    case 0xd20:                /*CM_IDLEST_CKGEN */
-        /*FIXME: all clock is active. we do not care it. */
-        ret = 0x3ffff;
-        /*DPLL3 BYPASS */
-        if (((s->cm_clken_pll & 0x7) == 0x5)
-            || ((s->cm_clken_pll & 0x7) == 0x6))
-            ret |= 0x3fffe;
-        /*DPLL4 BYPASS */
-        if ((s->cm_clken_pll & 0x70000) == 0x10000)
-            ret |= 0x3fffd;
-        return ret;
     case 0xd70:
     	 return s->cm_clkout_ctrl;
+
+    	 
     case 0xe00:
     	return s->cm_fclken_dss;
    	case 0xe10:
     	return s->cm_iclken_dss;
     case 0xe20:
     	return s->cm_idlest_dss;
+    case 0xe30:
+    	return s->cm_autoidle_dss;
     case 0xe40:
         return s->cm_clksel_dss;
     case 0xe44:
@@ -1648,24 +2072,77 @@ static uint32_t omap3_cm_read(void *opaque, target_phys_addr_t addr)
         return s->cm_clkstctrl_dss;
     case 0xe4c:
         return s->cm_clkstst_dss;
+
+        
     case 0xf00:
     	return s->cm_fclken_cam;
     case 0xf10:
     	return s->cm_iclken_cam;
+    case 0xf20:
+    	return s->cm_idlest_cam&0x0;
+    case 0xf30:
+    	return s->cm_autoidle_cam;
     case 0xf40:
         return s->cm_clksel_cam;
+    case 0xf44:
+    	return s->cm_sleepdep_cam;
+    case 0xf48:
+    	return s->cm_clkstctrl_cam;
+    case 0xf4c:
+    	return s->cm_clkstst_cam;
+
+    	
     case 0x1000:
         return s->cm_fclken_per;
     case 0x1010:
         return s->cm_iclken_per;
     case 0x1020:
     	return s->cm_idlest_per ;
+    case 0x1030:
+    	return s->cm_autoidle_per;
     case 0x1040:
         return s->cm_clksel_per;
+    case 0x1044:
+    	return s->cm_sleepdep_per;
     case 0x1048:
     	return s->cm_clkstctrl_per;
+    case 0x104c:
+		return s->cm_clkstst_per;
+
+    	
     case 0x1140:               /*CM_CLKSEL1_EMU */
         return s->cm_clksel1_emu;
+    case 0x1148:
+    	 return s->cm_clkstctrl_emu;
+    case 0x114c:
+    	return s->cm_clkstst_emu&0x0;
+    case 0x1150:
+    	return s->cm_clksel2_emu;
+    case 0x1154:
+    	return s->cm_clksel3_emu;
+
+   case 0x129c:
+   		return s->cm_polctrl;
+
+   	case 0x1320:
+   		return s->cm_idlest_neon&0x0;
+   	case 0x1348:
+   		return s->cm_clkstctrl_neon;
+
+   	case 0x1400:
+   		return s->cm_fclken_usbhost;
+   	case 0x1410:
+   		return s->cm_iclken_usbhost;
+   	case 0x1420:
+   		return s->cm_idlest_usbhost&0x0;
+    case 0x1430:
+    	return s->cm_autoidle_usbhost;
+    case 0x1444:
+    	return s->cm_sleepdep_usbhost;
+    case 0x1448:
+    	return s->cm_clkstctrl_usbhost;
+    case 0x144c:
+    	return s->cm_clkstst_usbhost;
 
     default:
         printf("omap3_cm_read addr %x offset %x pc %x \n", addr, offset,cpu_single_env->regs[15] );
@@ -1682,10 +2159,36 @@ static void omap3_cm_write(void *opaque, target_phys_addr_t addr,
 
     switch (offset)
     {
+    case 0x20:
+    case 0x24:
+    case 0x4c:
+    case 0x800:
+    case 0x920:
+    case 0x924:
+    case 0x94c:
+    case 0xa20:
+    case 0xa24:
+    case 0xa28:
+    case 0xa4c:
+    case 0xb20:
+    case 0xb4c:
     case 0xc20:                /*CM_IDLEST_WKUP */
+    case 0xd20:
+    case 0xd24:
+    case 0xe20:
+    case 0xe4c:
+    case 0xf20:
+    case 0xf4c:
+    case 0x1020:
+    case 0x104c:
+    case 0x114c:
+    case 0x1320:
+    case 0x1420:
+    case 0x144c:
         OMAP_RO_REG(addr);
         exit(-1);
         break;
+        
     case 0x0:
     	s->cm_fclken_iva2 = value & 0x1;
     	break;
@@ -1693,6 +2196,9 @@ static void omap3_cm_write(void *opaque, target_phys_addr_t addr,
         s->cm_clken_pll_iva2 = value & 0x7ff;
         omap3_cm_iva2_update(s);
         break;
+    case 0x34:
+    	s->cm_autoidle_pll_iva2 = value & 0x7;
+    	break;
     case 0x40:
         s->cm_clksel1_pll_iva2 = value & 0x3fff7f;
         //printf("value %x s->cm_clksel1_pll_iva2 %x \n",value,s->cm_clksel1_pll_iva2);
@@ -1702,10 +2208,22 @@ static void omap3_cm_write(void *opaque, target_phys_addr_t addr,
         s->cm_clksel2_pll_iva2 = value & 0x1f;
         omap3_cm_iva2_update(s);
         break;
+    case 0x48:
+    	s->cm_clkstctrl_iva2 = value& 0x3;
+    	break;
+
+    case 0x810:
+    	s->cm_sysconfig = value & 0x1;
+    	break;
+
+        
     case 0x904:                /*CM_CLKEN_PLL_MPU */
         s->cm_clken_pll_mpu = value & 0x7ff;
         omap3_cm_mpu_update(s);
         break;
+    case 0x934:
+    	s->cm_autoidle_pll_mpu = value & 0x7;
+    	break;
     case 0x940:
         //printf("s->cm_clksel1_pll_mpu  %x\n",s->cm_clksel1_pll_mpu );
         s->cm_clksel1_pll_mpu = value & 0x3fff7f;
@@ -1715,15 +2233,35 @@ static void omap3_cm_write(void *opaque, target_phys_addr_t addr,
         s->cm_clksel2_pll_mpu = value & 0x1f;
         omap3_cm_mpu_update(s);
         break;
+    case 0x948:
+    	s->cm_clkstctrl_mpu = value & 0x3;
+    	break;
+
+    	
     case 0xa00:
         s->cm_fclken1_core = value & 0x43fffe00;
          break;
+    case 0xa08:
+    	 s->cm_fclken3_core = value & 0x7;
+    	 break;
     case 0xa10:
         s->cm_iclken1_core = value & 0x7ffffed2;
          break;
     case 0xa14:
     	 s->cm_iclken2_core = value & 0x1f;
     	 break;
+    case 0xa18:
+    	s->cm_iclken3_core = value & 0x2;
+    	break;
+    case 0xa30:
+    	s->cm_autoidle1_core = value & 0x7ffffed0;
+    	break;
+    case 0xa34:
+    	s->cm_autoidle2_core = value & 0x1f;
+    	break;
+    case 0xa38:
+    	s->cm_autoidle3_core = value & 0x2;
+    	break;
     case 0xa40:                /*CM_CLKSEL_CORE */
         s->cm_clksel_core = (value & 0xff);
         s->cm_clksel_core |= 0x100;
@@ -1732,29 +2270,56 @@ static void omap3_cm_write(void *opaque, target_phys_addr_t addr,
         omap3_cm_l3clk_update(s);
         omap3_cm_l4clk_update(s);
         break;
+    case 0xa48:
+    	s->cm_clkstctrl_core = value & 0xf;
+    	break;
+
+    case 0xb00:
+    	s->cm_fclken_sgx = value &0x2;
+    	break;
+    case 0xb10:
+    	s->cm_iclken_sgx = value & 0x1;
+    	break;
     case 0xb40:                /*CM_CLKSEL_SGX */
         /*TODO: SGX Clock!! */
         s->cm_clksel_sgx = value;
         break;
+    case 0xb44:
+    	s->cm_sleepdep_sgx = value &0x2;
+    	break;
+    case 0xb48:
+    	s->cm_clkstctrl_sgx = value & 0x3;
+    	break;
+
+    
     case 0xc00:                /*CM_FCLKEN_WKUP */
         s->cm_fclken_wkup = value & 0x2e9;
-        //omap3_cm_fclken_wkup_update(s,s->cm_fclken_wkup);
         break;
     case 0xc10:                /*CM_ICLKEN_WKUP */
         s->cm_iclken_wkup = value & 0x2ff;
-        //omap3_cm_iclken_wkup_update(s,s->cm_iclken_wkup);
         break;
+    case 0xc30:
+    	s->cm_autoidle_wkup = value & 0x23f;
+    	break;
     case 0xc40:                /*CM_CLKSEL_WKUP */
         s->cm_clksel_wkup = value & 0x7f;
         omap3_cm_clksel_wkup_update(s, s->cm_clksel_wkup);
         break;
+
+        
     case 0xd00:                /*CM_CLKEN_PLL */
         s->cm_clken_pll = value & 0xffff17ff;
         omap3_cm_dpll3_update(s);
         omap3_cm_dpll4_update(s);
         break;
+    case 0xd04:
+    	s->cm_clken2_pll = value & 0x7ff;
+    	break;
     case 0xd30:
     	s->cm_autoidle_pll = value & 0x3f;
+    	break;
+    case 0xd34:
+    	s->cm_autoidle2_pll = value & 0x7;
     	break;
     case 0xd40:                /*CM_CLKSEL1_PLL */
         //OMAP3_DEBUG(("WD40 value %x \n",value));
@@ -1779,11 +2344,19 @@ static void omap3_cm_write(void *opaque, target_phys_addr_t addr,
         s->cm_clksel5_pll = value & 0x1f;
         omap3_cm_dpll5_update(s);
         break;
+    case 0xd70:
+    	s->cm_clkout_ctrl = value & 0xbb;
+    	omap3_cm_clkout2_update(s);
+    	break;
+        
     case 0xe00:
     	s->cm_fclken_dss = value & 0x7;
     	break;
    	case 0xe10:
     	s->cm_iclken_dss = value & 0x1;
+    	break;
+    case 0xe30:
+    	s->cm_autoidle_dss = value & 0x1;
     	break;
     case 0xe40:
         s->cm_clksel_dss = value & 0x1f1f;
@@ -1802,33 +2375,83 @@ static void omap3_cm_write(void *opaque, target_phys_addr_t addr,
     case 0xf10:
     	s->cm_iclken_cam = value & 0x1;
     	break;
+    case 0xf30:
+    	s->cm_autoidle_cam = value & 0x1;
+    	break;
     case 0xf40:
         s->cm_clksel_cam = value & 0x1f;
         omap3_cm_dpll4_update(s);
         break;
+    case 0xf44:
+    	s->cm_sleepdep_cam = value & 0x2;
+    	break;
+    case 0xf48:
+    	s->cm_clkstctrl_cam = value & 0x3;
+    	break;
+   
     case 0x1000:
         s->cm_fclken_per = value & 0x3ffff;
         break;
     case 0x1010:
         s->cm_iclken_per = value & 0x3ffff;
         break;
-    case 0x1020:
-    	s->cm_idlest_per = value & 0x3ffff;
+    
+    case 0x1030:
+    	s->cm_autoidle_per = value &0x3ffff;
     	break;
     case 0x1040:
         s->cm_clksel_per = value & 0xff;
         omap3_cm_per_gptimer_update(s);
         break;
+    case 0x1044:
+    	s->cm_sleepdep_per = value & 0x6;
+    	break;
     case 0x1048:
     	 s->cm_clkstctrl_per = value &0x7;
     	 break;
+    	 
     case 0x1140:               /*CM_CLKSEL1_EMU */
         s->cm_clksel1_emu = value & 0x1f1f3fff;
         //printf("cm_clksel1_emu %x\n",s->cm_clksel1_emu);
         omap3_cm_dpll3_update(s);
         omap3_cm_dpll4_update(s);
         break;
+    case 0x1148:
+    	s->cm_clkstctrl_emu = value & 0x3;
+    	break;
+	 case 0x1150:
+	 	 s->cm_clksel2_emu = value & 0xfff7f;
+	 	 omap3_cm_dpll3_update(s);
+        break;
+    case 0x1154:
+    	 s->cm_clksel3_emu = value & 0xfff7f;
+	 	 omap3_cm_dpll4_update(s);
+        break;
 
+    case 0x129c:
+    	 s->cm_polctrl = value & 0x1;
+    	 break;
+
+   case 0x1348:
+   		s->cm_clkstctrl_neon = value & 0x3;
+   		break;
+
+   	case 0x1400:
+   		s->cm_fclken_usbhost = value & 0x3;
+   		break;
+   	case 0x1410:
+   		s->cm_iclken_usbhost = value & 0x1;
+   		break;
+    case 0x1430:
+    	s->cm_autoidle_usbhost = value & 0x1;
+    	break;
+    case 0x1444:
+    	s->cm_sleepdep_usbhost = value & 0x6;
+    	break;
+    case 0x1448:
+    	s->cm_clkstctrl_usbhost = value & 0x3;
+    	break;
+   
     default:
         printf("omap3_cm_write addr %x value %x pc %x\n", addr, value,cpu_single_env->regs[15] );
         exit(-1);
@@ -3372,6 +3995,290 @@ void omap3_tap_init(struct omap_target_agent_s *ta,
                             omap3_tap_readfn, omap3_tap_writefn, mpu));
 }
 #endif
+#if 0
+/*offset 0x00->0x63*/
+uint32 omap_l3_ia_data[11][4]=
+{
+			{0x3e000000,0x0,0x0,0x0},
+			{0x3e000000,0x0,0x0,0x0},
+			{0x3e000000,0x0,0x0,0x0},
+			{0x3e000000,0x0,0x0,0x0},
+			{0x3e000000,0x0,0x0,0x0},
+			{0x3e000000,0x0,0x0,0x0},
+			{0x3e000000,0x0,0x0,0x0},
+			{0x3e000000,0x0,0x0,0x0},
+			{0x3e000000,0x0,0x0,0x0},
+			{0x3e000000,0x0,0x0,0x0},
+			{0x3e000000,0x0,0x0,0x0},
+};
+struct omap3_l3_agent_info_s omap3_l3_ia[11] =
+{
+		{0x68001400,"IA_MPUSS",(void *)omap_l3_ia_data[0]},
+		{0x68001800,"IA_IVA2.2",(void *)omap_l3_ia_data[1]},
+		{0x68001c00,"IA_SGX",(void *)omap_l3_ia_data[2]},
+		{0x68004000,"IA_USB_HS_Host",(void *)omap_l3_ia_data[3]},,
+		{0x68004400,"IA_USB_HS_OTG",(void *)omap_l3_ia_data[4]},
+		{0x68003000,"IA_MAD2D",(void *)omap_l3_ia_data[5]},
+		{0x68004C00,"IA_DMA_RD",(void *)omap_l3_ia_data[6]},
+		{0x68005000,"IA_DMA_WR",(void *)omap_l3_ia_data[7]},
+		{0x68005400,"IA_DSS",(void *)omap_l3_ia_data[8]},
+		{0x68005800,"IA_CAM",(void *)omap_l3_ia_data[9]},
+		{0x68005C00,"IA_DAP",(void *)omap_l3_ia_data[10]},
+};
+
+int omap3_l3_ia_get_index(target_phys_addr_t addr)
+{
+	switch (addr)
+	{
+		case 0x68001400 ... 0x68001467:
+			return 0;
+		case 0x68001800 ... 0x68001867:
+			return 1;
+		case 0x68001c00 ... 0x68001c67:
+			return 2;
+		case 0x68004000 ... 0x68004067:
+			return 3;
+		case 0x68004400 ... 0x68004467:
+			return 4;
+		case 0x68003000 ... 0x68003067:
+			return 5;
+		case 0x68004c00 ... 0x68004c67:
+			return 6;
+		case 0x68005000 ... 0x68005067:
+			return 7;
+		case 0x68005400 ... 0x68005467:
+			return 8;
+		case 0x68005800 ... 0x68005867:
+			return 9;
+		case 0x68005c00 ... 0x68005c67:
+			return 10;
+		default:
+			fprintf(stderr,"error address %x \n",addr);
+			exit(-1);
+	}
+}
+
+static uint32_t omap3_l3_ia_read32(void *opaque, target_phys_addr_t addr)
+{
+    struct omap3_l3_agent_info_s *s = (struct omap3_l3_agent_info_s *) opaque;
+    int offset = addr - s->base;
+    int index = omap3_l3_ia_get_index(addr);
+    uint32 *data = omap_l3_ia_data[index];
+
+    switch (offset)
+    {
+    case 0x20:
+    	return data[0];
+    case 0x28:
+    	return data[1];
+    case 0x58:
+    	return data[2];
+    case 0x60:
+    	return data[3];
+    default:
+        printf("omap3_l3_ia_read32 addr %x \n", addr);
+        exit(-1);
+    }
+}
+
+static void omap3_l3_ia_write32(void *opaque, target_phys_addr_t addr,
+                              uint32_t value)
+{
+    struct omap3_l3_agent_info_s *s = (struct omap3_l3_agent_info_s *) opaque;
+    int offset = addr - s->base;
+    int index = omap3_l3_ia_get_index(addr);
+    uint32 *data = omap_l3_ia_data[index];
+    switch (offset)
+    {
+    case 0x20:
+    	data[0] = value ;
+    	break;
+    case 0x28:
+    	data[1] = value;
+    	break;
+    case 0x58:
+    	data[2] = value;
+    	break;
+    case 0x60:
+    	data[3] = value;
+    	break;
+    default:
+        printf("omap3_l3_ia_write32 addr %x \n", addr);
+        exit(-1);
+    }
+
+    
+
+}
+
+static CPUReadMemoryFunc *omap3_l3_ia_readfn[] = {
+    omap_badwidth_read32,
+    omap_badwidth_read32,
+    omap3_l3_ia_read32,
+};
+
+static CPUWriteMemoryFunc *omap3_l3_ia_writefn[] = {
+    omap_badwidth_write32,
+    omap_badwidth_write32,
+    omap3_l3_ia_write32,
+};
+
+void omap3_l3_ia_init(struct omap_mpu_state_s *mpu,int l3_ia_index)
+{
+	 int iomemtype;
+    struct omap3_l3_agent_info_s * s = omap3_l3_ia+l3_ia_index;
+
+    iomemtype = cpu_register_io_memory(0, omap3_l3_ia_readfn,
+                                      omap3_l3_ia_writefn, s);
+    cpu_register_physical_memory(s->base, 0x68, iomemtype);
+
+}
+
+
+
+
+
+
+/*offset 0x00->0x63*/
+uint32 omap_l3_ta_data[10][4]=
+{
+			{0x30000000,0x0,0x0,0x0},
+			{0x30000000,0x0,0x0,0x0},
+			{0x30000000,0x0,0x0,0x0},
+			{0x30000000,0x0,0x0,0x0},
+			{0x30000000,0x0,0x0,0x0},
+			{0x30000000,0x0,0x0,0x0},
+			{0x30000000,0x0,0x0,0x0},
+			{0x30000000,0x0,0x0,0x0},
+			{0x30000000,0x0,0x0,0x0},
+			{0x30000000,0x0,0x0,0x0},
+};
+struct omap3_l3_agent_info_s omap3_l3_ta[10] =
+{
+		{0x68002000,"TA_SMS",(void *)omap_l3_ta_data[0]},
+		{0x68002400,"TA_GPMC",(void *)omap_l3_ta_data[1]},
+		{0x68002800,"TA_OCM_RAM",(void *)omap_l3_ta_data[2]},
+		{0x68002C00,"TA_OCM_ROM",(void *)omap_l3_ta_data[3]},,
+		{0x68003400,"TA_MAD2D",(void *)omap_l3_ta_data[4]},
+		{0x68006000,"TA_IVA2.2",(void *)omap_l3_ta_data[5]},
+		{0x68006400,"TA_SGX",(void *)omap_l3_ta_data[6]},
+		{0x68006800,"TA_L4_CORE",(void *)omap_l3_ta_data[7]},
+		{0x68006C00,"TA_L4_PER",(void *)omap_l3_ta_data[8]},
+		{0x68007000,"TA_L4_EMU",(void *)omap_l3_ta_data[9]},
+};
+
+int omap3_l3_ta_get_index(target_phys_addr_t addr)
+{
+	switch (addr)
+	{
+		case 0x68002000 ... 0x68002067:
+			return 0;
+		case 0x68002400 ... 0x68002467:
+			return 1;
+		case 0x68002800 ... 0x68002867:
+			return 2;
+		case 0x68002C00 ... 0x68002C67:
+			return 3;
+		case 0x68003400 ... 0x68003467:
+			return 4;
+		case 0x68006000 ... 0x68006067:
+			return 5;
+		case 0x68006400 ... 0x68006467:
+			return 6;
+		case 0x68006800 ... 0x68006867:
+			return 7;
+		case 0x68006C00 ... 0x68006C67:
+			return 8;
+		case 0x68007000 ... 0x68007067:
+			return 9;
+		default:
+			fprintf(stderr,"error address %x \n",addr);
+			exit(-1);
+	}
+}
+
+static uint32_t omap3_l3_ta_read32(void *opaque, target_phys_addr_t addr)
+{
+    struct omap3_l3_agent_info_s *s = (struct omap3_l3_agent_info_s *) opaque;
+    int offset = addr - s->base;
+    int index = omap3_l3_ta_get_index(addr);
+    uint32 *data = omap_l3_ta_data[index];
+
+    switch (offset)
+    {
+    case 0x20:
+    	return data[0];
+    case 0x28:
+    	return data[1];
+    case 0x58:
+    	return data[2];
+    case 0x60:
+    	return data[3];
+    default:
+        printf("omap3_l3_ta_read32 addr %x \n", addr);
+        exit(-1);
+    }
+}
+
+static void omap3_l3_ta_write32(void *opaque, target_phys_addr_t addr,
+                              uint32_t value)
+{
+    struct omap3_l3_agent_info_s *s = (struct omap3_l3_agent_info_s *) opaque;
+    int offset = addr - s->base;
+    int index = omap3_l3_ta_get_index(addr);
+    uint32 *data = omap_l3_ta_data[index];
+    switch (offset)
+    {
+    case 0x20:
+    	data[0] = value ;
+    	break;
+    case 0x28:
+    	data[1] = value;
+    	break;
+    case 0x58:
+    	data[2] = value;
+    	break;
+    case 0x60:
+    	data[3] = value;
+    	break;
+    default:
+        printf("omap3_l3_ta_write32 addr %x \n", addr);
+        exit(-1);
+    }
+
+    
+
+}
+
+static CPUReadMemoryFunc *omap3_l3_ta_readfn[] = {
+    omap_badwidth_read32,
+    omap_badwidth_read32,
+    omap3_l3_ta_read32,
+};
+
+static CPUWriteMemoryFunc *omap3_l3_ta_writefn[] = {
+    omap_badwidth_write32,
+    omap_badwidth_write32,
+    omap3_l3_ta_write32,
+};
+
+void omap3_l3_ia_init(struct omap_mpu_state_s *mpu,int l3_ia_index)
+{
+	 int iomemtype;
+    struct omap3_l3_agent_info_s * s = omap3_l3_ta+l3_ia_index;
+
+    iomemtype = cpu_register_io_memory(0, omap3_l3_ta_readfn,
+                                      omap3_l3_ta_writefn, s);
+    cpu_register_physical_memory(s->base, 0x68, iomemtype);
+
+}
+
+#endif
+
+
+
+
+
 struct omap_mpu_state_s *omap3530_mpu_init(unsigned long sdram_size,
                                            DisplayState * ds, const char *core)
 {
@@ -3566,8 +4473,7 @@ struct omap_mpu_state_s *omap3530_mpu_init(unsigned long sdram_size,
 
      omap_tap_init(omap3_l4ta_get(s->l4, 28), s);
 
-
-
+     
 
     return s;
 }
