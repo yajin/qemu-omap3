@@ -2368,6 +2368,7 @@ static uint32_t unassigned_mem_readw(void *opaque, target_phys_addr_t addr)
 static uint32_t unassigned_mem_readl(void *opaque, target_phys_addr_t addr)
 {
 printf("Unassigned mem readl " TARGET_FMT_plx "pc "TARGET_FMT_plx"\n", addr,cpu_single_env->regs[15] );
+if (addr<0xa0000000)
 exit(-1);
 #ifdef DEBUG_UNASSIGNED
     printf("Unassigned mem read " TARGET_FMT_plx "\n", addr);
@@ -2406,8 +2407,9 @@ static void unassigned_mem_writew(void *opaque, target_phys_addr_t addr, uint32_
 static void unassigned_mem_writel(void *opaque, target_phys_addr_t addr, uint32_t val)
 {
 	printf("Unassigned mem writel " TARGET_FMT_plx " = 0x%x pc %x \n", addr, val,cpu_single_env->regs[15] );
-	if (addr!=0x680050a0)
+	if ((addr!=0x680050a0)&&(addr<0xa0000000))
 	exit(-1);
+	
 #ifdef DEBUG_UNASSIGNED
     printf("Unassigned mem write " TARGET_FMT_plx " = 0x%x\n", addr, val);
 #endif

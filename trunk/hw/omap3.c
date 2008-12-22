@@ -2851,6 +2851,7 @@ struct omap3_scm_s
 		 *(padconfs+offset/4) |= (wakeup1 <<30)|(offmode1<<25)|(inputenable1<<24)|(pupd1<<19)|(muxmode1<<16); \
 } while (0)
 
+
 void omap3_scm_reset(struct omap3_scm_s *s)
 {
 	 uint32 * padconfs;
@@ -4285,10 +4286,39 @@ void omap3_l3_ia_init(struct omap_mpu_state_s *mpu,int l3_ia_index)
 
 #endif
 
+/*
+  set the kind of memory connected to GPMC that we are trying to boot form.
+  Uses SYS BOOT settings.
+*/
+void omap3_set_mem_type(struct omap_mpu_state_s *s,int bootfrom)
+{
+	switch (bootfrom)
+	{
+		case 0x0: /*GPMC_NOR*/
+			s->omap3_scm->general[32] |= 7;
+			break;
+		case 0x1: /*GPMC_NAND*/
+			s->omap3_scm->general[32] |= 1;
+			break;
+		case 0x2:
+			s->omap3_scm->general[32] |= 8;
+			break;
+		case 0x3:
+			s->omap3_scm->general[32] |= 0;
+			break;
+		case 0x4:
+			s->omap3_scm->general[32] |= 17;
+			break;
+		case 0x5:
+			s->omap3_scm->general[32] |= 3;
+			break;
+	}
+}
 
-
-
-
+void omap3_set_device_type(struct omap_mpu_state_s *s,int device_type)
+{
+	s->omap3_scm->general[32] |= (device_type&0x7)<<8;
+}
 struct omap_mpu_state_s *omap3530_mpu_init(unsigned long sdram_size,
                                            DisplayState * ds, const char *core)
 {
@@ -4323,12 +4353,16 @@ struct omap_mpu_state_s *omap3530_mpu_init(unsigned long sdram_size,
     omap_clk_init(s);
 
     /* Memory-mapped stuff */
+
     q2_base = qemu_ram_alloc(s->sdram_size);
     cpu_register_physical_memory(OMAP3_Q2_BASE, s->sdram_size,
                                  (q2_base | IO_MEM_RAM));
     sram_base = qemu_ram_alloc(s->sram_size);
     cpu_register_physical_memory(OMAP3_SRAM_BASE, s->sram_size,
                                  (sram_base | IO_MEM_RAM));
+
+
+    
 
     s->l4 = omap_l4_init(OMAP3_L4_BASE, sizeof(omap3_l4_agent_info));
 
@@ -4496,13 +4530,13 @@ struct omap_mpu_state_s *omap3530_mpu_init(unsigned long sdram_size,
                     s->irq[0][OMAP_INT_35XX_MMC1_IRQ],
                     &s->drq[OMAP35XX_DMA_MMC1_TX],
                     omap_findclk(s, "omap3_mmc1_fclk"), omap_findclk(s, "omap3_mmc1_iclk"));
-/*
+
  s->i2c[0] = omap2_i2c_init(omap3_l4ta_get(s->l4, 32),
                     s->irq[0][OMAP_INT_35XX_I2C1_IRQ],
                     &s->drq[OMAP35XX_DMA_I2C1_TX],
                     omap_findclk(s, "omap3_i2c1_fclk"),
                     omap_findclk(s, "omap3_i2c1_iclk"));
-    s->i2c[1] = omap2_i2c_init(omap3_l4ta_get(s->l4, 33),
+ s->i2c[1] = omap2_i2c_init(omap3_l4ta_get(s->l4, 33),
                     s->irq[0][OMAP_INT_35XX_I2C2_IRQ],
                     &s->drq[OMAP35XX_DMA_I2C2_TX],
                     omap_findclk(s, "omap3_i2c2_fclk"),
@@ -4512,7 +4546,7 @@ struct omap_mpu_state_s *omap3530_mpu_init(unsigned long sdram_size,
                     &s->drq[OMAP35XX_DMA_I2C3_TX],
                     omap_findclk(s, "omap3_i2c3_fclk"),
                     omap_findclk(s, "omap3_i2c3_iclk"));
-*/
+
 
      
 
