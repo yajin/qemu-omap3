@@ -1380,6 +1380,72 @@ static struct clk omap3_sys_clkout2 = {
     .parent	= &omap3_core_clk,        /*CORE_CLK CM_SYS_CLK CM_96M_FCLK 54 MHz clock*/
 };
 
+
+/*MMC Clock*/
+static struct clk omap3_mmc1_fclk = {
+    .name	= "omap3_mmc1_fclk",
+    .flags	= CLOCK_IN_OMAP353X ,
+    .parent	= &omap3_per_96m_fclk,       
+};
+static struct clk omap3_mmc1_iclk = {
+    .name	= "omap3_mmc1_iclk",
+    .flags	= CLOCK_IN_OMAP353X ,
+    .parent	= &omap3_per_l4_iclk,       
+};
+static struct clk omap3_mmc2_fclk = {
+    .name	= "omap3_mmc2_fclk",
+    .flags	= CLOCK_IN_OMAP353X ,
+    .parent	= &omap3_per_96m_fclk,       
+};
+static struct clk omap3_mmc2_iclk = {
+    .name	= "omap3_mmc2_iclk",
+    .flags	= CLOCK_IN_OMAP353X ,
+    .parent	= &omap3_per_l4_iclk,       
+};
+static struct clk omap3_mmc3_fclk = {
+    .name	= "omap3_mmc3_fclk",
+    .flags	= CLOCK_IN_OMAP353X ,
+    .parent	= &omap3_per_96m_fclk,       
+};
+static struct clk omap3_mmc3_iclk = {
+    .name	= "omap3_mmc3_iclk",
+    .flags	= CLOCK_IN_OMAP353X ,
+    .parent	= &omap3_per_l4_iclk,       
+};
+
+
+/*I2C Clocls*/
+static struct clk omap3_i2c1_fclk = {
+    .name	= "omap3_i2c1_fclk",
+    .flags	= CLOCK_IN_OMAP353X ,
+    .parent	= &omap3_per_96m_fclk,       
+};
+static struct clk omap3_i2c1_iclk = {
+    .name	= "omap3_i2c1_iclk",
+    .flags	= CLOCK_IN_OMAP353X ,
+    .parent	= &omap3_core_l4_iclk,       
+};
+static struct clk omap3_i2c2_fclk = {
+    .name	= "omap3_i2c2_fclk",
+    .flags	= CLOCK_IN_OMAP353X ,
+    .parent	= &omap3_per_96m_fclk,       
+};
+static struct clk omap3_i2c2_iclk = {
+    .name	= "omap3_i2c2_iclk",
+    .flags	= CLOCK_IN_OMAP353X ,
+    .parent	= &omap3_core_l4_iclk,       
+};
+static struct clk omap3_i2c3_fclk = {
+    .name	= "omap3_i2c3_fclk",
+    .flags	= CLOCK_IN_OMAP353X ,
+    .parent	= &omap3_per_96m_fclk,       
+};
+static struct clk omap3_i2c3_iclk = {
+    .name	= "omap3_i2c3_iclk",
+    .flags	= CLOCK_IN_OMAP353X ,
+    .parent	= &omap3_core_l4_iclk,       
+};
+
 static struct clk *onchip_clks[] = {
     /* OMAP 1 */
 
@@ -1582,6 +1648,18 @@ static struct clk *onchip_clks[] = {
     &omap3_sdma_fclk,
     &omap3_sdma_iclk,
     &omap3_sys_clkout2,
+    &omap3_mmc1_fclk,
+    &omap3_mmc1_iclk,
+    &omap3_mmc2_fclk,
+    &omap3_mmc2_iclk,
+    &omap3_mmc3_fclk,
+    &omap3_mmc3_iclk,
+    &omap3_i2c1_fclk,
+    &omap3_i2c1_iclk,
+    &omap3_i2c2_fclk,
+    &omap3_i2c2_iclk,
+    &omap3_i2c3_fclk,
+    &omap3_i2c3_iclk,
 
     0
 };
