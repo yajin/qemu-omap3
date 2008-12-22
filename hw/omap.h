@@ -713,6 +713,98 @@ struct omap_dma_lcd_channel_s {
 # define OMAP24XX_DMA_MS		63	/* Not in OMAP2420 */
 # define OMAP24XX_DMA_EXT_DMAREQ5	64
 
+
+/*
+ * DMA request numbers for the OMAP3. according to 3530 datasheet
+ */
+# define OMAP35XX_DMA_NO_DEVICE		0
+# define OMAP35XX_DMA_EXT_DMAREQ0		1	
+# define OMAP35XX_DMA_EXT_DMAREQ1	2
+# define OMAP35XX_DMA_GPMC        3
+# define OMAP35XX_DMA_DSS_LINETRIGGER          5
+# define OMAP35XX_DMA_EXT_DMAREQ2	6
+
+# define OMAP35XX_DMA_AES1_TX		8	
+# define OMAP35XX_DMA_AES1_RX		9	
+# define OMAP35XX_DMA_DES1_TX		10	
+# define OMAP35XX_DMA_DES1_RX		11	
+# define OMAP35XX_DMA_SHA2MD5_RX	12	
+
+# define OMAP35XX_DMA_SPI3_TX0		14
+# define OMAP35XX_DMA_SPI3_RX0		15
+
+# define OMAP35XX_DMA_MCBSP3_TX		16
+# define OMAP35XX_DMA_MCBSP3_RX		17
+# define OMAP35XX_DMA_MCBSP4_TX		18
+# define OMAP35XX_DMA_MCBSP4_RX		19
+# define OMAP35XX_DMA_MCBSP5_TX		20
+# define OMAP35XX_DMA_MCBSP5_RX		21
+
+# define OMAP35XX_DMA_SPI3_TX1		22
+# define OMAP35XX_DMA_SPI3_RX1		23
+
+# define OMAP35XX_DMA_I2C3_TX		24
+# define OMAP35XX_DMA_I2C3_RX		25
+# define OMAP35XX_DMA_I2C1_TX		26
+# define OMAP35XX_DMA_I2C1_RX		27
+# define OMAP35XX_DMA_I2C2_TX		28
+# define OMAP35XX_DMA_I2C2_RX		29
+
+# define OMAP35XX_DMA_MCBSP1_TX		30
+# define OMAP35XX_DMA_MCBSP1_RX		31
+# define OMAP35XX_DMA_MCBSP2_TX		32
+# define OMAP35XX_DMA_MCBSP2_RX		33
+
+# define OMAP35XX_DMA_SPI1_TX0		34
+# define OMAP35XX_DMA_SPI1_RX0		35
+# define OMAP35XX_DMA_SPI1_TX1		36
+# define OMAP35XX_DMA_SPI1_RX1		37
+# define OMAP35XX_DMA_SPI1_TX2		38
+# define OMAP35XX_DMA_SPI1_RX2		39
+# define OMAP35XX_DMA_SPI1_TX3		40
+# define OMAP35XX_DMA_SPI1_RX4		41
+# define OMAP35XX_DMA_SPI2_TX0		42
+# define OMAP35XX_DMA_SPI2_RX0		43
+# define OMAP35XX_DMA_SPI2_TX1		44
+# define OMAP35XX_DMA_SPI2_RX1		45
+
+# define OMAP35XX_DMA_MMC2_TX		46
+# define OMAP35XX_DMA_MMC2_RX		47
+
+# define OMAP35XX_DMA_UART1_TX		48
+# define OMAP35XX_DMA_UART1_RX		49
+# define OMAP35XX_DMA_UART2_TX		50
+# define OMAP35XX_DMA_UART2_RX		51
+# define OMAP35XX_DMA_UART3_TX		52
+# define OMAP35XX_DMA_UART3_RX		53
+
+# define OMAP35XX_DMA_MMC1_TX		60
+# define OMAP35XX_DMA_MMC1_RX		61
+
+# define OMAP35XX_DMA_MS		62
+
+# define OMAP35XX_DMA_EXT_DMAREQ3	63
+
+# define OMAP35XX_DMA_AES2_TX          64
+# define OMAP35XX_DMA_AES2_RX          65
+# define OMAP35XX_DMA_DES2_TX          66
+# define OMAP35XX_DMA_DES2_RX          67
+# define OMAP35XX_DMA_SHA1MD5_RX	  68	
+
+# define OMAP35XX_DMA_SPI4_TX0		69
+# define OMAP35XX_DMA_SPI4_RX0		70
+
+# define OMAP35XX_DMA_DSS0    71
+# define OMAP35XX_DMA_DSS1    72
+# define OMAP35XX_DMA_DSS2    73
+# define OMAP35XX_DMA_DSS3    74
+
+# define OMAP35XX_DMA_MMC3_TX		76
+# define OMAP35XX_DMA_MMC3_RX		77
+
+# define OMAP35XX_DMA_USIM_TX		78
+# define OMAP35XX_DMA_USIM_RX		79
+
 /* omap[123].c */
 struct omap_mpu_timer_s;
 struct omap_mpu_timer_s *omap_mpu_timer_init(target_phys_addr_t base,
