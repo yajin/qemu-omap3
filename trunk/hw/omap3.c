@@ -29,8 +29,11 @@
 #include "soc_dma.h"
 #include "audio/audio.h"
 
+#ifdef _OMAP3_DEBUG_
 #define OMAP3_DEBUG(x)    do {  printf x ; } while(0)
-
+#else
+#define OMAP3_DEBUG(x) 
+#endif
 static uint32_t omap3_l4ta_read(void *opaque, target_phys_addr_t addr)
 {
     struct omap_target_agent_s *s = (struct omap_target_agent_s *) opaque;
@@ -133,7 +136,7 @@ static struct omap_l4_region_s omap3_l4_region[] = {
     [25] = {0x070000, 0x1000, 16 | 8},  /*  I2C1 */
     [26] = {0x071000, 0x1000, 32 | 16 | 8},     /*  L4TA4 */
 
-    [27] = {0x072000, 0x1000, 16 | 8},  /*  I2C1 */
+    [27] = {0x072000, 0x1000, 16 | 8},  /*  I2C2 */
     [28] = {0x073000, 0x1000, 32 | 16 | 8},     /*  L4TA4 */
 
     [29] = {0x074000, 0x1000, 32},      /*  mcbsp1 */
@@ -374,6 +377,13 @@ static struct omap_l4_agent_info_s omap3_l4_agent_info[] = {
     {26, 136, 2, 1},              /* GPIO 5 */
     {27, 138, 2, 1},              /* GPIO 6 */
     {28,82, 2, 1},                 /* TAP */
+    {29,43, 2, 1},                 /* MMC1 */
+    {30,57, 2, 1},                 /* MMC2 */
+    {31,51, 2, 1},                 /* MMC3 */
+    {32,25, 2, 1},                 /* I2C1 */
+    {33,27, 2, 1},                 /* I2C2 */
+    {34,15, 2, 1},                 /* I2C3 */
+    
     
 };
 
@@ -4288,6 +4298,7 @@ struct omap_mpu_state_s *omap3530_mpu_init(unsigned long sdram_size,
     qemu_irq *cpu_irq;
     qemu_irq dma_irqs[4];
     int i;
+    int sdindex;
     //omap_clk gpio_clks[4];
 
 
@@ -4300,6 +4311,13 @@ struct omap_mpu_state_s *omap3530_mpu_init(unsigned long sdram_size,
     }
     s->sdram_size = sdram_size;
     s->sram_size = OMAP3530_SRAM_SIZE;
+
+    sdindex = drive_get_index(IF_SD, 0, 0);
+    printf("sdindex %d \n",sdindex);
+    if (sdindex == -1) {
+        fprintf(stderr, "qemu: missing SecureDigital device\n");
+        exit(1);
+    }
 
     /* Clocks */
     omap_clk_init(s);
@@ -4328,6 +4346,7 @@ struct omap_mpu_state_s *omap3530_mpu_init(unsigned long sdram_size,
                             omap_findclk(s, "omap3_sdma_fclk"),
                             omap_findclk(s, "omap3_sdma_iclk"));
     s->port->addr_valid = omap3_validate_addr;
+
 
     /* Register SDRAM and SRAM ports for fast DMA transfers.  */
     soc_dma_port_add_mem_ram(s->dma, q2_base, OMAP2_Q2_BASE, s->sdram_size);
@@ -4414,21 +4433,21 @@ struct omap_mpu_state_s *omap3530_mpu_init(unsigned long sdram_size,
                                  s->irq[0][OMAP_INT_35XX_UART1_IRQ],
                                  omap_findclk(s, "omap3_uart1_fclk"),
                                  omap_findclk(s, "omap3_uart1_iclk"),
-                                 s->drq[OMAP24XX_DMA_UART1_TX],
-                                 s->drq[OMAP24XX_DMA_UART1_RX], serial_hds[0]);
+                                 s->drq[OMAP35XX_DMA_UART1_TX],
+                                 s->drq[OMAP35XX_DMA_UART1_RX], serial_hds[0]);
     s->uart[1] = omap2_uart_init(omap3_l4ta_get(s->l4, 19),
                                  s->irq[0][OMAP_INT_35XX_UART2_IRQ],
                                  omap_findclk(s, "omap3_uart2_fclk"),
                                  omap_findclk(s, "omap3_uart2_iclk"),
-                                 s->drq[OMAP24XX_DMA_UART2_TX],
-                                 s->drq[OMAP24XX_DMA_UART2_RX],
+                                 s->drq[OMAP35XX_DMA_UART2_TX],
+                                 s->drq[OMAP35XX_DMA_UART2_RX],
                                  serial_hds[0] ? serial_hds[1] : 0);
     s->uart[2] = omap2_uart_init(omap3_l4ta_get(s->l4, 20),
                                  s->irq[0][OMAP_INT_35XX_UART3_IRQ],
                                  omap_findclk(s, "omap3_uart2_fclk"),
                                  omap_findclk(s, "omap3_uart3_iclk"),
-                                 s->drq[OMAP24XX_DMA_UART3_TX],
-                                 s->drq[OMAP24XX_DMA_UART3_RX],
+                                 s->drq[OMAP35XX_DMA_UART3_TX],
+                                 s->drq[OMAP35XX_DMA_UART3_RX],
                                  serial_hds[0]
                                  && serial_hds[1] ? serial_hds[2] : 0);
     
@@ -4472,6 +4491,28 @@ struct omap_mpu_state_s *omap3530_mpu_init(unsigned long sdram_size,
                 					NULL,NULL,5);
 
      omap_tap_init(omap3_l4ta_get(s->l4, 28), s);
+
+    s->mmc = omap3_mmc_init(omap3_l4ta_get(s->l4, 29), drives_table[sdindex].bdrv,
+                    s->irq[0][OMAP_INT_35XX_MMC1_IRQ],
+                    &s->drq[OMAP35XX_DMA_MMC1_TX],
+                    omap_findclk(s, "omap3_mmc1_fclk"), omap_findclk(s, "omap3_mmc1_iclk"));
+/*
+ s->i2c[0] = omap2_i2c_init(omap3_l4ta_get(s->l4, 32),
+                    s->irq[0][OMAP_INT_35XX_I2C1_IRQ],
+                    &s->drq[OMAP35XX_DMA_I2C1_TX],
+                    omap_findclk(s, "omap3_i2c1_fclk"),
+                    omap_findclk(s, "omap3_i2c1_iclk"));
+    s->i2c[1] = omap2_i2c_init(omap3_l4ta_get(s->l4, 33),
+                    s->irq[0][OMAP_INT_35XX_I2C2_IRQ],
+                    &s->drq[OMAP35XX_DMA_I2C2_TX],
+                    omap_findclk(s, "omap3_i2c2_fclk"),
+                    omap_findclk(s, "omap3_i2c2_iclk"));
+    s->i2c[2] = omap2_i2c_init(omap3_l4ta_get(s->l4, 34),
+                    s->irq[0][OMAP_INT_35XX_I2C3_IRQ],
+                    &s->drq[OMAP35XX_DMA_I2C3_TX],
+                    omap_findclk(s, "omap3_i2c3_fclk"),
+                    omap_findclk(s, "omap3_i2c3_iclk"));
+*/
 
      
 

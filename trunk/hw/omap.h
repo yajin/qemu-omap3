@@ -976,6 +976,12 @@ void omap_mmc_reset(struct omap_mmc_s *s);
 void omap_mmc_handlers(struct omap_mmc_s *s, qemu_irq ro, qemu_irq cover);
 void omap_mmc_enable(struct omap_mmc_s *s, int enable);
 
+/* omap3_mmc.c */
+struct omap3_mmc_s;
+struct omap3_mmc_s *omap3_mmc_init(struct omap_target_agent_s *ta,
+                BlockDriverState *bd, qemu_irq irq, qemu_irq dma[],
+                omap_clk fclk, omap_clk iclk);
+
 /* omap_i2c.c */
 struct omap_i2c_s;
 struct omap_i2c_s *omap_i2c_init(target_phys_addr_t base,

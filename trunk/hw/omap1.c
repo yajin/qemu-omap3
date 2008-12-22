@@ -34,7 +34,6 @@ uint32_t omap_badwidth_read8(void *opaque, target_phys_addr_t addr)
     uint8_t ret;
 
     OMAP_8B_REG(addr);
-    exit(-1);
     cpu_physical_memory_read(addr, (void *) &ret, 1);
     return ret;
 }
@@ -45,16 +44,13 @@ void omap_badwidth_write8(void *opaque, target_phys_addr_t addr,
     uint8_t val8 = value;
 
     OMAP_8B_REG(addr);
-    exit(-1);
     cpu_physical_memory_write(addr, (void *) &val8, 1);
 }
 
 uint32_t omap_badwidth_read16(void *opaque, target_phys_addr_t addr)
 {
     uint16_t ret;
-
     OMAP_16B_REG(addr);
-    exit(-1);
     cpu_physical_memory_read(addr, (void *) &ret, 2);
     return ret;
 }
@@ -65,7 +61,6 @@ void omap_badwidth_write16(void *opaque, target_phys_addr_t addr,
     uint16_t val16 = value;
 
     OMAP_16B_REG(addr);
-    exit(-1);
     cpu_physical_memory_write(addr, (void *) &val16, 2);
 }
 
@@ -74,7 +69,6 @@ uint32_t omap_badwidth_read32(void *opaque, target_phys_addr_t addr)
     uint32_t ret;
 
     OMAP_32B_REG(addr);
-    exit(-1);
     cpu_physical_memory_read(addr, (void *) &ret, 4);
     return ret;
 }
@@ -83,7 +77,6 @@ void omap_badwidth_write32(void *opaque, target_phys_addr_t addr,
                 uint32_t value)
 {
     OMAP_32B_REG(addr);
-    exit(-1);
     cpu_physical_memory_write(addr, (void *) &value, 4);
 }
 
@@ -2070,7 +2063,7 @@ static void omap_uart_write(void *opaque, target_phys_addr_t addr,
 
     switch (offset) {
     case 0x20:	/* MDR1 */
-        s->mdr[0] = value & 0x7f;
+    	 s->mdr[0] = value & 0x7f;
         break;
     case 0x24:	/* MDR2 */
         s->mdr[1] = value & 0xff;

@@ -112,27 +112,6 @@ CPUReadMemoryFunc *beagle_nand_readfn[] = {
         omap_badwidth_write32,
 };
 
-/*
-void beagle_nand_base_update(void *opaque, target_phys_addr_t new)
-{
-    struct beagle_s *s = (struct beagle_s *) opaque;
-    int iomemtype;
-
-    printf("beagle_nand_base_update base %x \n",new);
-
-    s->nand_base = new;
-
-	iomemtype = cpu_register_io_memory(0, beagle_nand_readfn,
-                    beagle_nand_writefn, s);
-    cpu_register_physical_memory(s->nand_base, 0xc, iomemtype);
-}
-
-void beagle_nand_base_unmap(void *opaque)
-{
-    struct beagle_s *s = (struct beagle_s *) opaque;
-    cpu_register_physical_memory(s->nand_base,0xc, IO_MEM_UNASSIGNED);
-}
-*/
 static void beagle_nand_setup(struct beagle_s *s)
 {
 	int iomemtype;
@@ -174,9 +153,13 @@ static int beagle_nand_read_page(struct beagle_s *s,uint8_t *buf, uint16_t page_
 	return 1;
 }
 
+static int beagle_boot_from_mmc(struct beagle_s *s)
+{
+	return (-1);
+}
 
 /*read the xloader from NAND Flash into internal RAM*/
- void beagle_rom_emu(struct beagle_s *s)
+static int beagle_boot_from_nand(struct beagle_s *s)
 {
 	uint32_t	loadaddr, len;
 	uint8_t nand_page[0x800],*load_dest;
@@ -188,6 +171,8 @@ static int beagle_nand_read_page(struct beagle_s *s,uint8_t *buf, uint16_t page_
 	beagle_nand_read_page(s,nand_page,0);
 	len = *((uint32_t*)nand_page);
 	loadaddr =  *((uint32_t*)(nand_page+4));
+	if ((len==0)||(loadaddr==0)||(len==0xffffffff)||(loadaddr==0xffffffff))
+		return (-1);
 
 	/*put the first page into internal ram*/
 	load_dest = phys_ram_base +beagle_binfo.ram_size;
@@ -208,7 +193,18 @@ static int beagle_nand_read_page(struct beagle_s *s,uint8_t *buf, uint16_t page_
 		memcpy(load_dest,nand_page,0x800);
 		load_dest += 0x800;
 	}
-		s->cpu->env->regs[15] = loadaddr;
+	s->cpu->env->regs[15] = loadaddr;
+	return 0;
+
+}
+ static int beagle_rom_emu(struct beagle_s *s)
+{
+	if (beagle_boot_from_mmc(s)<0)
+	{
+		if (beagle_boot_from_nand(s)<0)
+			return (-1); 
+	}
+	return (0);
 }
 
 static void beagle_dss_setup(struct beagle_s *s, DisplayState *ds)
@@ -216,6 +212,15 @@ static void beagle_dss_setup(struct beagle_s *s, DisplayState *ds)
 	s->lcd_panel = omap3_lcd_panel_init(ds);
 	omap3_lcd_panel_attach(s->cpu->dss, 0, s->lcd_panel);
 	s->lcd_panel->dss = s->cpu->dss;
+}
+
+static void beagle_mmc_cs_cb(void *opaque, int line, int level)
+{
+    /* TODO: this seems to actually be connected to the menelaus, to
+     * which also both MMC slots connect.  */
+    omap_mmc_enable((struct omap_mmc_s *) opaque, !level);
+
+    printf("%s: MMC slot %i active\n", __FUNCTION__, level + 1);
 }
 
 static void beagle_init(ram_addr_t ram_size, int vga_ram_size,
@@ -233,7 +238,11 @@ static void beagle_init(ram_addr_t ram_size, int vga_ram_size,
     }
    	s->cpu = omap3530_mpu_init(sdram_size, NULL, NULL);
    	beagle_nand_setup(s);
-   	beagle_rom_emu(s);
+   if (beagle_rom_emu(s)<0)
+   	{
+   		fprintf(stderr,"boot from MMC and nand failed \n");
+   		exit(-1);
+   	}
    	beagle_dss_setup(s,ds);
 
 }
