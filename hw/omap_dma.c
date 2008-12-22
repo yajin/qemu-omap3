@@ -1935,7 +1935,10 @@ static void omap_dma4_write(void *opaque, target_phys_addr_t addr,
         break;
 
     case 0x08:	/* DMA4_CICR */
-        ch->interrupts = value & 0x09be;
+    	 if (s->mpu->mpu_model==omap3530)
+    	 	ch->interrupts = value & 0x1fbe;
+    	 else
+          ch->interrupts = value & 0x09be;
         break;
 
     case 0x0c:	/* DMA4_CSR */
