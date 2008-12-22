@@ -450,9 +450,27 @@ static void omap_disc_write(void *opaque, target_phys_addr_t addr,
         if (value & (1 << 5)) {				/* GOLCD */
              /* XXX: Likewise for LCD here.  */
              s->lcd.active = 1;
+             printf("LCD active pc %x\n",cpu_single_env->regs[15] );
         }
         else
-        	s->lcd.active = 0;
+        	{
+        	printf("LCD UNactive pc %x\n",cpu_single_env->regs[15] );
+        		s->lcd.active = 0;
+        	}
+
+         if (value & (1 << 6)) {				/* GOLCD */
+           
+             //s->lcd.active = 1;
+             printf("dig active pc %x\n",cpu_single_env->regs[15] );
+        }
+        else
+        	{
+        	printf("dig UNactive pc %x\n",cpu_single_env->regs[15] );
+        		//s->lcd.active = 0;
+        	}
+
+
+        
         s->dispc.invalidate = 1;
         break;
 
@@ -516,6 +534,7 @@ static void omap_disc_write(void *opaque, target_phys_addr_t addr,
     case 0x080:	/* DISPC_GFX_BA0 */
         s->dispc.l[0].addr[0] = (target_phys_addr_t) value;
         s->dispc.invalidate = 1;
+        printf("s->dispc.l[0].addr[0] %x pc %x \n",s->dispc.l[0].addr[0],cpu_single_env->regs[15] );
         break;
     case 0x084:	/* DISPC_GFX_BA1 */
         s->dispc.l[0].addr[1] = (target_phys_addr_t) value;
@@ -1161,8 +1180,10 @@ static void omap3_lcd_panel_update_display(void *opaque)
 	uint8_t *src, *dest;
 	
 
+	//printf("dss->lcd.active  %d dss->lcd.enable %d \n",dss->lcd.active,dss->lcd.enable);
 	if (!dss->lcd.active)
     	return;
+
 	
 	/*check whether LCD is enabled*/
 	if (!dss->lcd.enable)
@@ -1197,7 +1218,7 @@ static void omap3_lcd_panel_update_display(void *opaque)
     graphic_height = dss->dispc.l[0].ny;
     start_x = dss->dispc.l[0].posx;
     start_y = dss->dispc.l[0].posy;
-   // printf("lcd_width %d lcd_height %d \n",lcd_width,lcd_height);
+   //printf("lcd_width %d lcd_height %d \n",lcd_width,lcd_height);
 	//printf("graphic_width %d graphic_height %d \n",graphic_width,graphic_height);
 	//printf("start_x %d start_y %d \n",start_x,start_y);
 
@@ -1228,6 +1249,8 @@ static void omap3_lcd_panel_update_display(void *opaque)
  	 	
  	lcd_Bpp = omap3_lcd_panel_bpp[dss->dispc.l[0].gfx_format];
  	dss_Bpp = linesize/ds_get_width(s->state);
+
+ 	//printf("LCD BPP %d dss_bpp %d \n",lcd_Bpp,dss_Bpp);
 
  	dest += linesize*start_y;
  	dest += start_x*dss_Bpp;
