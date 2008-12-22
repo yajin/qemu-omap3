@@ -32,12 +32,27 @@
 #include "hw.h"
 
 #define BEAGLE_NAND_CS			0
+#define BEAGLE_TWL4030_ADDR		0x4b	/* Power management */
+
+#define GPMC_NOR             0
+#define GPMC_NAND           1
+#define GPMC_MDOC           2
+#define GPMC_ONENAND    3
+#define MMC_NAND            4
+#define MMC_ONENAND     5
+
+
+#define TST_DEVICE              0x0
+#define EMU_DEVICE              0x1
+#define HS_DEVICE               0x2
+#define GP_DEVICE               0x3
 
 #ifdef DEBUG_BEAGLE
 #define BEAGLE_DEBUG(x)    do {  printf x ; } while(0)
 #else
 #define BEAGLE_DEBUG(x)    do {   } while(0)
 #endif
+
 /* Beagle board support */
 struct beagle_s {
     struct omap_mpu_state_s *cpu;
@@ -45,6 +60,7 @@ struct beagle_s {
 	target_phys_addr_t nand_base;
     struct nand_flash_s *nand;
     struct omap3_lcd_panel_s *lcd_panel;
+    i2c_bus *i2c;
 };
 
 
@@ -126,6 +142,9 @@ static void beagle_nand_setup(struct beagle_s *s)
                     beagle_nand_writefn, s);
     cpu_register_physical_memory(s->nand_base, 0xc, iomemtype);
 
+	 /*BOOT from nand*/
+    omap3_set_mem_type(s->cpu,GPMC_NAND);
+
 }
 
 static int beagle_nand_read_page(struct beagle_s *s,uint8_t *buf, uint16_t page_addr)
@@ -152,7 +171,7 @@ static int beagle_nand_read_page(struct beagle_s *s,uint8_t *buf, uint16_t page_
 	}
 	return 1;
 }
-
+/*TODO*/
 static int beagle_boot_from_mmc(struct beagle_s *s)
 {
 	return (-1);
@@ -223,6 +242,20 @@ static void beagle_mmc_cs_cb(void *opaque, int line, int level)
     printf("%s: MMC slot %i active\n", __FUNCTION__, level + 1);
 }
 
+static void beagle_i2c_setup(struct beagle_s *s)
+{
+
+    /* Attach the CPU on one end of our I2C bus.  */
+    s->i2c = omap_i2c_bus(s->cpu->i2c[0]);
+
+    /* Attach a menelaus PM chip */
+    i2c_set_slave_address(
+                    twl4030_init(s->i2c,
+                            s->cpu->irq[0][OMAP_INT_35XX_SYS_NIRQ]),
+                    BEAGLE_TWL4030_ADDR);
+}
+
+
 static void beagle_init(ram_addr_t ram_size, int vga_ram_size,
                 const char *boot_device, DisplayState *ds,
                 const char *kernel_filename, const char *kernel_cmdline,
@@ -238,12 +271,15 @@ static void beagle_init(ram_addr_t ram_size, int vga_ram_size,
     }
    	s->cpu = omap3530_mpu_init(sdram_size, NULL, NULL);
    	beagle_nand_setup(s);
+   	beagle_i2c_setup(s);
+   	beagle_dss_setup(s,ds);
+   	omap3_set_device_type(s->cpu,GP_DEVICE);
    if (beagle_rom_emu(s)<0)
    	{
    		fprintf(stderr,"boot from MMC and nand failed \n");
    		exit(-1);
    	}
-   	beagle_dss_setup(s,ds);
+   	
 
 }
 

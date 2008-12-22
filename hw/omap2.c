@@ -3984,6 +3984,7 @@ struct omap_sysctl_s *omap_sysctl_init(struct omap_target_agent_s *ta,
 struct omap_sdrc_s {
     target_phys_addr_t base;
     uint32_t mcfg[2];
+    uint32_t cscfg;
 
     uint8_t config;
 };
@@ -3991,6 +3992,7 @@ struct omap_sdrc_s {
 static void omap_sdrc_reset(struct omap_sdrc_s *s)
 {
     s->config = 0x10;
+    s->cscfg = 0x4;
 }
 
 static uint32_t omap_sdrc_read(void *opaque, target_phys_addr_t addr)
@@ -4014,6 +4016,7 @@ static uint32_t omap_sdrc_read(void *opaque, target_phys_addr_t addr)
     	cs = (offset-0x80)/0x30;
     	return s->mcfg[cs];
     case 0x40:	/* SDRC_CS_CFG */
+    	return s->cscfg;
     case 0x44:	/* SDRC_SHARING */
     case 0x48:	/* SDRC_ERR_ADDR */
     case 0x4c:	/* SDRC_ERR_TYPE */
@@ -4074,10 +4077,14 @@ static void omap_sdrc_write(void *opaque, target_phys_addr_t addr,
     /*u-boot needs this to determine dram size*/
     case 0x80:	/* SDRC_MCFG_0 */
     case 0xb0:	/* SDRC_MCFG_1 */
+    	printf("write offset %x value %x \n",offset,value);
     	cs = (offset-0x80)/0x30;
     	s->mcfg[cs] = value & 0xc77bffff;
     	break;
     case 0x40:	/* SDRC_CS_CFG */
+    	printf("write s->cscfg  %x \n",value);
+    	s->cscfg = value & 0x30f;
+    	break;
     case 0x44:	/* SDRC_SHARING */
     case 0x4c:	/* SDRC_ERR_TYPE */
     case 0x60:	/* SDRC_DLLA_SCTRL */
@@ -4183,8 +4190,7 @@ static void omap_gpmc_cs_map(struct omap_gpmc_cs_file_s *f, int base, int mask)
     }
 
     if (!f->opaque)
-        return;
-    
+      return;
 
     f->base = base << 24;
     f->size = (0x0fffffff & ~(mask << 24)) + 1;

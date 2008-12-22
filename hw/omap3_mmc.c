@@ -359,8 +359,8 @@ static uint32_t omap3_mmc_read(void *opaque, target_phys_addr_t addr)
     struct omap3_mmc_s *s = (struct omap3_mmc_s *) opaque;
     uint32_t offset = addr - s->base;
     uint32_t i ;
-   // if ((offset!=0x12c))
-   // printf("omap3_mmc_read %x pc %x \n",offset,cpu_single_env->regs[15] );
+   //if ((offset!=0x12c)&&(offset!=0x120))
+   //printf("omap3_mmc_read %x pc %x \n",offset,cpu_single_env->regs[15] );
     switch (offset)
     {
     case 0x10:
