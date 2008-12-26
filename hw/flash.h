@@ -25,11 +25,14 @@ void nand_setpins(struct nand_flash_s *s,
 void nand_getpins(struct nand_flash_s *s, int *rb);
 void nand_setio(struct nand_flash_s *s, uint8_t value);
 uint8_t nand_getio(struct nand_flash_s *s);
-void nand_set_wp(struct nand_flash_s *s, uint8_t value);
-void nand_write_command(struct nand_flash_s *s, uint8_t value);
-void nand_write_address(struct nand_flash_s *s, uint8_t value);
-void nand_write_data16(struct nand_flash_s *s, uint16_t value);
-uint16_t nand_read_data16(struct nand_flash_s *s);
+
+/* nand_bpage.c */
+struct nand_bflash_s;
+struct nand_bflash_s *nandb_init(int manf_id, int chip_id);
+void nandb_write_data16(struct nand_bflash_s *s, uint16_t value);
+uint16_t nandb_read_data16(struct nand_bflash_s *s);
+void nandb_write_address(struct nand_bflash_s *s, uint16_t value);
+void nandb_write_command(struct nand_bflash_s *s, uint16_t value);
 
 
 #define NAND_MFR_TOSHIBA	0x98

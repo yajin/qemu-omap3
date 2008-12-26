@@ -84,7 +84,7 @@ static uint32_t beagle_nand_read16(void *opaque, target_phys_addr_t addr)
 			omap_badwidth_read16(s,addr);
 			break;
 		case 0x8: /*NAND_DATA*/
-			return nand_read_data16(s->nand);
+			return nandb_read_data16(s->nand);
 			break;
 		default:
 			omap_badwidth_read16(s,addr);
@@ -102,13 +102,13 @@ static void beagle_nand_write16(void *opaque, target_phys_addr_t addr,
     switch (offset)
 	{
 		case 0x0: /*NAND_COMMAND*/
-			nand_write_command(s->nand,value);
+			nandb_write_command(s->nand,value);
 			break;
 		case 0x4: /*NAND_ADDRESS*/
-			nand_write_address(s->nand,value);
+			nandb_write_address(s->nand,value);
 			break;
 		case 0x8: /*NAND_DATA*/
-			nand_write_data16(s->nand,value);
+			nandb_write_data16(s->nand,value);
 			break;
 		default:
 			omap_badwidth_write16(s,addr,value);
@@ -133,9 +133,9 @@ static void beagle_nand_setup(struct beagle_s *s)
 	int iomemtype;
 	
 	/*MT29F2G16ABC*/
-	s->nand = nand_init(NAND_MFR_MICRON,0xba);
+	s->nand = nandb_init(NAND_MFR_MICRON,0xba);
 	/*wp=1, no write protect!!! */
-	nand_set_wp(s->nand, 1);
+	//nand_set_wp(s->nand, 1);
 	s->nand_base = 0x6e00007c ;
 
 	iomemtype = cpu_register_io_memory(0, beagle_nand_readfn,
