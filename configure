@@ -1395,9 +1395,6 @@ if test `expr "$target_list" : ".*softmmu.*"` != 0 ; then
       tools="qemu-nbd\$(EXESUF) $tools"
   fi
 fi
-if test `expr "$target_list" : "arm-softmmu"` != 0 ; then
-  tools="bb_nandflash_ecc\$(EXESUF) $tools"
-fi
 
 
 echo "TOOLS=$tools" >> $config_mak
