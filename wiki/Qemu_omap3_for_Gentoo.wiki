@@ -1,5 +1,4 @@
 #summary This is a simple howto which describe howto emulate beagleboard with qemu-omap3, and it's specific for gentoo user
-#labels Featured
 
 = Introduction =
 
