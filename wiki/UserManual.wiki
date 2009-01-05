@@ -28,7 +28,7 @@ qemu-system-arm will be generated in directory qemu-omap3/arm-softmmu.
 
 = Download u-boot/kernel/rootfs =
 {{{
-cd qemu-omap3/arm-softmmu
+cd arm-softmmu
 wget http://qemu-omap3.googlecode.com/files/image-v0.01.tar.bz2
 tar jxvf image-v0.01.tar.bz2
 wget http://beagleboard.googlecode.com/files/rd-ext2-8M.bin
@@ -50,8 +50,8 @@ choose Install dash as /bin/sh? with NO.
 #! /bin/bash
 }}}
 
+Assume you are in qemu-omap3/arm-softmmu.
 {{{
-cd qemu-omap3/arm-softmmu
 cp ../bb_nandflash.sh .
 cp ../bb_nandflash_ecc .
 ./bb_nandflash.sh x-load.bin.ift beagle-nand.bin x-loader
