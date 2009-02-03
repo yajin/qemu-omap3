@@ -858,12 +858,9 @@ void omap_gpio_out_set(struct omap_gpio_s *s, int line, qemu_irq handler);
 struct omap_gpif_s;
 struct omap_gpif_s *omap2_gpio_init(struct omap_target_agent_s *ta,
                 qemu_irq *irq, omap_clk *fclk, omap_clk iclk, int modules);
-#if 0
+struct omap_gpif_s *omap3_gpif_init();
 void omap3_gpio_init(struct omap_gpif_s *s,struct omap_target_agent_s *ta,
                 					qemu_irq *irq, omap_clk *fclk, omap_clk iclk, int module_index);
-
-struct omap_gpif_s *omap3_gpif_init();
-#endif
 
 qemu_irq *omap2_gpio_in_get(struct omap_gpif_s *s, int start);
 void omap2_gpio_out_set(struct omap_gpif_s *s, int line, qemu_irq handler);
@@ -988,8 +985,13 @@ struct omap_i2c_s *omap_i2c_init(target_phys_addr_t base,
                 qemu_irq irq, qemu_irq *dma, omap_clk clk);
 struct omap_i2c_s *omap2_i2c_init(struct omap_target_agent_s *ta,
                 qemu_irq irq, qemu_irq *dma, omap_clk fclk, omap_clk iclk);
-struct omap_i2c_s *omap3_i2c_init(struct omap_target_agent_s *ta,
+
+/* omap3_i2c.c */
+struct omap3_i2c_s *omap3_i2c_init(struct omap_target_agent_s *ta,
                 qemu_irq irq, qemu_irq *dma, omap_clk fclk, omap_clk iclk);
+i2c_bus *omap3_i2c_bus(struct omap3_i2c_s * s);
+
+
 void omap_i2c_reset(struct omap_i2c_s *s);
 i2c_bus *omap_i2c_bus(struct omap_i2c_s *s);
 
@@ -1081,6 +1083,7 @@ struct omap_mpu_state_s {
     } pwt;
 
     struct omap_i2c_s *i2c[2];
+
 
     struct omap_rtc_s *rtc;
 
@@ -1181,6 +1184,8 @@ struct omap_mpu_state_s {
 	struct omap3_scm_s *omap3_scm;
 	struct omap3_pm_s *omap3_pm;
 	struct omap3_sms_s *omap3_sms;
+	struct omap3_i2c_s *omap3_i2c[3];
+	struct omap3_mmc_s *omap3_mmc;
 	
     
 };

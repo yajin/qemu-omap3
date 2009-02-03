@@ -118,7 +118,7 @@ static inline uint32_t omap_gp_timer_read(struct omap_gp_timer_s *timer)
     if (timer->st && timer->rate) {
         distance = qemu_get_clock(vm_clock) - timer->time;
         
-        /*if ticks_per_secis bigger than 32bit, we can not use muldiv64 anymore!*/
+        /*if ticks_per_sec is bigger than 32bit, we can not use muldiv64 anymore!*/
         if (timer->ticks_per_sec>0xffffffff)
        {
        	distance = distance/(ticks_per_sec/1000);  /*distance ms*/
@@ -264,7 +264,6 @@ static void omap_gp_timer_clk_setup(struct omap_gp_timer_s *timer)
     omap_clk_adduser(timer->clk,
                     qemu_allocate_irqs(omap_gp_timer_clk_update, timer, 1)[0]);
     timer->rate = omap_clk_getrate(timer->clk);
-    printf("gptimer ckl %x\n",timer->rate);
 }
 
 static void omap_gp_timer_reset(struct omap_gp_timer_s *s)
