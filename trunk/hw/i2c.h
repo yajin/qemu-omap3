@@ -78,7 +78,8 @@ i2c_slave *twl92230_init(i2c_bus *bus, qemu_irq irq);
 qemu_irq *twl92230_gpio_in_get(i2c_slave *i2c);
 void twl92230_gpio_out_set(i2c_slave *i2c, int line, qemu_irq handler);
 /* twl4030.c */
-i2c_slave *twl4030_init(i2c_bus *bus, qemu_irq irq);
+struct twl4030_s;
+struct twl4030_s *twl4030_init(i2c_bus *bus, qemu_irq irq);
 
 
 /* tmp105.c */
