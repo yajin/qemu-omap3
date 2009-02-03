@@ -217,7 +217,6 @@ static uint32_t omap_i2c_read(void *opaque, target_phys_addr_t addr)
         return s->mask;
 
     case 0x08:	/* I2C_STAT */
-    	 //printf("I2C SATA %x \n",s->stat | (i2c_bus_busy(s->bus) << 12));
         return s->stat | (i2c_bus_busy(s->bus) << 12);
 
     case 0x0c:	/* I2C_IV */
@@ -539,3 +538,4 @@ i2c_bus *omap_i2c_bus(struct omap_i2c_s *s)
 {
     return s->bus;
 }
+
