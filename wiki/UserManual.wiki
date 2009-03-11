@@ -2,6 +2,9 @@
 #labels Featured
 <wiki:toc max_depth="1" />
 
+= Caution =
+This page is a little outdated. I am too busy to contiue this project. The guy at maemo has done very well on qemu omap3 emulation. Go to [https://garage.maemo.org/scm/?group_id=877 this page] for more information.
+
 = Introduction =
 
 This article will tell you how to use qemu-omap3 v0.01.
